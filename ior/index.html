@@ -1,0 +1,669 @@
+<title>Sphère de Fresnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Thème sombre assumé : un viewport de lookdev reste sombre pour ne pas biaiser la lecture des valeurs. */
+  :root {
+    color-scheme: dark;
+    --ground: #0e1012;
+    --panel: #15181b;
+    --line: #262b30;
+    --line-2: #343a41;
+    --ink: #e9e5db;
+    --muted: #8b929a;
+    --sodium: #ffb53d;   /* raie D du sodium, 589,3 nm : la longueur d'onde de référence de n_D */
+    --cobalt: #72a9ff;
+    --sans: "Archivo", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr) 330px;
+    grid-template-areas: "ctl view ana";
+    gap: 16px;
+    padding: 16px;
+    height: 100vh;
+    min-height: 620px;
+  }
+  .ctl { grid-area: ctl; }
+  .view { grid-area: view; }
+  .ana { grid-area: ana; }
+  .ctl, .ana { overflow-y: auto; display: flex; flex-direction: column; gap: 0; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+
+  header { padding-block: 4px 18px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; font-size: 26px; font-weight: 750; font-stretch: 112%; letter-spacing: -0.01em; line-height: 1.05; text-wrap: balance; }
+  header p { margin: 8px 0 0; color: var(--muted); font-size: 13px; text-wrap: pretty; }
+
+  section.block { padding-block: 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  section.block:last-child { border-bottom: 0; }
+  .label { font-size: 11px; font-weight: 600; font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  /* Lecture d'indice */
+  .ior { --c: var(--sodium); }
+  .ior.b { --c: var(--cobalt); }
+  .ior-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .ior-name { display: flex; align-items: center; gap: 8px; }
+  .tag { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--ground); background: var(--c); border-radius: 2px; padding: 1px 5px; }
+  .readout { display: flex; align-items: baseline; gap: 6px; font-family: var(--mono); color: var(--c); }
+  .readout span { font-size: 15px; font-style: italic; opacity: .8; }
+  .readout input {
+    width: 5.2ch; font: 500 34px/1 var(--mono); color: var(--c); background: transparent; border: 0; border-bottom: 1px dashed transparent;
+    padding: 0; font-variant-numeric: tabular-nums; -moz-appearance: textfield;
+  }
+  .readout input::-webkit-inner-spin-button, .readout input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .readout input:hover { border-bottom-color: var(--line-2); }
+  .readout input:focus-visible { outline: none; border-bottom-color: var(--c); }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; --p: 50%; }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--c, var(--ink)) var(--p), var(--line-2) var(--p)); }
+  input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line-2); }
+  input[type=range]::-moz-range-progress { height: 3px; border-radius: 2px; background: var(--c, var(--ink)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 6px; height: 18px; margin-top: -7.5px; border-radius: 2px; background: var(--ink); border: 0; box-shadow: 0 0 0 3px var(--ground); }
+  input[type=range]::-moz-range-thumb { width: 6px; height: 18px; border-radius: 2px; background: var(--ink); border: 0; box-shadow: 0 0 0 3px var(--ground); }
+  input[type=range]:focus-visible { outline: 1px solid var(--c, var(--sodium)); outline-offset: 2px; border-radius: 2px; }
+
+  .scale { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: -6px; font-variant-numeric: tabular-nums; }
+
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .chip {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 5px 7px; border-radius: 3px;
+    background: transparent; border: 1px solid var(--line); color: var(--muted); font: 500 12px/1.2 var(--sans); cursor: pointer; text-align: left;
+  }
+  .chip b { font: 400 11px/1.3 var(--mono); color: var(--muted); opacity: .75; }
+  .chip:hover { border-color: var(--line-2); color: var(--ink); }
+  .chip[aria-pressed=true] { border-color: var(--c); color: var(--ink); }
+  .chip[aria-pressed=true] b { color: var(--c); opacity: 1; }
+  .chip:focus-visible, .btn:focus-visible, .seg input:focus-visible + span, .switch input:focus-visible + span { outline: 1px solid var(--sodium); outline-offset: 2px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; border-radius: 3px;
+    border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); font: 600 12px var(--sans); cursor: pointer; width: 100%;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn[aria-pressed=true] { border-color: var(--sodium); color: var(--sodium); }
+  .btn svg { width: 10px; height: 10px; fill: currentColor; }
+
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; font-size: 13px; }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch span { position: relative; width: 30px; height: 16px; border-radius: 8px; background: var(--line-2); flex: none; transition: background .15s; }
+  .switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform .15s, background .15s; }
+  .switch input:checked + span { background: #3a3326; }
+  .switch input:checked + span::after { transform: translateX(14px); background: var(--sodium); }
+
+  .dim { opacity: .38; transition: opacity .15s; }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .seg label { position: relative; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; }
+  .seg span { display: block; padding: 7px 8px; border: 1px solid var(--line); border-radius: 3px; font-size: 12px; color: var(--muted); }
+  .seg span i { font-family: var(--mono); font-style: normal; font-size: 11px; }
+  .seg label:hover span { color: var(--ink); border-color: var(--line-2); }
+  .seg input:checked + span { color: var(--ink); border-color: var(--ink); background: var(--panel); }
+
+  /* Viewport */
+  .view { position: relative; border-radius: 4px; overflow: hidden; background: #050606; border: 1px solid var(--line); min-height: 0; }
+  .view canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  .view canvas.dragging { cursor: grabbing; }
+  .ovl { position: absolute; pointer-events: none; font-family: var(--mono); font-size: 12px; display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: rgba(8,9,10,.62); border-radius: 3px; backdrop-filter: blur(4px); font-variant-numeric: tabular-nums; }
+  .ovl.tl { top: 12px; left: 12px; color: var(--sodium); }
+  .ovl.tr { top: 12px; right: 12px; color: var(--cobalt); }
+  .ovl.bl { bottom: 12px; left: 12px; color: var(--muted); font-family: var(--sans); font-size: 11.5px; }
+  .ovl.br { bottom: 12px; right: 12px; color: var(--ink); }
+  .ovl .tag { color: #0e1012; }
+  .nogl { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+
+  /* Analyse */
+  .chart-wrap { position: relative; }
+  #chart { display: block; width: 100%; height: 220px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 0; border-bottom: 1px solid var(--line); text-align: right; font-size: 12.5px; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 11px; font-weight: 600; font-stretch: 75%; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding-top: 0; }
+  td { font-family: var(--mono); }
+  td:first-child { font-family: var(--sans); color: var(--muted); }
+  td small { display: block; font-size: 10.5px; opacity: .75; }
+  .ca { color: var(--sodium); } .cb { color: var(--cobalt); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  .notes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; color: var(--muted); font-size: 13px; }
+  .notes li { padding-left: 14px; position: relative; text-wrap: pretty; }
+  .notes li::before { content: ""; position: absolute; left: 0; top: .62em; width: 6px; height: 1px; background: var(--muted); }
+  .notes strong { color: var(--ink); font-weight: 600; }
+  .mono { font-family: var(--mono); font-size: .92em; }
+
+  @media (max-width: 1180px) {
+    .app { grid-template-columns: 290px minmax(0, 1fr); grid-template-areas: "ctl view" "ctl ana"; grid-template-rows: minmax(420px, 62vh) auto; height: auto; }
+    .ctl { overflow: visible; }
+    .ana { overflow: visible; display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+    .ana section.block:first-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "view" "ctl" "ana"; grid-template-rows: auto; }
+    .view { aspect-ratio: 1 / 1; max-width: 100%; }
+    .ana { display: flex; }
+    h1 { font-size: 22px; }
+    .ovl.bl { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <aside class="ctl" aria-label="Réglages">
+    <header>
+      <h1>Sphère de Fresnel</h1>
+      <p>Une sphère diélectrique lancée en ray tracing. Changez l'indice de réfraction et regardez la part réfléchie monter vers les bords.</p>
+    </header>
+
+    <section class="block ior" id="blockA">
+      <div class="ior-head">
+        <div class="ior-name"><span class="tag">A</span><p class="label">Indice n<sub>D</sub></p></div>
+        <div class="readout"><span>n</span><input type="number" id="numA" min="1" max="3" step="0.001" value="1.520" aria-label="Indice A"></div>
+      </div>
+      <input type="range" id="iorA" min="1" max="3" step="0.001" value="1.52" aria-label="Indice A">
+      <div class="scale"><span>1.0</span><span>1.5</span><span>2.0</span><span>2.5</span><span>3.0</span></div>
+      <div class="chips" id="chipsA"></div>
+      <button class="btn" id="sweep" aria-pressed="false" type="button">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0 L9 5 L1 10 Z"/></svg><span>Balayer n de 1.0 à 2.6</span>
+      </button>
+    </section>
+
+    <section class="block">
+      <label class="switch" for="compare">Comparer avec un indice B
+        <input type="checkbox" id="compare" checked><span></span>
+      </label>
+    </section>
+
+    <section class="block ior b" id="blockB">
+      <div class="ior-head">
+        <div class="ior-name"><span class="tag">B</span><p class="label">Indice n<sub>D</sub></p></div>
+        <div class="readout"><span>n</span><input type="number" id="numB" min="1" max="3" step="0.001" value="2.417" aria-label="Indice B"></div>
+      </div>
+      <input type="range" id="iorB" min="1" max="3" step="0.001" value="2.417" aria-label="Indice B">
+      <div class="scale"><span>1.0</span><span>1.5</span><span>2.0</span><span>2.5</span><span>3.0</span></div>
+      <div class="chips" id="chipsB"></div>
+    </section>
+
+    <section class="block">
+      <p class="label">Affichage</p>
+      <div class="seg" role="radiogroup" aria-label="Mode d'affichage">
+        <label><input type="radio" name="mode" id="mode0" value="0" checked><span>Rendu final</span></label>
+        <label><input type="radio" name="mode" id="mode1" value="1"><span>Coefficient <i>F</i></span></label>
+        <label><input type="radio" name="mode" id="mode2" value="2"><span>Réflexion <i>× F</i></span></label>
+        <label><input type="radio" name="mode" id="mode3" value="3"><span>Réfraction <i>× (1−F)</i></span></label>
+      </div>
+      <label class="switch" for="schlick">Approximation de Schlick
+        <input type="checkbox" id="schlick"><span></span>
+      </label>
+      <div class="row"><p class="label">Dispersion Δn (R→B)</p><span class="mono" id="dispOut" style="color:var(--muted)">0.000</span></div>
+      <input type="range" id="disp" min="0" max="0.06" step="0.001" value="0" aria-label="Dispersion">
+    </section>
+  </aside>
+
+  <main class="view" id="view">
+    <canvas id="gl"></canvas>
+    <div class="ovl tl" id="ovlA"><span class="tag" style="background:var(--sodium)">A</span><span id="ovlAv">n 1.520</span></div>
+    <div class="ovl tr" id="ovlB"><span class="tag" style="background:var(--cobalt)">B</span><span id="ovlBv">n 2.417</span></div>
+    <div class="ovl bl">Glisser pour tourner · molette pour zoomer · survoler la sphère pour lire θ et F</div>
+    <div class="ovl br" id="hover" hidden></div>
+  </main>
+
+  <aside class="ana" aria-label="Analyse">
+    <section class="block" style="padding-top:4px">
+      <div class="row"><p class="label">Réflectance F(θ)</p><span class="mono" style="color:var(--muted);font-size:11px">air → matériau</span></div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section class="block">
+      <table>
+        <thead><tr><th>Grandeur</th><th class="ca">A</th><th class="cb" id="thB">B</th></tr></thead>
+        <tbody>
+          <tr><td>F₀ réflexion normale<small>((n−1)/(n+1))²</small></td><td class="ca" id="f0A"></td><td class="cb" id="f0B"></td></tr>
+          <tr><td>F à 70°<small>vue rasante</small></td><td class="ca" id="f70A"></td><td class="cb" id="f70B"></td></tr>
+          <tr><td>Angle de Brewster<small>arctan n</small></td><td class="ca" id="brA"></td><td class="cb" id="brB"></td></tr>
+          <tr><td>Angle critique interne<small>arcsin 1/n</small></td><td class="ca" id="crA"></td><td class="cb" id="crB"></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="block">
+      <p class="label">Ce qu'il faut regarder</p>
+      <ul class="notes">
+        <li><strong>Au centre</strong>, le rayon arrive de face (θ = 0°) : seule une fraction F₀ est réfléchie — 4 % pour le verre, 17 % pour le diamant.</li>
+        <li><strong>Au bord</strong>, θ tend vers 90° et F tend vers 100 % quel que soit n : c'est l'effet Fresnel. Monter l'indice élargit l'anneau réfléchissant vers le centre.</li>
+        <li><strong>À n = 1</strong>, la sphère disparaît : ni réflexion ni déviation. Plus n grandit, plus l'image du damier est courbée, inversée et compressée.</li>
+        <li><strong>Au-delà de l'angle critique</strong>, la lumière reste piégée à l'intérieur (réflexion totale) : c'est l'origine des éclats du diamant.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const PRESETS = [["Air", 1.000], ["Eau", 1.333], ["Verre", 1.520], ["Saphir", 1.770], ["Diamant", 2.417], ["Moissanite", 2.650]];
+  const S = { a: 1.52, b: 2.417, compare: true, mode: 0, schlick: false, disp: 0, yaw: 0.55, pitch: 0.22, dist: 4.3, hover: null, sweep: false };
+  const TARGET = [0, -0.2, 0], FOCAL = 2.2;
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Physique ---------- */
+  function fresnelExact(cosi, n1, n2) {
+    const sint = n1 / n2 * Math.sqrt(Math.max(0, 1 - cosi * cosi));
+    if (sint >= 1) return 1;
+    const cost = Math.sqrt(Math.max(0, 1 - sint * sint));
+    const rs = (n1 * cosi - n2 * cost) / (n1 * cosi + n2 * cost);
+    const rp = (n2 * cosi - n1 * cost) / (n2 * cosi + n1 * cost);
+    return 0.5 * (rs * rs + rp * rp);
+  }
+  function fresnelSchlick(cosi, n1, n2) {
+    let r0 = (n1 - n2) / (n1 + n2); r0 *= r0;
+    let c = cosi;
+    if (n1 > n2) { const s2 = (n1 / n2) ** 2 * (1 - cosi * cosi); if (s2 >= 1) return 1; c = Math.sqrt(1 - s2); }
+    return r0 + (1 - r0) * (1 - c) ** 5;
+  }
+  const F = (cosi, n, schlick = S.schlick) => schlick ? fresnelSchlick(cosi, 1, n) : fresnelExact(cosi, 1, n);
+
+  /* ---------- WebGL ---------- */
+  const cv = $("gl");
+  const gl = cv.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+  const FS = `
+precision highp float;
+uniform vec2 uRes; uniform vec3 uRo; uniform vec3 uTa;
+uniform float uIorA, uIorB, uCompare, uMode, uSchlick, uDisp, uLine;
+
+float fresnelExact(float cosi, float n1, float n2){
+  float sint = n1/n2*sqrt(max(0.0, 1.0-cosi*cosi));
+  if (sint >= 1.0) return 1.0;
+  float cost = sqrt(max(0.0, 1.0-sint*sint));
+  float rs = (n1*cosi - n2*cost)/(n1*cosi + n2*cost);
+  float rp = (n2*cosi - n1*cost)/(n2*cosi + n1*cost);
+  return 0.5*(rs*rs + rp*rp);
+}
+float fresnelSchlick(float cosi, float n1, float n2){
+  float r0 = (n1-n2)/(n1+n2); r0 *= r0;
+  float c = cosi;
+  if (n1 > n2){
+    float s2 = (n1/n2)*(n1/n2)*(1.0-cosi*cosi);
+    if (s2 >= 1.0) return 1.0;
+    c = sqrt(1.0-s2);
+  }
+  float m = 1.0-c;
+  return r0 + (1.0-r0)*m*m*m*m*m;
+}
+float fres(float cosi, float n1, float n2){
+  return uSchlick > 0.5 ? fresnelSchlick(cosi, n1, n2) : fresnelExact(cosi, n1, n2);
+}
+
+vec3 softbox(vec3 d, vec3 c, vec2 size, vec3 col){
+  float k = dot(d, c);
+  if (k <= 0.0) return vec3(0.0);
+  vec3 r = normalize(cross(c, vec3(0.0,1.0,0.0)));
+  vec3 u = cross(r, c);
+  vec2 q = abs(vec2(dot(d,r), dot(d,u))/k);
+  vec2 e = 1.0 - smoothstep(size*0.82, size, q);
+  return col*e.x*e.y;
+}
+vec3 sky(vec3 d){
+  float h = d.y;
+  vec3 col = mix(vec3(0.028,0.031,0.036), vec3(0.10,0.112,0.128), smoothstep(0.0, 0.9, h));
+  col += vec3(0.05,0.046,0.04)*exp(-abs(h)*12.0);
+  col += softbox(d, normalize(vec3(-0.55,0.60,0.58)), vec2(0.42,0.30), vec3(7.0,6.6,6.0));
+  col += softbox(d, normalize(vec3(0.85,0.25,-0.45)), vec2(0.07,0.60), vec3(3.6,4.3,5.4));
+  col += softbox(d, normalize(vec3(0.20,0.95,0.10)), vec2(0.55,0.10), vec3(2.0));
+  col += softbox(d, normalize(vec3(-0.90,0.18,-0.40)), vec2(0.12,0.12), vec3(3.2,1.9,0.35));
+  return col;
+}
+vec3 env(vec3 p, vec3 d){
+  if (d.y < -1e-4){
+    float t = (-1.0 - p.y)/d.y;
+    if (t > 0.0){
+      vec3 q = p + d*t;
+      vec2 g = floor(q.xz*2.0);
+      float chk = mod(g.x + g.y, 2.0);
+      vec3 base = mix(vec3(0.12,0.125,0.13), vec3(0.58,0.56,0.52), chk);
+      float ln = 1.0 - smoothstep(0.025, 0.04, abs(q.z + 1.25));
+      base = mix(base, vec3(1.0,0.55,0.12)*1.3, ln);
+      float r2 = dot(q.xz, q.xz);
+      float sh = 1.0 - 0.7*exp(-r2*2.4);
+      vec2 so = q.xz - vec2(0.5,-0.52);
+      sh *= 1.0 - 0.45*exp(-dot(so,so)*1.3);
+      float key = 0.35 + 0.45*exp(-length(q.xz - vec2(-1.5,1.5))*0.18);
+      vec3 lit = base*key*sh;
+      float fade = smoothstep(3.5, 14.0, length(q.xz));
+      return mix(lit, sky(vec3(d.x, 0.0, d.z)), fade);
+    }
+  }
+  return sky(d);
+}
+
+vec3 trace(vec3 ro, vec3 rd, float n){
+  float b = dot(ro, rd);
+  float c = dot(ro, ro) - 1.0;
+  float h = b*b - c;
+  if (h < 0.0) return env(ro, rd);
+  float t = -b - sqrt(h);
+  if (t < 0.0) return env(ro, rd);
+  vec3 p = ro + rd*t;
+  vec3 N = p;
+  float cosi = clamp(-dot(rd, N), 0.0, 1.0);
+  float Fr = fres(cosi, 1.0, n);
+  if (uMode > 0.5 && uMode < 1.5) return vec3(Fr);
+  vec3 refl = env(p, reflect(rd, N));
+  if (uMode > 1.5 && uMode < 2.5) return refl*Fr;
+
+  vec3 acc = vec3(0.0);
+  float thr = 1.0;
+  vec3 pos = p;
+  vec3 dir = refract(rd, N, 1.0/n);
+  for (int i = 0; i < 5; i++){
+    float tt = -2.0*dot(pos, dir);
+    vec3 q = pos + dir*tt;
+    vec3 Ni = -q;
+    float ci = clamp(-dot(dir, Ni), 0.0, 1.0);
+    float Fi = fres(ci, n, 1.0);
+    if (Fi < 1.0) acc += thr*(1.0 - Fi)*env(q, refract(dir, Ni, n));
+    thr *= Fi;
+    dir = reflect(dir, Ni);
+    pos = q;
+  }
+  if (uMode > 2.5) return acc*(1.0 - Fr);
+  return refl*Fr + acc*(1.0 - Fr);
+}
+
+vec3 aces(vec3 x){ return clamp((x*(2.51*x + 0.03))/(x*(2.43*x + 0.59) + 0.14), 0.0, 1.0); }
+
+void main(){
+  vec2 fc = gl_FragCoord.xy;
+  vec2 uv = (fc - 0.5*uRes)/uRes.y;
+  vec3 f = normalize(uTa - uRo);
+  vec3 r = normalize(cross(f, vec3(0.0,1.0,0.0)));
+  vec3 u = cross(r, f);
+  vec3 rd = normalize(uv.x*r + uv.y*u + ${FOCAL.toFixed(2)}*f);
+  float n = (uCompare > 0.5 && fc.x >= 0.5*uRes.x) ? uIorB : uIorA;
+  vec3 col;
+  if (uDisp < 1e-4) col = trace(uRo, rd, n);
+  else col = vec3(trace(uRo, rd, max(1.0, n - uDisp)).r, trace(uRo, rd, n).g, trace(uRo, rd, n + uDisp).b);
+  if (uMode < 0.5 || uMode > 1.5) col = aces(col*0.95);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  if (uCompare > 0.5 && abs(fc.x - 0.5*uRes.x) < uLine) col = vec3(0.82, 0.8, 0.76);
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+  let prog, U = {};
+  if (gl) {
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "p");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ["uRes", "uRo", "uTa", "uIorA", "uIorB", "uCompare", "uMode", "uSchlick", "uDisp", "uLine"].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+  } else {
+    const d = document.createElement("div"); d.className = "nogl";
+    d.textContent = "WebGL n'est pas disponible dans ce navigateur : le rendu de la sphère ne peut pas s'afficher. La courbe F(θ) reste consultable.";
+    $("view").appendChild(d);
+  }
+
+  function camera() {
+    const cp = Math.cos(S.pitch);
+    const ro = [TARGET[0] + S.dist * Math.sin(S.yaw) * cp, TARGET[1] + S.dist * Math.sin(S.pitch), TARGET[2] + S.dist * Math.cos(S.yaw) * cp];
+    const norm = v => { const l = Math.hypot(...v); return v.map(x => x / l); };
+    const f = norm(TARGET.map((t, i) => t - ro[i]));
+    const r = norm([-f[2], 0, f[0]]);               // cross(f, up)
+    const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+    return { ro, f, r, u, norm };
+  }
+
+  let dpr = 1;
+  function resize() {
+    const rect = cv.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    cv.width = Math.max(1, Math.round(rect.width * dpr));
+    cv.height = Math.max(1, Math.round(rect.height * dpr));
+    request();
+  }
+
+  function render() {
+    if (!gl) return;
+    const { ro } = camera();
+    gl.viewport(0, 0, cv.width, cv.height);
+    gl.uniform2f(U.uRes, cv.width, cv.height);
+    gl.uniform3f(U.uRo, ...ro);
+    gl.uniform3f(U.uTa, ...TARGET);
+    gl.uniform1f(U.uIorA, S.a);
+    gl.uniform1f(U.uIorB, S.b);
+    gl.uniform1f(U.uCompare, S.compare ? 1 : 0);
+    gl.uniform1f(U.uMode, S.mode);
+    gl.uniform1f(U.uSchlick, S.schlick ? 1 : 0);
+    gl.uniform1f(U.uDisp, S.disp);
+    gl.uniform1f(U.uLine, Math.max(1, dpr));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  let pending = false;
+  function request() { if (!pending) { pending = true; requestAnimationFrame(frame); } }
+  let sweepT0 = 0;
+  function frame(now) {
+    pending = false;
+    if (S.sweep) {
+      const t = ((now - sweepT0) / 7000) % 1;
+      const k = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+      setIor("a", 1 + 1.6 * k, false);
+      request();
+    }
+    render();
+    drawChart();
+  }
+
+  /* ---------- Contrôles ---------- */
+  const fmtN = n => n.toFixed(3);
+  const pct = f => (f * 100).toFixed(f < 0.1 ? 2 : 1) + " %";
+  const deg = rad => (rad * 180 / Math.PI).toFixed(1) + "°";
+
+  function buildChips(which) {
+    const box = $("chips" + which.toUpperCase());
+    PRESETS.forEach(([name, n]) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.dataset.n = n;
+      b.innerHTML = `${name}<b>${fmtN(n)}</b>`;
+      b.addEventListener("click", () => { if (which === "a") stopSweep(); setIor(which, n); });
+      box.appendChild(b);
+    });
+  }
+  buildChips("a"); buildChips("b");
+
+  function setIor(which, n, fromNum) {
+    n = Math.min(3, Math.max(1, +n || 1));
+    S[which] = n;
+    const W = which.toUpperCase();
+    const range = $("ior" + W);
+    range.value = n;
+    range.style.setProperty("--p", ((n - 1) / 2 * 100) + "%");
+    if (fromNum !== true) $("num" + W).value = fmtN(n);
+    $("ovl" + W + "v").textContent = "n " + fmtN(n);
+    $("chips" + W).querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", Math.abs(+c.dataset.n - n) < 0.0006));
+    updateStats();
+    request();
+  }
+
+  ["a", "b"].forEach(w => {
+    const W = w.toUpperCase();
+    $("ior" + W).addEventListener("input", e => { if (w === "a") stopSweep(); setIor(w, e.target.value); });
+    $("num" + W).addEventListener("input", e => { if (e.target.value === "") return; if (w === "a") stopSweep(); setIor(w, e.target.value, true); });
+    $("num" + W).addEventListener("change", e => setIor(w, e.target.value));
+  });
+
+  function applyCompare() {
+    S.compare = $("compare").checked;
+    $("blockB").classList.toggle("dim", !S.compare);
+    $("ovlB").hidden = !S.compare;
+    $("thB").style.visibility = S.compare ? "" : "hidden";
+    ["f0B", "f70B", "brB", "crB"].forEach(id => $(id).style.visibility = S.compare ? "" : "hidden");
+    request();
+  }
+  $("compare").addEventListener("change", applyCompare);
+  $("blockB").addEventListener("pointerdown", () => { if (!S.compare) { $("compare").checked = true; applyCompare(); } });
+
+  document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener("change", e => { S.mode = +e.target.value; request(); }));
+  $("schlick").addEventListener("change", e => { S.schlick = e.target.checked; updateStats(); request(); });
+  $("disp").addEventListener("input", e => {
+    S.disp = +e.target.value;
+    $("dispOut").textContent = S.disp.toFixed(3);
+    e.target.style.setProperty("--p", (S.disp / 0.06 * 100) + "%");
+    request();
+  });
+
+  function stopSweep() {
+    if (!S.sweep) return;
+    S.sweep = false;
+    $("sweep").setAttribute("aria-pressed", "false");
+    $("sweep").querySelector("span").textContent = "Balayer n de 1.0 à 2.6";
+  }
+  $("sweep").addEventListener("click", () => {
+    if (S.sweep) { stopSweep(); return; }
+    S.sweep = true;
+    // Démarre la phase là où se trouve n pour éviter un saut
+    const k = Math.min(1, Math.max(0, (S.a - 1) / 1.6));
+    sweepT0 = performance.now() - Math.acos(1 - 2 * k) / (Math.PI * 2) * 7000;
+    $("sweep").setAttribute("aria-pressed", "true");
+    $("sweep").querySelector("span").textContent = "Arrêter le balayage";
+    request();
+  });
+
+  function updateStats() {
+    [["a", "A"], ["b", "B"]].forEach(([w, W]) => {
+      const n = S[w];
+      $("f0" + W).textContent = pct(F(1, n));
+      $("f70" + W).textContent = pct(F(Math.cos(70 * Math.PI / 180), n));
+      $("br" + W).textContent = n > 1.0005 ? deg(Math.atan(n)) : "—";
+      $("cr" + W).textContent = n > 1.0005 ? deg(Math.asin(1 / n)) : "—";
+    });
+  }
+
+  /* ---------- Orbite et survol ---------- */
+  let drag = null;
+  cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; cv.setPointerCapture(e.pointerId); cv.classList.add("dragging"); });
+  cv.addEventListener("pointerup", e => { drag = null; cv.classList.remove("dragging"); hoverAt(e); });
+  cv.addEventListener("pointercancel", () => { drag = null; cv.classList.remove("dragging"); });
+  cv.addEventListener("pointermove", e => {
+    if (drag) {
+      S.yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
+      S.pitch = Math.min(1.25, Math.max(0.02, drag.pitch + (e.clientY - drag.y) * 0.006));
+      S.hover = null; $("hover").hidden = true;
+      request();
+    } else hoverAt(e);
+  });
+  cv.addEventListener("pointerleave", () => { if (!drag) { S.hover = null; $("hover").hidden = true; request(); } });
+  cv.addEventListener("wheel", e => { e.preventDefault(); S.dist = Math.min(8, Math.max(2.4, S.dist * Math.exp(e.deltaY * 0.001))); request(); }, { passive: false });
+
+  function hoverAt(e) {
+    const rect = cv.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const px = (x - rect.width / 2) / rect.height, py = -(y - rect.height / 2) / rect.height;
+    const { ro, f, r, u, norm } = camera();
+    const rd = norm([0, 1, 2].map(i => px * r[i] + py * u[i] + FOCAL * f[i]));
+    const b = ro[0] * rd[0] + ro[1] * rd[1] + ro[2] * rd[2];
+    const c = ro[0] ** 2 + ro[1] ** 2 + ro[2] ** 2 - 1;
+    const h = b * b - c;
+    const el = $("hover");
+    if (h < 0) { S.hover = null; el.hidden = true; request(); return; }
+    const t = -b - Math.sqrt(h);
+    const p = ro.map((v, i) => v + rd[i] * t);
+    const cosi = Math.min(1, Math.max(0, -(rd[0] * p[0] + rd[1] * p[1] + rd[2] * p[2])));
+    const side = S.compare && x >= rect.width / 2 ? "b" : "a";
+    const n = S[side];
+    const fr = F(cosi, n);
+    S.hover = { theta: Math.acos(cosi), side, f: fr };
+    el.hidden = false;
+    el.style.color = side === "a" ? "var(--sodium)" : "var(--cobalt)";
+    el.textContent = `θ ${deg(Math.acos(cosi))} · F ${pct(fr)}`;
+    request();
+  }
+
+  /* ---------- Courbe F(θ) ---------- */
+  const ch = $("chart"), cx = ch.getContext("2d");
+  function drawChart() {
+    const rect = ch.getBoundingClientRect();
+    const k = window.devicePixelRatio || 1;
+    if (ch.width !== Math.round(rect.width * k)) { ch.width = Math.round(rect.width * k); ch.height = Math.round(rect.height * k); }
+    const W = rect.width, H = rect.height;
+    cx.setTransform(k, 0, 0, k, 0, 0);
+    cx.clearRect(0, 0, W, H);
+    const css = getComputedStyle(document.documentElement);
+    const col = { line: css.getPropertyValue("--line").trim(), muted: css.getPropertyValue("--muted").trim(), a: css.getPropertyValue("--sodium").trim(), b: css.getPropertyValue("--cobalt").trim(), ink: css.getPropertyValue("--ink").trim() };
+    const m = { l: 38, r: 10, t: 8, b: 24 };
+    const X = th => m.l + (th / 90) * (W - m.l - m.r);
+    const Y = v => m.t + (1 - v) * (H - m.t - m.b);
+
+    cx.font = "10px 'IBM Plex Mono', monospace";
+    cx.lineWidth = 1;
+    cx.fillStyle = col.muted;
+    cx.textAlign = "right"; cx.textBaseline = "middle";
+    for (let v = 0; v <= 1.0001; v += 0.2) {
+      cx.strokeStyle = col.line; cx.beginPath(); cx.moveTo(m.l, Math.round(Y(v)) + .5); cx.lineTo(W - m.r, Math.round(Y(v)) + .5); cx.stroke();
+      cx.fillText(Math.round(v * 100) + "%", m.l - 6, Y(v));
+    }
+    cx.textAlign = "center"; cx.textBaseline = "top";
+    for (let th = 0; th <= 90; th += 15) {
+      cx.strokeStyle = col.line; cx.beginPath(); cx.moveTo(Math.round(X(th)) + .5, m.t); cx.lineTo(Math.round(X(th)) + .5, H - m.b); cx.stroke();
+      cx.fillText(th + "°", Math.min(W - m.r - 8, X(th)), H - m.b + 7);
+    }
+
+    const curve = (n, color, width, schlick, dash) => {
+      cx.strokeStyle = color; cx.lineWidth = width; cx.setLineDash(dash || []);
+      cx.beginPath();
+      for (let i = 0; i <= 180; i++) {
+        const th = i / 2, v = F(Math.cos(th * Math.PI / 180), n, schlick);
+        i ? cx.lineTo(X(th), Y(v)) : cx.moveTo(X(th), Y(v));
+      }
+      cx.stroke(); cx.setLineDash([]);
+    };
+    const series = [["a", col.a]];
+    if (S.compare) series.push(["b", col.b]);
+    series.forEach(([w, c]) => {
+      const n = S[w];
+      if (n > 1.0005 && !S.schlick) {
+        const tb = Math.atan(n) * 180 / Math.PI;
+        cx.globalAlpha = .45; cx.strokeStyle = c; cx.setLineDash([2, 3]);
+        cx.beginPath(); cx.moveTo(X(tb), m.t); cx.lineTo(X(tb), H - m.b); cx.stroke(); cx.setLineDash([]);
+        cx.globalAlpha = 1;
+      }
+      if (S.schlick) { cx.globalAlpha = .5; curve(n, c, 1, false, [3, 3]); cx.globalAlpha = 1; }
+      curve(n, c, 2, S.schlick);
+      cx.fillStyle = c; cx.beginPath(); cx.arc(X(0), Y(F(1, n)), 3, 0, 7); cx.fill();
+    });
+
+    if (S.hover && (S.hover.side === "a" || S.compare)) {
+      const th = S.hover.theta * 180 / Math.PI, c = S.hover.side === "a" ? col.a : col.b;
+      cx.strokeStyle = col.ink; cx.globalAlpha = .5; cx.beginPath(); cx.moveTo(X(th), m.t); cx.lineTo(X(th), H - m.b); cx.stroke(); cx.globalAlpha = 1;
+      cx.fillStyle = "#0e1012"; cx.strokeStyle = c; cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(X(th), Y(S.hover.f), 4.5, 0, 7); cx.fill(); cx.stroke();
+    }
+
+    $("legend").innerHTML =
+      `<span><i style="background:${col.a}"></i>A · n ${fmtN(S.a)}</span>` +
+      (S.compare ? `<span><i style="background:${col.b}"></i>B · n ${fmtN(S.b)}</span>` : "") +
+      (S.schlick ? `<span><i style="background:repeating-linear-gradient(90deg,${col.muted} 0 3px,transparent 3px 6px)"></i>Fresnel exact</span>` : `<span><i style="background:repeating-linear-gradient(90deg,${col.muted} 0 2px,transparent 2px 5px)"></i>Brewster</span>`);
+  }
+
+  new ResizeObserver(resize).observe(cv);
+  new ResizeObserver(() => request()).observe(ch);
+  if (document.fonts) document.fonts.ready.then(request);
+  setIor("a", S.a); setIor("b", S.b); applyCompare();
+  $("disp").style.setProperty("--p", "0%");
+  resize();
+})();
+</script>
