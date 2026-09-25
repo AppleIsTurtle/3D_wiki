@@ -1,0 +1,1957 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cours interactif : le Pyro Solver de Houdini expliqué avec une simulation de fumée et de feu qui tourne dans le navigateur.">
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Labo Pyro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#EDEFF1; --surface:#F8F9FA; --ink:#14171A; --ink-2:#4A5259; --ink-3:#6C757C;
+  --line:#D3D8DC; --accent:#C8410F; --accent-soft:#F5D9CB; --code:#E1E5E8;
+  --cold:#2C6CB0; --ok:#2E7D4F; --bad:#B3261E;
+  --vp:#16181B; --vp-2:#202328; --vp-ink:#D5D8DB; --vp-ink-2:#8D949A; --vp-line:#2E3237; --vp-accent:#FF7A3A;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+    --line:#2A3136; --accent:#FF7A3A; --accent-soft:#3B2217; --code:#1D2327;
+    --cold:#6FA6E8; --ok:#5BC286; --bad:#FF7A70;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+  --line:#2A3136; --accent:#FF7A3A; --accent-soft:#3B2217; --code:#1D2327;
+  --cold:#6FA6E8; --ok:#5BC286; --bad:#FF7A70;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,4vw,44px);padding-block:36px 96px}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;line-height:1.08;margin:0}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;letter-spacing:-.015em}
+h3{font-size:1.3rem;font-weight:700}
+p{margin:0}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--code);padding:.08em .38em;border-radius:4px}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font:600 .74rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.lead{font-size:1.14rem;color:var(--ink-2);max-width:66ch}
+.lead strong{color:var(--ink)}
+.muted{color:var(--ink-2)}
+.small{font-size:.86rem}
+.hero{display:grid;gap:14px;padding-bottom:28px}
+
+/* ---------- lab ---------- */
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:0;background:var(--vp);color:var(--vp-ink);border-radius:12px;overflow:hidden;border:1px solid var(--vp-line)}
+.lab ::selection{background:#FF7A3A55}
+.vp{display:flex;flex-direction:column;gap:10px;padding:14px;min-width:0}
+.vp-bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.vp-bar .sep{width:1px;height:22px;background:var(--vp-line)}
+.tbtn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:6px;background:var(--vp-2);border:1px solid var(--vp-line);font:600 .8rem/1 var(--body);color:var(--vp-ink)}
+.tbtn:hover{border-color:#4A5057}
+.tbtn[aria-pressed="true"]{background:#3A2A20;border-color:#FF7A3A;color:#FFD2B8}
+.tbtn:focus-visible{outline:2px solid #FF7A3A;outline-offset:1px}
+.tbtn.primary{background:#FF7A3A;color:#1A0E07;border-color:#FF7A3A}
+.vsel{display:inline-flex;align-items:center;gap:6px;font:600 .72rem/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--vp-ink-2)}
+.vsel select{font:400 .84rem var(--body);background:var(--vp-2);color:var(--vp-ink);border:1px solid var(--vp-line);border-radius:6px;padding:5px 8px;text-transform:none;letter-spacing:0}
+.stage-wrap{position:relative;display:flex;justify-content:center;background:#0E1012;border-radius:8px;overflow:hidden}
+#cv-sim,#cv-ov{display:block;max-width:100%;height:auto}
+#cv-ov{position:absolute;top:0;left:50%;transform:translateX(-50%);cursor:crosshair;touch-action:none}
+.hud{display:flex;flex-wrap:wrap;gap:4px 16px;font:400 .76rem/1.4 var(--mono);color:var(--vp-ink-2);font-variant-numeric:tabular-nums}
+.hud b{color:var(--vp-ink);font-weight:600}
+.pipe{display:grid;gap:3px;font:400 .72rem/1.2 var(--mono);color:var(--vp-ink-2)}
+.pipe .row{display:grid;grid-template-columns:150px minmax(0,1fr) 54px;gap:8px;align-items:center}
+.pipe .bar{height:7px;border-radius:4px;background:#FF7A3A;min-width:2px;transition:width .3s}
+.pipe .row span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.pipe-title{display:flex;justify-content:space-between;gap:8px;font:600 .7rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--vp-ink-2)}
+
+.panel{background:#1C1F23;border-left:1px solid var(--vp-line);display:flex;flex-direction:column;min-width:0;max-height:980px}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--vp-line);background:#191C1F}
+.tabs button{all:unset;cursor:pointer;padding:10px 12px;font:600 .78rem/1 var(--body);color:var(--vp-ink-2);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:#FF7A3A}
+.tabs button:focus-visible{outline:2px solid #FF7A3A;outline-offset:-2px}
+.tabpanes{overflow:auto;padding:12px 14px 20px;flex:1}
+.pane{display:grid;gap:12px}
+.grp{display:grid;gap:9px;padding:10px 0 12px;border-bottom:1px solid var(--vp-line)}
+.grp:last-child{border-bottom:0}
+.grp-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.grp-h label{display:inline-flex;align-items:center;gap:8px;font:700 .95rem/1.2 var(--display);color:#fff;cursor:pointer}
+.grp-h .gt{font:700 .95rem/1.2 var(--display);color:#fff}
+.grp-h input[type=checkbox]{accent-color:#FF7A3A;width:16px;height:16px}
+.grp.off .grp-b{opacity:.45}
+.grp-b{display:grid;gap:9px}
+.grp-note{font-size:.78rem;line-height:1.4;color:var(--vp-ink-2)}
+.mini{all:unset;cursor:pointer;font:600 .68rem/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:#FFB48A;border:1px solid #5A3A28;border-radius:5px;padding:5px 7px;white-space:nowrap}
+.mini:hover{background:#3A2A20}
+.mini:focus-visible{outline:2px solid #FF7A3A}
+.prm{display:grid;gap:2px}
+.prm .lbl{display:flex;justify-content:space-between;gap:8px;font:600 .74rem/1.25 var(--mono);color:#E6E8EA}
+.prm .lbl output{font-weight:400;color:var(--vp-ink-2);font-variant-numeric:tabular-nums}
+.prm .hint{font-size:.74rem;line-height:1.35;color:var(--vp-ink-2)}
+.prm input[type=range]{width:100%;accent-color:#FF7A3A;margin:3px 0}
+.prm select,.prm input[type=number]{font:400 .82rem var(--body);background:var(--vp-2);color:var(--vp-ink);border:1px solid var(--vp-line);border-radius:5px;padding:4px 6px;width:100%}
+.prm.chk label{display:flex;gap:8px;align-items:center;font:600 .74rem/1.25 var(--mono);color:#E6E8EA;cursor:pointer}
+.prm.chk input{accent-color:#FF7A3A}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sub{font:600 .66rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#8D949A;margin-top:4px}
+.ctrl{display:grid;gap:6px;padding:8px;border:1px dashed var(--vp-line);border-radius:6px}
+
+@media (max-width:1040px){
+  .lab{grid-template-columns:minmax(0,1fr)}
+  .panel{border-left:0;border-top:1px solid var(--vp-line);max-height:none}
+  .tabpanes{max-height:620px}
+}
+@media (max-width:520px){ .pipe .row{grid-template-columns:110px minmax(0,1fr) 48px} }
+
+/* ---------- course ---------- */
+section.sec{padding-block:64px;border-top:1px solid var(--line);display:grid;gap:26px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.cols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:44px;align-items:start}
+@media (max-width:920px){.cols{grid-template-columns:minmax(0,1fr)}}
+.prose{display:grid;gap:14px;max-width:66ch}
+.prose ul,.prose ol{margin:0;padding-left:1.25em;display:grid;gap:7px}
+.keep{border-left:3px solid var(--accent);padding:4px 0 4px 14px;font-weight:700}
+.op{display:grid;gap:18px;padding-block:40px;border-top:1px dashed var(--line)}
+.op:first-of-type{border-top:0;padding-top:8px}
+.op-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 18px}
+.op-head h3{font-size:1.7rem}
+.op-head .tag{font:600 .74rem/1 var(--mono);color:var(--ink-3)}
+.try{display:flex;flex-wrap:wrap;gap:8px}
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:7px 12px;font:600 .84rem var(--body);display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--ink-3)}
+.btn.hot{border-color:var(--accent);color:var(--accent)}
+.facts{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.facts div{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:12px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:.9rem}
+.facts div:last-child{border-bottom:0}
+.facts dt,.facts .k{font:600 .78rem/1.4 var(--mono);color:var(--ink)}
+.facts .v{color:var(--ink-2)}
+@media (max-width:520px){.facts div{grid-template-columns:minmax(0,1fr);gap:2px}}
+.pipeline{display:grid;gap:0;counter-reset:st;margin:0;padding:0;list-style:none;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.pipeline li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);counter-increment:st}
+.pipeline li:last-child{border-bottom:0}
+.pipeline li::before{content:counter(st);font:700 .95rem/1.5 var(--mono);color:var(--accent)}
+.pipeline b{font-family:var(--mono);font-size:.84rem}
+.pipeline span{color:var(--ink-2);font-size:.92rem}
+.pipeline li.shape{background:var(--accent-soft)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.field{display:grid;gap:4px;padding-top:10px;border-top:3px solid var(--c,var(--ink-3))}
+.field b{font:600 .9rem var(--mono)}
+.field span{font-size:.9rem;color:var(--ink-2)}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:.9rem}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .72rem/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+pre{margin:0;background:var(--code);border-radius:8px;padding:14px 16px;overflow-x:auto;font:400 .84rem/1.55 var(--mono)}
+.recipes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+@media (max-width:900px){.recipes{grid-template-columns:minmax(0,1fr)}}
+.recipe{display:grid;gap:10px;align-content:start}
+.recipe ul{margin:0;padding-left:1.1em;display:grid;gap:5px;font-size:.93rem;color:var(--ink-2)}
+.crumb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:600 .78rem/1.2 var(--mono);color:var(--ink-3)}
+.crumb a{color:var(--ink-2);text-decoration:none}
+.crumb a:hover{color:var(--accent);text-decoration:underline}
+footer{padding-top:40px;border-top:1px solid var(--line);color:var(--ink-3);font-size:.85rem;display:grid;gap:6px;max-width:84ch}
+</style>
+
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <nav class="crumb" aria-label="Fil d'Ariane"><a href="/">Wiki 3D</a><span aria-hidden="true">/</span><span>Labo Pyro</span></nav>
+  <span class="eyebrow">Cours FX · 3<sup>e</sup> année · Houdini 21</span>
+  <h1>Labo Pyro</h1>
+  <p class="lead">Une vraie simulation de fumée et de feu qui tourne dans ton navigateur, avec les paramètres du <strong>Pyro Solver SOP</strong> rangés dans les mêmes onglets que dans Houdini. Change un paramètre pendant que ça tourne, affiche les champs avec <strong>Field Guide</strong>, regarde où agit chaque opérateur avec <strong>Shape Guide</strong>, et utilise <strong>Comparer A/B</strong> pour voir deux simulations côte à côte, avec et sans un opérateur.</p>
+</header>
+
+<!-- ================= LAB ================= -->
+<div class="lab" id="lab">
+  <div class="vp">
+    <div class="vp-bar">
+      <button class="tbtn primary" type="button" id="b-play">Pause</button>
+      <button class="tbtn" type="button" id="b-reset">Reset Simulation</button>
+      <button class="tbtn" type="button" id="b-step">+1 frame</button>
+      <span class="sep" aria-hidden="true"></span>
+      <label class="vsel" for="preset">Setup
+        <select id="preset">
+          <option value="smoke">Fumée</option>
+          <option value="fire">Feu</option>
+          <option value="explosion">Explosion</option>
+          <option value="candle">Flamme laminaire</option>
+          <option value="heavy">Fumée lourde</option>
+          <option value="base">Base (shape off)</option>
+          <option value="houdini" hidden>Depuis Houdini</option>
+        </select>
+      </label>
+    </div>
+    <div class="vp-bar">
+      <label class="vsel" for="fieldguide">Field Guide
+        <select id="fieldguide">
+          <option value="look">Rendu (Look)</option>
+          <option value="density">density</option>
+          <option value="temperature">temperature</option>
+          <option value="flame">flame</option>
+          <option value="speed">speed</option>
+          <option value="divergence">divergence</option>
+          <option value="pressure">pressure</option>
+          <option value="curl">vorticité (curl)</option>
+          <option value="active">Active Region (conteneur)</option>
+        </select>
+      </label>
+      <label class="vsel" for="shapeguide">Shape Guide
+        <select id="shapeguide">
+          <option value="none">No Guide</option>
+          <option value="disturbance">Disturbance</option>
+          <option value="turbulence">Turbulence</option>
+          <option value="shredding">Shredding</option>
+        </select>
+      </label>
+      <label class="vsel" for="compare">Comparer A/B
+        <select id="compare">
+          <option value="none">Non</option>
+          <option value="disturbance">Disturbance</option>
+          <option value="turbulence">Turbulence</option>
+          <option value="shredding">Shredding</option>
+          <option value="buoyancy">Buoyancy</option>
+          <option value="wind">Wind</option>
+          <option value="expansion">Flame Expansion</option>
+          <option value="viscosity">Viscosity</option>
+          <option value="dissipation">Dissipation</option>
+          <option value="advection">Advection Scheme</option>
+          <option value="reflection">Advection-Reflection</option>
+          <option value="voxel">Voxel Size</option>
+          <option value="sparse">Sparse vs Dense</option>
+        </select>
+      </label>
+      <button class="tbtn" type="button" id="b-arrows" aria-pressed="false">Flèches vel</button>
+      <label class="vsel" for="mousemode">Souris
+        <select id="mousemode">
+          <option value="push">Pousser</option>
+          <option value="heat">Chauffer + fumée</option>
+        </select>
+      </label>
+    </div>
+    <div class="stage-wrap" id="stage">
+      <canvas id="cv-sim" aria-hidden="true"></canvas>
+      <canvas id="cv-ov" role="img" aria-label="Simulation pyro 2D. Clique-glisse pour interagir."></canvas>
+    </div>
+    <div class="hud" id="hud"></div>
+    <div class="pipe" id="pipe" aria-label="Coût de chaque étape du solver"></div>
+  </div>
+  <div class="panel">
+    <div class="tabs" role="tablist" id="tabs" aria-label="Onglets du Pyro Solver"></div>
+    <div class="tabpanes" id="panes"></div>
+  </div>
+</div>
+
+<!-- ================= FIELDS & PIPELINE ================= -->
+<section class="sec" id="solver">
+  <div class="cols">
+    <div class="prose">
+      <span class="eyebrow">Les bases</span>
+      <h2>Ce que le solver calcule à chaque pas</h2>
+      <p>Pyro est un solver <b>purement volumétrique</b> : il n'y a pas de particules, seulement une grille de voxels. Chaque voxel stocke quelques valeurs, les <b>champs</b> (fields). La simulation consiste à faire évoluer ces champs, pas de temps après pas de temps.</p>
+      <p>Retiens surtout ceci : <b>ce qui fait bouger la fumée, c'est le champ <code>vel</code></b>. La densité, elle, ne fait que se laisser transporter. Tous les paramètres de l'onglet <i>Shape</i>, sauf la dissipation, sont des <b>forces</b> qui modifient <code>vel</code>.</p>
+      <p>Dans le labo, choisis un champ dans <b>Field Guide</b> pour le voir, exactement comme le menu <i>Fields › Field Guide</i> du Pyro Solver.</p>
+      <p class="keep">La fumée n'a pas de forme à elle. Elle prend la forme du champ de vitesse qui la transporte.</p>
+    </div>
+    <div class="fields">
+      <div class="field" style="--c:var(--ink)"><b>vel</b><span>Vecteur vitesse. Le moteur de tout le mouvement.</span></div>
+      <div class="field" style="--c:var(--ink-3)"><b>density</b><span>La suie visible. Plus c'est dense, plus la fumée est épaisse.</span></div>
+      <div class="field" style="--c:var(--accent)"><b>temperature</b><span>La chaleur. Normalisée : 0 = air ambiant, 1 = Reference Temp. Fait monter le gaz (buoyancy).</span></div>
+      <div class="field" style="--c:#E0A21B"><b>flame</b><span>Durée de vie restante du combustible. Sert d'émission au rendu et génère fumée, chaleur et expansion.</span></div>
+      <div class="field" style="--c:var(--cold)"><b>divergence</b><span>Expansion voulue. Positif = le gaz gonfle (explosion), négatif = il se contracte.</span></div>
+      <div class="field" style="--c:#7A8791"><b>pressure</b><span>Champ auxiliaire calculé par la projection. Utile à visualiser, pas à modifier.</span></div>
+      <div class="field" style="--c:#5E9E77"><b>speed</b><span>Longueur de <code>vel</code>. Optionnel (Calculate Speed Field), pratique comme control field.</span></div>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3>L'ordre des opérations</h3>
+      <p>Voici l'ordre documenté par SideFX pour un pas de temps. Le labo suit le même ordre, et les barres sous la simulation montrent le temps passé dans chaque étape.</p>
+      <p>Deux remarques pour la prod :</p>
+      <ul>
+        <li>La <b>projection de pression</b> vient en dernier et coûte le plus cher. C'est elle qui rend le gaz incompressible, qui crée les tourbillons et qui fait gonfler les explosions à partir du champ <code>divergence</code>.</li>
+        <li>Les opérateurs Shape agissent <b>avant</b> la projection. Une force qui pousse le gaz est donc ensuite « corrigée » pour que le volume se conserve : c'est pour ça qu'une poussée crée des rouleaux sur les côtés.</li>
+      </ul>
+    </div>
+    <ol class="pipeline">
+      <li><div><b>temperature</b> diffusée et refroidie<br><span>Diffusion, Cooling Rate</span></div></li>
+      <li><div><b>Advection</b> de density, temperature, flame, vel<br><span>Advection Scheme, Wind (passif)</span></div></li>
+      <li><div><b>flame</b> vieillit et produit ses sorties<br><span>Flame Lifespan, Emit From Flame</span></div></li>
+      <li><div><b>density</b> dissipée<br><span>Dissipation, Clamp Below</span></div></li>
+      <li><div><b>Sourcing</b><br><span>Les volumes de ta Pyro Source</span></div></li>
+      <li><div><b>Resize</b> du conteneur<br><span>Boîte de la fumée + padding ; Sparse : tuiles actives</span></div></li>
+      <li><div><b>Forces</b> externes<br><span>Density Influences Gravity, nœuds de force</span></div></li>
+      <li class="shape"><div><b>Buoyancy</b><br><span>Buoyancy Scale, Ambient / Reference Temp</span></div></li>
+      <li class="shape"><div><b>Viscosity</b><br><span>Flou sur vel</span></div></li>
+      <li class="shape"><div><b>Shape operators</b><br><span>Disturbance, Shredding, Turbulence</span></div></li>
+      <li><div><b>Projection de pression</b><br><span>vel sans divergence, sauf où <code>divergence</code> le demande</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= SHAPE ================= -->
+<section class="sec" id="shape">
+  <div class="sec-head">
+    <span class="eyebrow">Onglet Shape</span>
+    <h2>Les forces qui sculptent la fumée</h2>
+    <p class="muted">Deux sortes d'opérateurs. <b>Buoyancy, Wind et Flame Expansion</b> décident du mouvement global : où va le gaz et à quelle vitesse. <b>Disturbance, Turbulence et Shredding</b> ajoutent du détail sans changer ce mouvement global. <b>Viscosity</b> fait l'inverse : elle lisse. SideFX conseille de régler le mouvement global d'abord, et le détail en dernier.</p>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <h3>Le point commun : le control field</h3>
+      <p>Presque chaque opérateur a trois étages qui décident <b>où</b> il agit :</p>
+      <ol>
+        <li>Un <b>Threshold Field</b> avec une plage. Par défaut, Disturbance n'agit que là où <code>density</code> est quasi nulle, Turbulence là où <code>temperature</code> dépasse 0.01, Shredding là où il y a de la <code>flame</code>.</li>
+        <li>Un <b>Control Field</b> optionnel : la valeur d'un champ est ramenée de la <i>Control Range</i> vers 0–1, puis passe éventuellement dans la <i>Control Ramp</i>.</li>
+        <li>Le résultat <b>multiplie</b> la force globale (le slider principal).</li>
+      </ol>
+      <p>Autrement dit, un control field est un <b>masque</b>. Utilise <b>Shape Guide</b> dans le labo pour voir ce masque : c'est l'équivalent du menu <i>Shape › Shape Guides</i> de Houdini.</p>
+    </div>
+    <div class="diagram">
+      <svg viewBox="0 0 560 220" role="img" aria-label="Schéma : valeur du champ, fit de la Control Range, ramp, multiplication par la force">
+        <rect x="8" y="70" width="112" height="70" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+        <text x="64" y="98" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="var(--ink)">temperature</text>
+        <text x="64" y="120" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">ex. 0.35</text>
+        <rect x="150" y="70" width="118" height="70" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+        <text x="209" y="98" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink)">fit(0.1 → 0.6)</text>
+        <text x="209" y="120" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">= 0.5</text>
+        <rect x="298" y="70" width="112" height="70" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+        <path d="M312 128 C 340 128, 350 84, 396 84" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        <text x="354" y="62" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">Control Ramp</text>
+        <rect x="440" y="70" width="112" height="70" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <text x="496" y="98" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink)">× Disturbance</text>
+        <text x="496" y="120" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">force locale</text>
+        <g stroke="var(--ink-3)" stroke-width="1.5" fill="none"><path d="M122 105h24"/><path d="M270 105h24"/><path d="M412 105h24"/></g>
+        <g fill="var(--ink-3)"><path d="M146 105l-7-4v8z"/><path d="M294 105l-7-4v8z"/><path d="M436 105l-7-4v8z"/></g>
+        <text x="280" y="186" text-anchor="middle" font-family="var(--body)" font-size="13" fill="var(--ink-2)">valeur du champ → plage 0–1 → (courbe) → multiplie la force globale</text>
+      </svg>
+    </div>
+  </div>
+
+  <article class="op" id="op-buoyancy">
+    <div class="op-head"><h3>Buoyancy</h3><span class="tag">Shape › Buoyancy · activé par défaut</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> L'air chaud est moins dense que l'air ambiant, donc il monte. Buoyancy ajoute à <code>vel</code> une accélération vers le haut qui dépend de la <code>temperature</code> de chaque voxel.</p>
+        <p><b>Comment.</b> Le champ <code>temperature</code> est normalisé : 0 correspond à <i>Ambient Temp</i> (300 K) et 1 à <i>Reference Temp</i> (3000 K). Le solver convertit en kelvins, puis calcule la poussée avec la gravité (9.8). Plus l'écart avec l'ambiant est grand, plus ça monte vite. Une température négative ferait descendre le gaz.</p>
+        <p><b>Réglage.</b> SideFX conseille de fixer Ambient/Reference Temp et Gravity une fois pour toutes, puis de régler la vitesse de montée avec <b>Buoyancy Scale</b>. Le <b>Cooling Rate</b> (onglet Fields) décide à quelle hauteur la fumée ralentit : regarde où la montée s'essouffle.</p>
+        <p><b>Density Influences Gravity</b> fait l'inverse : la fumée dense tombe. Utile pour de la fumée lourde, des nuées ardentes, de la poussière (preset <i>Fumée lourde</i>).</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Buoyancy Scale</span><span class="v">1 · multiplicateur de la poussée</span></div>
+          <div><span class="k">Ambient Temp (K)</span><span class="v">300 · valeur 0 du champ</span></div>
+          <div><span class="k">Reference Temp (K)</span><span class="v">3000 · valeur 1 du champ</span></div>
+          <div><span class="k">Gravity</span><span class="v">9.8, direction (0,−1,0) · règle l'échelle de la scène</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="buoyancy">Comparer sans / avec</button>
+          <button class="btn" type="button" data-guide="temperature">Voir temperature</button>
+          <button class="btn" type="button" data-preset="heavy">Charger Fumée lourde</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-disturbance">
+    <div class="op-head"><h3>Disturbance</h3><span class="tag">Shape › Disturbance · défaut 0.5, Block-Based</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Ajoute des petites forces aléatoires pour casser les formes trop lisses, surtout les « champignons » réguliers au sommet de la fumée, <b>sans changer le mouvement global</b>. Ces poussées aléatoires s'annulent en moyenne.</p>
+        <p><b>Comment (Block-Based).</b> L'espace est découpé en blocs de <i>Base Block Size</i>. Chaque bloc reçoit un vecteur aléatoire constant, tenu pendant <i>Pulse Length</i> secondes, puis retiré au sort. On empile plusieurs couches de blocs de plus en plus petits (<i>Max Octaves</i>, <i>Lacunarity</i>, <i>Roughness</i>), comme un fractal de noise. En mode <b>Continuous</b>, chaque voxel a son propre vecteur, renouvelé à chaque frame : détail au plus petit possible, vite bruité.</p>
+        <p><b>Le piège du Threshold.</b> Par défaut, <i>Threshold Field</i> = <code>density</code> et <i>Threshold Range</i> = 0.05 → 0. Disturbance n'agit donc que là où il n'y a <b>presque pas de fumée</b> : dans l'air autour et sur les bords fins. Elle imite l'air ambiant agité qui grignote la fumée. Active le Shape Guide pour le voir : la zone dense reste noire.</p>
+        <p><b>Quand.</b> Fumée qui monte en blocs lisses, caps trop ronds, avalanche (mode Continuous).</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Disturbance</span><span class="v">0.5 · force globale</span></div>
+          <div><span class="k">Mode</span><span class="v">Block-Based (ou Continuous)</span></div>
+          <div><span class="k">Base Block Size</span><span class="v">0.2 · taille des plus gros blocs, en unités</span></div>
+          <div><span class="k">Pulse Length</span><span class="v">0.2 s · durée pendant laquelle le motif reste fixe</span></div>
+          <div><span class="k">Max Octaves / Lacunarity / Roughness</span><span class="v">3 / 2.1 / 0.5 · couches de blocs</span></div>
+          <div><span class="k">Reference Scale</span><span class="v">0.2 · normalisation en mode Continuous</span></div>
+          <div><span class="k">Threshold Field / Range</span><span class="v">density · 0.05 → 0</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="disturbance">Comparer sans / avec</button>
+          <button class="btn" type="button" data-shapeguide="disturbance">Voir le Shape Guide</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-turbulence">
+    <div class="op-head"><h3>Turbulence</h3><span class="tag">Shape › Turbulence · défaut 0.1, Swirl Size 1</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Ajoute des <b>grands tourbillons</b> qui brassent la fumée : rouleaux, masses qui se tordent. SideFX la réserve au « bas » des fréquences : gros mouvement, et on laisse Disturbance et Shredding faire le petit détail.</p>
+        <p><b>Comment.</b> Un noise (Simplex ou Fast Simplex) calculé dans l'espace, qui évolue dans le temps selon <i>Pulse Length</i>, est transformé en champ de rotation (un <i>curl noise</i>) puis ajouté à <code>vel</code>. <i>Swirl Size</i> est la taille des tourbillons en unités. <i>Max Octaves</i> ajoute des couches deux fois plus petites, pondérées par <i>Roughness</i>.</p>
+        <p><b>Threshold.</b> Par défaut elle n'agit que là où <code>temperature</code> &gt; 0.01 : dans le gaz chaud, pas dans l'air. C'est aussi une optimisation (moins de voxels à traiter).</p>
+        <p><b>Quand.</b> Fumée qui monte trop droit, feu rapide qui manque de caractère, colonnes d'explosion. Attention : trop de turbulence donne un look « noise plaqué », tout se tortille pareil.</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Turbulence</span><span class="v">0.1 · force globale</span></div>
+          <div><span class="k">Swirl Size</span><span class="v">1 · taille des tourbillons (unités)</span></div>
+          <div><span class="k">Roughness</span><span class="v">0.5 · poids des couches plus petites</span></div>
+          <div><span class="k">Pulse Length</span><span class="v">0.5 s · plus grand = évolue plus lentement</span></div>
+          <div><span class="k">Max Octaves</span><span class="v">2 · nombre de couches</span></div>
+          <div><span class="k">Seed</span><span class="v">0 · décale le noise</span></div>
+          <div><span class="k">Threshold Field / Range</span><span class="v">temperature · &gt; 0.01</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="turbulence">Comparer sans / avec</button>
+          <button class="btn" type="button" data-shapeguide="turbulence">Voir le Shape Guide</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-shredding">
+    <div class="op-head"><h3>Shredding</h3><span class="tag">Shape › Shredding · défaut 0.5, dans la flame</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Donne au feu ses <b>langues</b> et ses déchirures. Sans shredding, un feu est dominé par des grandes langues verticales, molles et régulières.</p>
+        <p><b>Comment.</b> Même générateur de blocs aléatoires que Disturbance, mais appliqué en <b>rotation</b> : la vitesse de chaque voxel est tournée vers une direction aléatoire, <b>sans changer sa longueur</b>. Le flux est redirigé sans accélérer ni ralentir, donc le feu garde sa vitesse de montée mais se déchire.</p>
+        <p><b>Threshold.</b> <i>Threshold Field</i> = <code>flame</code>, plage 0.1 → 1 : il n'agit que dans les flammes, et plus fort là où la flame est jeune.</p>
+        <p><b>Quand.</b> Tout feu. Commence vers 0.5–1 avec des blocs proches de la taille d'une langue de feu. Trop fort, le feu devient du bruit aléatoire.</p>
+        <p class="small muted">L'ancien Pyro Solver (avant H18) avait un shredding différent, basé sur le gradient de température avec Squash et Stretch. Tu le croiseras dans de vieux tutos.</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Shredding</span><span class="v">0.5 · vitesse de rotation vers la cible</span></div>
+          <div><span class="k">Base Block Size</span><span class="v">0.2 · taille des zones de déchirure</span></div>
+          <div><span class="k">Pulse Length</span><span class="v">0.2 s</span></div>
+          <div><span class="k">Max Octaves / Lacunarity / Roughness</span><span class="v">1 / 2.1 / 0.5</span></div>
+          <div><span class="k">Threshold Field / Range</span><span class="v">flame · 0.1 → 1</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="shredding" data-preset="fire">Comparer sur un feu</button>
+          <button class="btn" type="button" data-shapeguide="shredding">Voir le Shape Guide</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-wind">
+    <div class="op-head"><h3>Wind</h3><span class="tag">Shape › Wind · Wind Speed 1, direction (1,0,0)</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Un vent <b>passif</b> : il est ajouté seulement au moment de l'advection. Tout est transporté par <code>vel + wind</code>, mais <code>vel</code> lui-même ne contient pas le vent.</p>
+        <p><b>Conséquence.</b> Si tu affiches <i>speed</i> ou les flèches de vitesse, tu ne vois pas le vent. Et comme il ne passe pas par la projection, il ne crée pas de tourbillons à lui seul : il penche et transporte la colonne. Pour un vent qui interagit vraiment (rafales, obstacles), on source une vitesse ou on utilise un nœud de force.</p>
+        <p><b>Piège.</b> Le vent fait sortir la fumée plus vite du conteneur : en sparse, pense au padding et aux substeps si le vent est fort.</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Wind Speed</span><span class="v">1 · unités par seconde</span></div>
+          <div><span class="k">Wind Direction</span><span class="v">(1, 0, 0) · ici un angle dans le plan</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="wind">Comparer sans / avec</button>
+          <button class="btn" type="button" data-guide="speed">Voir speed (sans le vent)</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-expansion">
+    <div class="op-head"><h3>Flame Expansion</h3><span class="tag">Shape › Flame Expansion · Expansion Rate 0.7</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Là où il y a de la <code>flame</code>, le gaz <b>gonfle</b>. C'est ce qui fait qu'une boule de feu continue à s'étendre et à rouler en montant, bien après la détonation.</p>
+        <p><b>Comment.</b> La <code>flame</code> est ramenée de <i>Flame Range</i> vers 0–1, multipliée par <i>Expansion Rate</i>, et ajoutée au champ <code>divergence</code>. La projection de pression fabrique ensuite des vitesses qui sortent de ces zones. Une valeur négative aspire le gaz.</p>
+        <p><b>Piège.</b> Avec de la divergence, garde <b>Advection-Reflection</b> sur <i>Disabled</i> (conseil SideFX pour les explosions).</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Add Expansion</span><span class="v">off par défaut</span></div>
+          <div><span class="k">Expansion Rate</span><span class="v">0.7 · négatif = contraction</span></div>
+          <div><span class="k">Flame Range</span><span class="v">0 → 1</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="expansion" data-preset="explosion">Comparer sur une explosion</button>
+          <button class="btn" type="button" data-guide="divergence">Voir divergence</button>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="op" id="op-viscosity">
+    <div class="op-head"><h3>Viscosity</h3><span class="tag">Shape › Viscosity · off par défaut</span></div>
+    <div class="cols">
+      <div class="prose">
+        <p><b>Ce que ça fait.</b> Un flou sur <code>vel</code>. Les voxels voisins sont forcés d'aller dans la même direction : mouvement plus cohérent, fluide, « sirupeux ». À 0, les voxels bougent librement et le résultat est plus chaotique.</p>
+        <p><b>Quand.</b> Fumée lente et élégante, flamme de bougie, vapeur, lave gazeuse, ou pour calmer une sim trop bruitée. C'est l'opposé des opérateurs de détail : n'empile pas beaucoup de viscosity avec beaucoup de disturbance.</p>
+      </div>
+      <div style="display:grid;gap:14px">
+        <div class="facts">
+          <div><span class="k">Viscosity</span><span class="v">0 · plus haut = plus de flou sur vel</span></div>
+        </div>
+        <div class="try">
+          <button class="btn hot" type="button" data-compare="viscosity">Comparer sans / avec</button>
+          <button class="btn" type="button" data-preset="candle">Charger Flamme laminaire</button>
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ================= FIELDS TAB ================= -->
+<section class="sec" id="fields">
+  <div class="sec-head">
+    <span class="eyebrow">Onglet Fields</span>
+    <h2>Ce que deviennent la fumée, la chaleur et la flamme</h2>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3>Density · Dissipation</h3>
+      <p><b>Dissipation</b> fait disparaître la fumée avec le temps. D'après la doc du solver sparse, <code>0.1</code> retire 10 % de la fumée <b>tous les 1/24 de seconde</b>, et <code>1</code> la fait disparaître immédiatement. C'est multiplicatif : la fumée s'estompe en douceur vers 0.</p>
+      <p><b>Clamp Below</b> (0.005) force à 0 les densités minuscules. En sparse, c'est important : sinon ces traces invisibles gardent la zone active énorme et la sim ralentit.</p>
+      <p>Avec un control field sur <code>temperature</code>, tu peux faire disparaître la fumée froide plus vite que la chaude.</p>
+      <h3>Temperature · Diffusion et Cooling Rate</h3>
+      <p><b>Cooling Rate</b> (0.5) ramène la température vers 0 (l'ambiant). Comme la température pilote la buoyancy, c'est lui qui décide <b>à quelle hauteur</b> la fumée arrête de monter vite. <b>Diffusion</b> floute la température : la chaleur s'étale, les bords sont plus doux et la poussée plus uniforme.</p>
+      <h3>Flame · Lifespan et Emit From Flame</h3>
+      <p>Depuis Houdini 18, il n'y a plus de <code>fuel</code> qui s'enflamme dans le solver. Tu sources directement un champ <code>flame</code>, qui représente la <b>durée de vie restante</b> du combustible. <b>Flame Lifespan</b> (2 s) est le temps pour consommer une valeur de 1.</p>
+      <p>En vieillissant, la flame peut produire trois sorties, chacune avec sa <b>Flame Range</b> : de la fumée (<i>Density › Emit From Flame</i>), de la chaleur (<i>Temperature › Emit From Flame</i>) et de l'expansion (<i>Shape › Flame Expansion</i>). Exemple classique : chaleur quand la flame est jeune, suie quand elle s'éteint.</p>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="diagram">
+        <svg viewBox="0 0 560 250" role="img" aria-label="Plages de flame : chaleur sur la flame jeune, suie sur la flame qui s'éteint">
+          <defs><linearGradient id="fl" x1="0" x2="1"><stop offset="0" stop-color="#FFE7A8"/><stop offset=".45" stop-color="#FF8A2B"/><stop offset=".85" stop-color="#7A1E08"/><stop offset="1" stop-color="#2A0A04"/></linearGradient></defs>
+          <text x="20" y="28" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">flame = 1 (source)</text>
+          <text x="540" y="28" text-anchor="end" font-family="var(--mono)" font-size="12" fill="var(--ink-3)">flame = 0 (éteinte)</text>
+          <rect x="20" y="40" width="520" height="26" rx="5" fill="url(#fl)"/>
+          <text x="280" y="88" text-anchor="middle" font-family="var(--body)" font-size="12.5" fill="var(--ink-2)">le temps passe → la flame décroît de 1/Lifespan par seconde</text>
+          <rect x="20" y="112" width="260" height="22" rx="4" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="30" y="128" font-family="var(--mono)" font-size="12" fill="var(--ink)">Temperature · Flame Range 0.5–1</text>
+          <rect x="332" y="150" width="156" height="22" rx="4" fill="var(--bg)" stroke="var(--ink-3)"/>
+          <text x="340" y="166" font-family="var(--mono)" font-size="12" fill="var(--ink)">Smoke · 0.1–0.4</text>
+          <rect x="20" y="188" width="416" height="22" rx="4" fill="var(--bg)" stroke="var(--cold)"/>
+          <text x="30" y="204" font-family="var(--mono)" font-size="12" fill="var(--ink)">Expansion · Flame Range 0.2–1</text>
+          <text x="20" y="238" font-family="var(--body)" font-size="12" fill="var(--ink-3)">Exemple tiré de la doc SideFX : chaleur au début de la vie, suie vers la fin.</text>
+        </svg>
+      </div>
+      <div class="facts">
+        <div><span class="k">Dissipation</span><span class="v">0.1 · part retirée par 1/24 s</span></div>
+        <div><span class="k">Clamp Below</span><span class="v">0.005</span></div>
+        <div><span class="k">Temperature Diffusion</span><span class="v">0</span></div>
+        <div><span class="k">Cooling Rate</span><span class="v">0.5</span></div>
+        <div><span class="k">Flame Lifespan</span><span class="v">2 s pour consommer 1</span></div>
+        <div><span class="k">Density › Emit From Flame</span><span class="v">off · Maximum · Flame Range 0.2–0.5</span></div>
+        <div><span class="k">Temperature › Emit From Flame</span><span class="v">off · Pull · Flame Range 0–1</span></div>
+      </div>
+      <div class="try">
+        <button class="btn hot" type="button" data-compare="dissipation">Comparer sans / avec dissipation</button>
+        <button class="btn" type="button" data-guide="flame" data-preset="fire">Voir flame sur un feu</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SETUP / ADVANCED ================= -->
+<section class="sec" id="setup">
+  <div class="sec-head">
+    <span class="eyebrow">Onglets Setup et Advanced</span>
+    <h2>Résolution, pas de temps, advection</h2>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3>Voxel Size</h3>
+      <p>La taille d'un voxel. Diviser par 2 donne <b>8 fois plus</b> de voxels en 3D (4 fois dans ce labo 2D), donc 8 fois plus de mémoire et de temps. SideFX conseille de régler le look à basse résolution puis de monter : le solver est conçu pour que le résultat reste proche. Essaie <i>Comparer A/B › Voxel Size</i>.</p>
+      <h3>Time Scale, Substeps, CFL</h3>
+      <p><b>Time Scale</b> ralentit ou accélère la sim (on peut l'animer pour le souffle initial d'une explosion). <b>Max Substeps</b> autorise plusieurs sous-pas par frame ; le <b>CFL Condition</b> décide combien : un sous-pas ne doit pas déplacer le gaz de plus de <i>CFL</i> voxels. Symptôme d'un manque de substeps sur une sim rapide : des traînées et des escaliers.</p>
+      <h3>Advection Scheme</h3>
+      <p>L'advection transporte les champs. <b>Semi-Lagrangian</b> remonte le courant une fois et interpole : simple, mais ça floute à chaque pas. <b>Modified MacCormack</b> (défaut) fait un aller-retour pour estimer l'erreur et la corriger : détails plus nets. <b>BFECC</b> ajoute encore un passage : le plus net, le plus cher. <b>Clamp Values › Revert</b> évite les valeurs aberrantes que la correction peut créer. Compare Semi-Lagrangian et MacCormack dans le labo, le flou saute aux yeux.</p>
+      <h3>Advection-Reflection</h3>
+      <p>Réinjecte une partie de l'énergie que la projection enlève : les tourbillons tiennent plus longtemps. <b>Single-Project</b> coûte presque rien, <b>Double-Project</b> est plus propre mais double le coût (le labo propose Single-Project). À laisser sur <b>Disabled</b> quand il y a de la divergence.</p>
+      <h3>Sparse, Dense, Minimal OpenCL</h3>
+      <p>Dans les deux modes, le <b>conteneur</b> suit la fumée à chaque pas : c'est la boîte qui englobe les voxels où les <i>Reference Fields</i> (<code>density flame</code>) sont positifs, agrandie de <b>Padding</b> (0.3), sans dépasser la taille max. Au-delà, il n'y a pas d'air simulé : le bord est ouvert.</p>
+      <p><b>Dense</b> calcule toute cette boîte. En <b>Sparse</b> (le défaut), le solver ne calcule en plus que les <b>tuiles actives</b> de la boîte, celles proches de la fumée. Ailleurs, c'est du vide, et la <b>Reset Rule</b> par défaut (<i>All Inactive</i>) remet <code>vel</code> et <code>temperature</code> à 0. Deux bouffées éloignées s'ignorent donc tant que leurs zones ne se touchent pas. Affiche <i>Field Guide › Active Region</i> dans le labo pour voir la boîte ou les tuiles suivre la fumée.</p>
+      <p>Conséquences pratiques :</p>
+      <ul>
+        <li>Une force appliquée dans l'air vide ne fait rien : dans le labo, « Pousser » loin de la fumée n'a aucun effet. Utilise « Chauffer + fumée ».</li>
+        <li>Le Padding change le mouvement. Avec un bord ouvert tout près du nuage, l'air s'échappe facilement et une boule chaude monte plus vite qu'au milieu d'un grand volume d'air. Trop petit, il coupe la fumée en escaliers.</li>
+        <li>Pense à <b>Clamp Below</b> : des densités minuscules agrandissent le conteneur pour rien.</li>
+      </ul>
+      <p><b>Minimal OpenCL</b> tourne sur la carte graphique en temps réel : idéal pour régler les étapes de ce cours de manière interactive dans Houdini.</p>
+    </div>
+    <div class="prose">
+      <h3>Look (viewport et rendu)</h3>
+      <p>L'onglet <b>Look</b> ne change pas la simulation, seulement son affichage (et le Pyro Shader si tu l'assignes).</p>
+      <ul>
+        <li><b>Density Scale</b> : épaisseur de la fumée. <b>Shadow Density</b> : force des ombres internes, qui donnent du volume.</li>
+        <li><b>Fire Intensity Volume</b> (défaut <code>flame</code>) et <b>Intensity Scale</b> : où et combien ça brille.</li>
+        <li><b>Fire Color Volume</b> (défaut <code>flame</code>) et <b>Color Mode</b> : <i>Color Ramp</i>, ou <i>Physical Blackbody</i> qui convertit la température en couleur physique à partir de Reference Temp.</li>
+      </ul>
+      <p>Dans le labo, passe le Color Volume sur <code>temperature</code> et le mode sur Blackbody : les zones chaudes deviennent blanc-jaune, les zones qui refroidissent rouge sombre.</p>
+      <h3>Workflow conseillé par SideFX</h3>
+      <ol>
+        <li>Soigner la source (avec du noise, voir l'<a href="/noise/">Atlas des noises</a> : Worley F2-F1 pour la base d'un feu).</li>
+        <li>Régler la sim de base : voxel size, substeps.</li>
+        <li>Température et buoyancy.</li>
+        <li>Flame : lifespan et sorties.</li>
+        <li>Les shape operators, en dernier.</li>
+      </ol>
+      <p>Chaque étape change peu les précédentes, donc on itère sur peu de paramètres à la fois.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RECIPES ================= -->
+<section class="sec" id="recettes">
+  <div class="sec-head">
+    <span class="eyebrow">En production</span>
+    <h2>Recettes et diagnostics</h2>
+  </div>
+  <div class="recipes">
+    <div class="recipe">
+      <h3>Fumée</h3>
+      <ul>
+        <li>Source density + temperature, avec du noise pour casser l'émission.</li>
+        <li>Buoyancy Scale pour la vitesse de montée, Cooling Rate pour la hauteur.</li>
+        <li>Dissipation 0.05–0.2, Clamp Below activé.</li>
+        <li>Disturbance pour casser les caps, un peu de Turbulence pour les grands mouvements.</li>
+      </ul>
+      <button class="btn" type="button" data-preset="smoke">Charger dans le labo</button>
+    </div>
+    <div class="recipe">
+      <h3>Feu</h3>
+      <ul>
+        <li>Source flame + temperature, noise Worley F2-F1 sur la base.</li>
+        <li>Flame Lifespan court (0.3–1 s) : il règle la hauteur des flammes.</li>
+        <li>Temperature › Emit From Flame en Pull, fumée émise quand la flame s'éteint.</li>
+        <li>Shredding pour les langues, Turbulence légère, Disturbance faible.</li>
+      </ul>
+      <button class="btn" type="button" data-preset="fire">Charger dans le labo</button>
+    </div>
+    <div class="recipe">
+      <h3>Explosion</h3>
+      <ul>
+        <li>Source courte (quelques frames) avec divergence forte : le souffle.</li>
+        <li>Flame Expansion pour que la boule continue à gonfler.</li>
+        <li>Advection-Reflection sur Disabled, substeps en hausse.</li>
+        <li>Turbulence et Disturbance pour les rouleaux, Ground plane si ça part du sol.</li>
+      </ul>
+      <button class="btn" type="button" data-preset="explosion">Charger dans le labo</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Symptôme</th><th>Paramètre à regarder</th><th>Pourquoi</th></tr></thead>
+      <tbody>
+        <tr><td>Caps de fumée lisses, en champignon</td><td>Disturbance (Block Size ≈ taille des détails voulus)</td><td>Casse les bords sans changer le mouvement global.</td></tr>
+        <tr><td>Feu mou, grandes langues verticales</td><td>Shredding, Flame Lifespan</td><td>Le shredding redirige le flux dans la flamme ; le lifespan règle la hauteur.</td></tr>
+        <tr><td>Colonne trop droite, sans vie</td><td>Turbulence (Swirl Size ≈ largeur de la colonne)</td><td>Ajoute les grands brassages.</td></tr>
+        <tr><td>La fumée monte trop haut / pas assez</td><td>Buoyancy Scale, Cooling Rate</td><td>La poussée vient de la température ; le refroidissement la coupe.</td></tr>
+        <tr><td>Traînées ou escaliers sur une sim rapide</td><td>Max Substeps, CFL, Padding</td><td>Le gaz traverse trop de voxels par pas.</td></tr>
+        <tr><td>Détails qui fondent, tout est flou</td><td>Advection Scheme, Voxel Size</td><td>Semi-Lagrangian floute à chaque pas ; la résolution limite le détail.</td></tr>
+        <tr><td>Sim sparse de plus en plus lente</td><td>Dissipation › Clamp Below</td><td>Des densités minuscules gardent la zone active.</td></tr>
+        <tr><td>Explosion instable, qui explose numériquement</td><td>Advection-Reflection = Disabled</td><td>Recommandé dès qu'il y a de la divergence.</td></tr>
+        <tr><td>Fines traînées alignées sur les axes</td><td>Advanced › Hourglass Filtering</td><td>Filtre les modes parasites de la grille.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>La simulation du labo est une version 2D, calculée sur le processeur, du même principe que le Pyro Solver : grille MAC, advection Semi-Lagrangian / MacCormack / BFECC, conteneur qui suit la fumée, projection de pression par gradient conjugué. Les noms, valeurs par défaut et plages des paramètres viennent du Pyro Solver SOP de Houdini 21.0.</p>
+  <p>Les constantes du labo ont été calées sur des simulations 2D du Pyro Solver de Houdini 21, avec la même source et le même domaine. Dissipation, refroidissement, flammes, expansion, divergence et flottabilité suivent Houdini à quelques pour cent près. Turbulence, Disturbance et Shredding restent à 10–20 %, et les motifs de bruit ne sont pas les mêmes. Une sim 3D ne se comporte pas non plus exactement comme une coupe 2D : le labo sert à choisir un style et des ordres de grandeur, pas à prédire chaque volute.</p>
+  <p>Sources : aide Houdini (Pyro Solver SOP, Pyro Solver Sparse DOP, Smoke Solver Sparse, Gas Disturb, Gas Turbulence, pages Pyro workflow, Understanding how pyro works, Flames).</p>
+</footer>
+</div>
+<script>
+(() => {
+'use strict';
+const TAU = Math.PI * 2;
+const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
+// fit x from [a,b] to [0,1], clamped (works with a > b, like Houdini threshold ranges)
+function fit01(x, a, b) { if (a === b) return x >= a ? 1 : 0; const t = (x - a) / (b - a); return t < 0 ? 0 : t > 1 ? 1 : t; }
+function remap(t, mode) { return mode === 'inv' ? 1 - t : mode === 'hill' ? Math.sin(Math.PI * t) : t; }
+
+/* ---------------- hashing & noise ---------------- */
+function h32(x, y, s) {
+  let h = Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul((y | 0) + 0x3c6ef372, 0x165667b1) ^ Math.imul((s | 0) + 0x7f4a7c15, 0x9e3779b9);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+const rnd = (x, y, s) => h32(x, y, s) / 4294967296;
+const PERM = new Uint8Array(512);
+{ let s = 12345; const r = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
+  const p = []; for (let i = 0; i < 256; i++) p.push(i);
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255]; }
+const GR3 = [1,1,0, -1,1,0, 1,-1,0, -1,-1,0, 1,0,1, -1,0,1, 1,0,-1, -1,0,-1, 0,1,1, 0,-1,1, 0,1,-1, 0,-1,-1];
+function snoise3(x, y, z) {
+  const F3 = 1 / 3, G3 = 1 / 6;
+  const s = (x + y + z) * F3, i = Math.floor(x + s), j = Math.floor(y + s), k = Math.floor(z + s);
+  const t = (i + j + k) * G3, x0 = x - (i - t), y0 = y - (j - t), z0 = z - (k - t);
+  let i1, j1, k1, i2, j2, k2;
+  if (x0 >= y0) {
+    if (y0 >= z0) { i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0; }
+    else if (x0 >= z0) { i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 0; k2 = 1; }
+    else { i1 = 0; j1 = 0; k1 = 1; i2 = 1; j2 = 0; k2 = 1; }
+  } else {
+    if (y0 < z0) { i1 = 0; j1 = 0; k1 = 1; i2 = 0; j2 = 1; k2 = 1; }
+    else if (x0 < z0) { i1 = 0; j1 = 1; k1 = 0; i2 = 0; j2 = 1; k2 = 1; }
+    else { i1 = 0; j1 = 1; k1 = 0; i2 = 1; j2 = 1; k2 = 0; }
+  }
+  const x1 = x0 - i1 + G3, y1 = y0 - j1 + G3, z1 = z0 - k1 + G3;
+  const x2 = x0 - i2 + 2 * G3, y2 = y0 - j2 + 2 * G3, z2 = z0 - k2 + 2 * G3;
+  const x3 = x0 - 0.5, y3 = y0 - 0.5, z3 = z0 - 0.5;
+  const ii = i & 255, jj = j & 255, kk = k & 255;
+  let n = 0, tt, g;
+  tt = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+  if (tt > 0) { g = (PERM[ii + PERM[jj + PERM[kk]]] % 12) * 3; tt *= tt; n += tt * tt * (GR3[g] * x0 + GR3[g + 1] * y0 + GR3[g + 2] * z0); }
+  tt = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+  if (tt > 0) { g = (PERM[ii + i1 + PERM[jj + j1 + PERM[kk + k1]]] % 12) * 3; tt *= tt; n += tt * tt * (GR3[g] * x1 + GR3[g + 1] * y1 + GR3[g + 2] * z1); }
+  tt = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+  if (tt > 0) { g = (PERM[ii + i2 + PERM[jj + j2 + PERM[kk + k2]]] % 12) * 3; tt *= tt; n += tt * tt * (GR3[g] * x2 + GR3[g + 1] * y2 + GR3[g + 2] * z2); }
+  tt = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+  if (tt > 0) { g = (PERM[ii + 1 + PERM[jj + 1 + PERM[kk + 1]]] % 12) * 3; tt *= tt; n += tt * tt * (GR3[g] * x3 + GR3[g + 1] * y3 + GR3[g + 2] * z3); }
+  return 32 * n;
+}
+// Worley like VEX wnoise() (measured on Houdini 21: same F2/F1 ratio and same histogram of the source value):
+// points jittered on a 3D grid of step 0.8, squared distances, slice z = 0. Returns F2 - F1.
+function worleyVex(x, y) {
+  const S = 0.802, X = x / S, Y = y / S, ix = Math.floor(X), iy = Math.floor(Y); let f1 = 9, f2 = 9;
+  for (let c = -1; c <= 1; c++) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+    const cx = ix + i, cy = iy + j, s = 16 + 3 * (c + 1);
+    const dx = cx + rnd(cx, cy, s) - X, dy = cy + rnd(cx, cy, s + 1) - Y, dz = c + rnd(cx, cy, s + 2), d = dx * dx + dy * dy + dz * dz;
+    if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+  }
+  return (f2 - f1) * S * S;
+}
+// contrast of VEX noise(): 2 * noise - 1 has a standard deviation of 0.207, this simplex 0.427
+const SN_VEX = 0.485;
+
+/* ---------------- parameters (names from the Pyro Solver SOP, Houdini 21) ---------------- */
+const FIELDS = [['density', 'density'], ['temperature', 'temperature'], ['flame', 'flame'], ['speed', 'speed']];
+const REMAP = [['none', 'Off'], ['inv', 'Rampe inversée'], ['hill', 'Rampe en cloche']];
+const ctrlItems = pre => [
+  ['sub', 'Control Field'],
+  [pre + '_usecontrol', 'Use Control Field', 'b', false],
+  [pre + '_controlfield', 'Control Field', 's', pre === 'dissipation' ? 'temperature' : pre === 'disturbance' ? 'speed' : 'density', FIELDS],
+  [pre + '_controlrange', 'Control Range', 'r', [0, 1]],
+  [pre + '_remapcontrol', 'Remap Control Field', 's', 'none', REMAP],
+];
+// item: [key, label, type, default, a, b, step, hint]; types f/i float/int slider, b toggle, s select (a = options), r range pair
+const TABS = [
+  { id: 'setup', label: 'Setup', groups: [
+    { title: 'General', items: [
+      ['divsize', 'Voxel Size', 's', '0.035', [['0.1', '0.1 (défaut Houdini)'], ['0.075', '0.075'], ['0.05', '0.05'], ['0.04', '0.04'], ['0.035', '0.035'], ['0.03', '0.03'], ['0.025', '0.025'], ['0.02', '0.02 (lent)']], 0, 0, 'Plus petit = plus de détail. En 3D : ÷2 → ×8 voxels.'],
+      ['timescale', 'Time Scale', 'f', 1, 0, 2, 0.01, '< 1 : ralenti, > 1 : accéléré.'],
+    ] },
+    { title: 'Simulation', compare: 'sparse', items: [
+      ['solver', 'Simulation Type', 's', 'sparse', [['sparse', 'Sparse'], ['dense', 'Dense']], 0, 0, 'Dense : tout le conteneur (une boîte qui suit la fumée). Sparse : seulement les tuiles proches de density et flame (Field Guide › Active Region).'],
+      ['substeps', 'Max Substeps', 'i', 1, 1, 8, 1, 'Sous-pas autorisés par frame.'],
+      ['cflcond', 'CFL Condition', 'f', 1, 0.25, 4, 0.05, 'Nombre de voxels qu\'un sous-pas peut traverser.'],
+      ['adv_vel_reflect', 'Advection-Reflection', 's', 'off', [['off', 'Disabled'], ['single', 'Single-Project']]],
+      ['adv_vel_reflectamount', 'Reflection Amount', 'f', 0.95, 0, 1, 0.01],
+    ] },
+    { title: 'Bounds › Resizing', note: 'Reference Fields : density flame. Le conteneur suit la boîte englobante de ces champs, agrandie de Padding, sans dépasser la taille max (ici le domaine 3 × 4.5). En Sparse, seules les tuiles de 8 × 8 voxels proches de ces champs sont calculées.', items: [
+      ['resize_padding', 'Padding', 'f', 0.3, 0, 1, 0.01, 'Marge autour de la fumée. Au-delà, bord ouvert : petite marge = l\'air s\'échappe tout près du nuage, qui monte plus librement. Trop petite : fumée coupée aux bords.'],
+      ['sparse_resetrule', 'Reset Rule', 's', 'inactive', [['inactive', 'All Inactive'], ['none', 'Disabled']], 0, 0, 'All Inactive : vel et temperature remis à 0 hors de la zone active.'],
+    ] },
+    { title: 'Bounds › Ground Planes', items: [
+      ['closey', 'Y Ground Plane (sol fermé)', 'b', false],
+    ] },
+  ] },
+  { id: 'source', label: 'Sourcing', groups: [
+    { title: 'Activation', note: 'Dans Houdini : une Pyro Source + Volume Rasterize Attributes, branchées dans l\'onglet Sourcing.', items: [
+      ['src_mode', 'Source', 's', 'cont', [['cont', 'Continue'], ['burst', 'Burst (explosion)'], ['off', 'Off']]],
+      ['src_burst', 'Source Frame Range (frames)', 'i', 6, 1, 24, 1, 'En burst : nombre de frames sourcées.'],
+      ['src_cycle', 'Cycle Length', 'i', 96, 24, 240, 1, 'Le burst recommence après ce nombre de frames.'],
+    ] },
+    { title: 'Forme', items: [
+      ['src_radius', 'Rayon de la sphère', 'f', 0.35, 0.05, 0.8, 0.01],
+      ['src_height', 'Hauteur', 'f', 0.5, 0.15, 2.5, 0.01],
+    ] },
+    { title: 'Valeurs sourcées (Maximum)', items: [
+      ['src_density', 'density', 'f', 1, 0, 2, 0.01],
+      ['src_temperature', 'temperature', 'f', 1, 0, 2, 0.01],
+      ['src_flame', 'flame', 'f', 0, 0, 1.5, 0.01],
+      ['src_divergence', 'divergence (Add)', 'f', 0, 0, 30, 0.1, 'Le souffle d\'une explosion.'],
+      ['src_vel', 'vel vers le haut', 'f', 0, 0, 6, 0.05],
+    ] },
+    { title: 'Noise sur la source', note: 'SideFX conseille toujours du noise sur la source, et Worley F2-F1 pour la base d\'un feu.', items: [
+      ['src_noise', 'Amount', 'f', 0.6, 0, 1, 0.01],
+      ['src_noisetype', 'Noise Type', 's', 'perlin', [['perlin', 'Perlin'], ['worley', 'Worley Cellular F2-F1']]],
+      ['src_noisesize', 'Element Size', 'f', 0.25, 0.05, 1, 0.01],
+      ['src_noisespeed', 'Animation', 'f', 0.6, 0, 3, 0.01],
+    ] },
+  ] },
+  { id: 'fields', label: 'Fields', groups: [
+    { title: 'Density › Dissipation', enable: ['enable_dissipation', true], compare: 'dissipation', items: [
+      ['dissipation', 'Dissipation', 'f', 0.1, 0, 1, 0.005, '0.1 = 10 % de la fumée retirée tous les 1/24 s.'],
+      ['dissipation_doclamp', 'Clamp Below', 'b', true],
+      ['dissipation_clampbelow', 'Clamp Below', 'f', 0.005, 0, 0.05, 0.001],
+      ...ctrlItems('dissipation'),
+    ] },
+    { title: 'Density › Emit From Flame', enable: ['soot_doemit', false], items: [
+      ['soot_mergemethod', 'Operation', 's', 'max', [['max', 'Maximum'], ['add', 'Add']]],
+      ['soot_amount', 'Emission Scale', 'f', 1, 0, 3, 0.01],
+      ['soot_controlrange', 'Flame Range', 'r', [0.2, 0.5]],
+      ['soot_remapcontrol', 'Remap Flame Range', 's', 'none', REMAP],
+    ] },
+    { title: 'Temperature', items: [
+      ['tempdiffusion', 'Diffusion', 'f', 0, 0, 5, 0.01, 'Flou sur la température.'],
+      ['tempcooling', 'Cooling Rate', 'f', 0.5, 0, 1, 0.01, 'Vitesse de retour vers l\'ambiant.'],
+    ] },
+    { title: 'Temperature › Emit From Flame', enable: ['temperature_doadd', false], items: [
+      ['temperature_mergemethod', 'Operation', 's', 'pull', [['pull', 'Pull'], ['add', 'Add']]],
+      ['temperature_pullstrength', 'Strength', 'f', 1, 0, 5, 0.01],
+      ['temperature_amount', 'Emission Scale', 'f', 1, 0, 3, 0.01],
+      ['temperature_controlrange', 'Flame Range', 'r', [0, 1]],
+      ['temperature_remapcontrol', 'Remap Flame Range', 's', 'none', REMAP],
+    ] },
+    { title: 'Flame', items: [
+      ['flames_lifespan', 'Flame Lifespan', 'f', 2, 0.05, 5, 0.01, 'Secondes pour consommer une flame de 1.'],
+    ] },
+  ] },
+  { id: 'shape', label: 'Shape', groups: [
+    { title: 'Buoyancy', enable: ['enable_buoyancy', true], compare: 'buoyancy', items: [
+      ['buoyancylift', 'Buoyancy Scale', 'f', 1, 0, 5, 0.01],
+      ['temperature0', 'Ambient Temp (K)', 'f', 300, 100, 600, 1],
+      ['temperature1', 'Reference Temp (K)', 'f', 3000, 500, 5000, 10],
+      ['gravaccel', 'Gravity Acceleration', 'f', 9.8, 0, 20, 0.1],
+    ] },
+    { title: 'Density Influences Gravity', enable: ['enable_density_gravity', false], items: [
+      ['density_gravity_scale', 'Gravity Scale', 'f', 1, 0, 5, 0.01],
+      ['density_range', 'Density Range', 'r', [0, 1]],
+    ] },
+    { title: 'Wind', enable: ['enable_wind', false], compare: 'wind', items: [
+      ['wind_strength', 'Wind Speed', 'f', 1, 0, 5, 0.01],
+      ['wind_angle', 'Wind Direction (angle °)', 'f', 0, -180, 180, 1, '0° = (1,0,0), vers la droite.'],
+    ] },
+    { title: 'Disturbance', enable: ['enable_disturbance', false], compare: 'disturbance', guide: 'disturbance', items: [
+      ['disturbance', 'Disturbance', 'f', 0.5, 0, 4, 0.01],
+      ['disturbance_mode', 'Mode', 's', 'blocks', [['cont', 'Continuous'], ['blocks', 'Block-Based']]],
+      ['disturbance_refscale', 'Reference Scale', 'f', 0.2, 0, 1, 0.01, 'Mode Continuous seulement.'],
+      ['disturbance_blocksize', 'Base Block Size', 'f', 0.2, 0.02, 1, 0.01, 'Mode Block-Based seulement.'],
+      ['disturbance_rough', 'Roughness', 'f', 0.5, 0, 1, 0.01],
+      ['disturbance_pulselength', 'Pulse Length', 'f', 0.2, 0.02, 2, 0.01],
+      ['disturbance_maxoct', 'Max Octaves', 'i', 3, 1, 6, 1],
+      ['disturbance_lacunarity', 'Lacunarity', 'f', 2.1, 1.2, 4, 0.01],
+      ['sub', 'Threshold'],
+      ['disturbance_thresholdfield', 'Threshold Field', 's', 'density', FIELDS],
+      ['disturbance_threshold', 'Threshold Range', 'r', [0.05, 0]],
+      ...ctrlItems('disturbance'),
+    ] },
+    { title: 'Turbulence', enable: ['enable_turbulence', false], compare: 'turbulence', guide: 'turbulence', items: [
+      ['turbulence_noisetype', 'Noise Type', 's', 'fast', [['simplex', 'Analytic Simplex Noise'], ['fast', 'Analytic Fast Simplex Noise']]],
+      ['turbulence', 'Turbulence', 'f', 0.1, 0, 1, 0.005],
+      ['turbulence_swirlsize', 'Swirl Size', 'f', 1, 0.1, 3, 0.01],
+      ['turbulence_grain', 'Roughness', 'f', 0.5, 0, 1, 0.01],
+      ['turbulence_pulselength', 'Pulse Length', 'f', 0.5, 0.05, 5, 0.01],
+      ['turbulence_levels', 'Max Octaves', 'i', 2, 1, 6, 1],
+      ['turbulence_seed', 'Seed', 'f', 0, 0, 100, 0.1],
+      ['sub', 'Threshold'],
+      ['turbulence_influencefield', 'Threshold Field', 's', 'temperature', FIELDS],
+      ['turbulence_infthreshold', 'Threshold Range', 'r', [0.01, 0]],
+      ['turbulence_infthreshold_asrange', 'Use as Range', 'b', false],
+      ...ctrlItems('turbulence'),
+    ] },
+    { title: 'Shredding', enable: ['enable_shredding', false], compare: 'shredding', guide: 'shredding', items: [
+      ['shredding', 'Shredding', 'f', 0.5, 0, 4, 0.01],
+      ['shredding_blocksize', 'Base Block Size', 'f', 0.2, 0.02, 1, 0.01],
+      ['shredding_rough', 'Roughness', 'f', 0.5, 0, 1, 0.01],
+      ['shredding_pulselength', 'Pulse Length', 'f', 0.2, 0.02, 2, 0.01],
+      ['shredding_maxoct', 'Max Octaves', 'i', 1, 1, 6, 1],
+      ['shredding_lacunarity', 'Lacunarity', 'f', 2.1, 1.2, 4, 0.01],
+      ['sub', 'Threshold'],
+      ['shredding_field', 'Threshold Field', 's', 'flame', FIELDS],
+      ['shredding_range', 'Threshold Range', 'r', [0.1, 1]],
+      ...ctrlItems('shredding'),
+    ] },
+    { title: 'Flame Expansion', enable: ['div_doadd', false], compare: 'expansion', items: [
+      ['div_amount', 'Expansion Rate', 'f', 0.7, -2, 2, 0.01],
+      ['div_controlrange', 'Flame Range', 'r', [0, 1]],
+      ['div_remapcontrol', 'Remap Flame Range', 's', 'none', REMAP],
+    ] },
+    { title: 'Viscosity', enable: ['enable_viscosity', false], compare: 'viscosity', items: [
+      ['viscosity', 'Viscosity', 'f', 0, 0, 5, 0.01],
+    ] },
+  ] },
+  { id: 'look', label: 'Look', groups: [
+    { title: 'Smoke', enable: ['enablesmoke', true], items: [
+      ['s_densityscale', 'Density Scale', 'f', 1, 0, 5, 0.01],
+      ['s_shadowint', 'Shadow Density', 'f', 1, 0, 2, 0.01],
+      ['s_color', 'Smoke Color (gris)', 'f', 0.8, 0, 1, 0.01],
+    ] },
+    { title: 'Fire', enable: ['fi_enable', true], items: [
+      ['fi_int', 'Intensity Scale', 'f', 25, 0, 100, 0.5],
+      ['fi_fitsrc', 'Source Range', 'r', [0, 1]],
+      ['bind_flame', 'Fire Intensity Volume', 's', 'flame', [['flame', 'flame'], ['temperature', 'temperature']]],
+      ['bind_temperature', 'Fire Color Volume', 's', 'flame', [['flame', 'flame'], ['temperature', 'temperature']]],
+      ['fc_colormode', 'Color Mode', 's', 'ramp', [['ramp', 'Color Ramp'], ['bb', 'Physical Blackbody']]],
+    ] },
+  ] },
+  { id: 'advanced', label: 'Advanced', groups: [
+    { title: 'Advection', compare: 'advection', items: [
+      ['adv_scheme', 'Advection Scheme', 's', 'mac', [['sl', 'Semi-Lagrangian'], ['bfecc', 'BFECC'], ['mac', 'Modified MacCormack']]],
+      ['adv_clampvalues', 'Clamp Values', 's', 'revert', [['none', 'None'], ['clamp', 'Clamp'], ['revert', 'Revert']]],
+    ] },
+    { title: 'Projection', items: [
+      ['proj_iters', 'Itérations de pression (max)', 'i', 80, 2, 160, 1, 'Le labo résout la pression par gradient conjugué et s\'arrête dès qu\'il a convergé (Houdini : multigrid). Peu d\'itérations = solution approchée, comme Single V-Cycle : le gaz se comprime.'],
+    ] },
+  ] },
+];
+const DEFAULTS = {};
+for (const t of TABS) for (const g of t.groups) {
+  if (g.enable) DEFAULTS[g.enable[0]] = g.enable[1];
+  for (const it of g.items) if (it[0] !== 'sub') DEFAULTS[it[0]] = Array.isArray(it[3]) ? it[3].slice() : it[3];
+}
+const P = JSON.parse(JSON.stringify(DEFAULTS));
+
+/* ---------------- grid sampling ---------------- */
+let SMIN = 0, SMAX = 0;
+function samp(a, w, h, gx, gy) {
+  if (gx < 0) gx = 0; else if (gx > w - 1) gx = w - 1;
+  if (gy < 0) gy = 0; else if (gy > h - 1) gy = h - 1;
+  let i = gx | 0, j = gy | 0; if (i > w - 2) i = w - 2; if (j > h - 2) j = h - 2;
+  const fx = gx - i, fy = gy - j, k = j * w + i;
+  const a0 = a[k] + (a[k + 1] - a[k]) * fx, a1 = a[k + w] + (a[k + w + 1] - a[k + w]) * fx;
+  return a0 + (a1 - a0) * fy;
+}
+function sampMM(a, w, h, gx, gy) {
+  if (gx < 0) gx = 0; else if (gx > w - 1) gx = w - 1;
+  if (gy < 0) gy = 0; else if (gy > h - 1) gy = h - 1;
+  let i = gx | 0, j = gy | 0; if (i > w - 2) i = w - 2; if (j > h - 2) j = h - 2;
+  const fx = gx - i, fy = gy - j, k = j * w + i;
+  const c00 = a[k], c10 = a[k + 1], c01 = a[k + w], c11 = a[k + w + 1];
+  SMIN = Math.min(c00, c10, c01, c11); SMAX = Math.max(c00, c10, c01, c11);
+  const a0 = c00 + (c10 - c00) * fx, a1 = c01 + (c11 - c01) * fx;
+  return a0 + (a1 - a0) * fy;
+}
+// Flou gaussien séparable, en place (bords répétés) : sigma en voxels. Sert de Gas Blur (Diffusion, Viscosity).
+function gblur(x, tmp, w, h, sigma) {
+  if (!(sigma > 0.05)) return;
+  const R = Math.min(64, Math.ceil(3 * sigma)), K = new Float32Array(2 * R + 1);
+  let s = 0; for (let i = -R; i <= R; i++) { K[i + R] = Math.exp(-0.5 * (i / sigma) * (i / sigma)); s += K[i + R]; }
+  for (let i = 0; i < K.length; i++) K[i] /= s;
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    let a = 0; for (let t = -R; t <= R; t++) { const ii = i + t < 0 ? 0 : i + t >= w ? w - 1 : i + t; a += K[t + R] * x[j * w + ii]; }
+    tmp[j * w + i] = a;
+  }
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    let a = 0; for (let t = -R; t <= R; t++) { const jj = j + t < 0 ? 0 : j + t >= h ? h - 1 : j + t; a += K[t + R] * tmp[jj * w + i]; }
+    x[j * w + i] = a;
+  }
+}
+// Constantes calibrées sur le Pyro Solver de Houdini 21 (scène de test 2D, mesures frame par frame) :
+// flous de Temperature Diffusion et Viscosity (sigma par pas = C * valeur * sqrt(dt), en unités), force de
+// Turbulence et vitesse d'évolution de son bruit, rotation du Shredding, poids du champ divergence.
+const C_TDIFF = 0.4, C_VISC = 0.6;
+let TURB_K = 4.06, TURB_E = 1, SHRED_K = 2.3, DIVS = 3;
+
+const DOM_W = 3, DOM_H = 4.5;
+const STAGES = [['temp', 'Température'], ['advect', 'Advection'], ['flame', 'Flame'], ['dissip', 'Dissipation'], ['source', 'Sourcing'], ['resize', 'Resize (zone active)'], ['forces', 'Forces + Buoyancy'], ['visc', 'Viscosity'], ['shape', 'Shape operators'], ['project', 'Projection']];
+const TS = 8; // sparse tile size, in voxels
+// Calibrage mesuré sur le Pyro Solver de Houdini 21 (scène de test 2D) : sa projection ne retire qu'environ la
+// moitié du gradient de pression à chaque pas. Avec 0.5, la vitesse, la hauteur et la perte de matière d'une
+// bouffée chaude suivent Houdini à ±10 % frame par frame (voxel 0.035 et 0.07, Time Scale 0.5 et 1, Buoyancy 1 et 2).
+let PROJ_ALPHA = 0.5;
+let TX = 0, TY = 0;
+
+class Sim {
+  constructor(over) { this.over = over || null; this.imp = []; this.reset(); }
+  par() { return this.over ? Object.assign({}, P, this.over) : P; }
+  reset() {
+    const p = this.par(), dx = this.dx = +p.divsize;
+    const nx = this.nx = Math.round(DOM_W / dx), ny = this.ny = Math.round(DOM_H / dx);
+    const N = nx * ny, NU = (nx + 1) * ny, NV = nx * (ny + 1), F = n => new Float32Array(n);
+    this.d = F(N); this.T = F(N); this.f = F(N); this.div = F(N); this.pr = F(N); this.spd = F(N);
+    this.u = F(NU); this.v = F(NV);
+    this.c1 = F(N); this.c2 = F(N); this.c3 = F(N); this.cmn = F(N); this.cmx = F(N);
+    this.u1 = F(NU); this.u2 = F(NU); this.u3 = F(NU); this.umn = F(NU); this.umx = F(NU);
+    this.v1 = F(NV); this.v2 = F(NV); this.v3 = F(NV); this.vmn = F(NV); this.vmx = F(NV);
+    this.cbx = F(N); this.cby = F(N); this.cfx = F(N); this.cfy = F(N);
+    this.ubx = F(NU); this.uby = F(NU); this.ufx = F(NU); this.ufy = F(NU);
+    this.vbx = F(NV); this.vby = F(NV); this.vfx = F(NV); this.vfy = F(NV);
+    this.ru = F(NU); this.rv = F(NV); this.pu = F(NU); this.pv = F(NV); this.hasR = false;
+    this.gD = F(N); this.gT = F(N); this.gS = F(N);
+    this.psi = F((nx + 1) * (ny + 1));
+    // pressure solve (conjugate gradient): diagonal, links to the right / upper cell, work vectors
+    const D64 = n => new Float64Array(n);
+    this.ad = new Uint8Array(N); this.lx = new Uint8Array(N); this.ly = new Uint8Array(N);
+    this.pc = D64(N); this.pres = D64(N); this.pz = D64(N); this.ps = D64(N); this.pq = D64(N); this.pt = D64(N); this.pIters = 0;
+    // sparse: active tiles, per-cell activity, masks for the padding dilation, back-traces leaving the container
+    this.ntx = Math.ceil(nx / TS); this.nty = Math.ceil(ny / TS);
+    this.tile = new Uint8Array(this.ntx * this.nty); this.cact = new Uint8Array(N);
+    this.mA = new Uint8Array(N); this.mB = new Uint8Array(N); this.nActive = 0;
+    this.box = null;
+    this.frame = 0; this.srcFrame = 0; this.time = 0; this.subs = 1; this.subCount = 0; this.maxSpeed = 0;
+    this.tm = {}; this.tmFrame = {};
+  }
+  field(name) { return name === 'temperature' ? this.T : name === 'flame' ? this.f : name === 'speed' ? this.spd : this.d; }
+  // control field of a shape operator: null when unused, else k -> multiplier
+  mkCtrl(p, pre) {
+    if (!p[pre + '_usecontrol']) return null;
+    const F = this.field(p[pre + '_controlfield']), r = p[pre + '_controlrange'], r0 = +r[0], r1 = +r[1], mode = p[pre + '_remapcontrol'];
+    return k => remap(fit01(F[k], r0, r1), mode);
+  }
+  stepFrame() {
+    const p = this.par();
+    if (this.frame === 0) {
+      // Comme Houdini : la première frame ne fait que sourcer (pas de transport, de forces ni de projection).
+      this.tm = {}; this.div.fill(0);
+      this.srcFrame = 0;
+      this.source(p, 0);
+      this.updateActive(p);
+      this.imp.length = 0; this.tmFrame = this.tm; this.subs = 0;
+      this.frame++;
+      return;
+    }
+    const dtF = p.timescale / 24;
+    let wx = 0, wy = 0;
+    if (p.enable_wind) { const a = p.wind_angle * Math.PI / 180; wx = Math.cos(a) * p.wind_strength; wy = Math.sin(a) * p.wind_strength; }
+    const vmax = this.maxSpeed + Math.hypot(wx, wy);
+    const n = clamp(Math.ceil(vmax * dtF / (Math.max(0.1, p.cflcond) * this.dx)), 1, p.substeps | 0);
+    this.subs = n; this.tm = {};
+    // Burst: Houdini active la source par sous-pas avec floor($SF - 1), $SF pris à la fin du sous-pas. Tous les
+    // sous-pas sauf le dernier comptent donc encore pour la frame précédente (mesuré : souffle avec 3 sous-pas).
+    for (let s = 0; s < n; s++) { this.srcFrame = s < n - 1 ? this.frame - 1 : this.frame; this.substep(p, dtF / n, wx, wy); }
+    this.imp.length = 0;
+    this.tmFrame = this.tm;
+    this.frame++;
+  }
+  substep(p, dt, wx, wy) {
+    const tm = this.tm; let t = performance.now();
+    const lap = name => { const n = performance.now(); tm[name] = (tm[name] || 0) + (n - t); t = n; };
+    const nx = this.nx, ny = this.ny, dx = this.dx, N = nx * ny;
+    const d = this.d, T = this.T, f = this.f, div = this.div;
+    div.fill(0);
+
+    // 1. temperature: cooling + diffusion
+    const cool = Math.pow(1 - clamp(p.tempcooling, 0, 0.999), dt);
+    for (let k = 0; k < N; k++) T[k] *= cool;
+    if (p.tempdiffusion > 0) gblur(T, this.c1, nx, ny, C_TDIFF * p.tempdiffusion * Math.sqrt(dt) / dx);
+    lap('temp');
+
+    // 2. advection (wind is passive: only added here)
+    this.advectAll(p, dt, wx, wy);
+    lap('advect');
+
+    // 3. flame ageing, then outputs computed from the aged value (mesuré sur Houdini 21)
+    const df = dt / Math.max(0.01, p.flames_lifespan);
+    const sr = p.soot_controlrange, tr = p.temperature_controlrange, dr = p.div_controlrange;
+    const pull = 1 - Math.exp(-p.temperature_pullstrength * dt);
+    for (let k = 0; k < N; k++) {
+      if (f[k] <= 0) continue;
+      const fl = f[k] = f[k] > df ? f[k] - df : 0;
+      if (p.soot_doemit) {
+        const o = remap(fit01(fl, +sr[0], +sr[1]), p.soot_remapcontrol) * p.soot_amount;
+        if (p.soot_mergemethod === 'max') { if (o > d[k]) d[k] = o; } else d[k] += o * dt * 24;
+      }
+      if (p.temperature_doadd) {
+        const o = remap(fit01(fl, +tr[0], +tr[1]), p.temperature_remapcontrol) * p.temperature_amount;
+        if (p.temperature_mergemethod === 'pull') { if (o > T[k]) T[k] += (o - T[k]) * pull; } else T[k] += o * dt * 24;
+      }
+      if (p.div_doadd) div[k] += remap(fit01(fl, +dr[0], +dr[1]), p.div_remapcontrol) * p.div_amount;
+    }
+    lap('flame');
+
+    // 4. dissipation
+    if (p.enable_dissipation) {
+      const rate = clamp(p.dissipation, 0, 1), cC = this.mkCtrl(p, 'dissipation'), fac = Math.pow(1 - rate, dt * 24);
+      const cb = p.dissipation_doclamp ? p.dissipation_clampbelow : -1;
+      for (let k = 0; k < N; k++) {
+        if (d[k] === 0) continue;
+        d[k] *= cC ? Math.pow(1 - rate * cC(k), dt * 24) : fac;
+        if (d[k] < cb) d[k] = 0;
+      }
+    }
+    lap('dissip');
+
+    // 5. sourcing (+ mouse)
+    this.source(p, dt);
+    lap('source');
+
+    // 6. resize: sparse active region + Reset Rule
+    this.updateActive(p);
+    lap('resize');
+
+    // 7-8. forces: density gravity, buoyancy
+    const u = this.u, v = this.v;
+    if (p.enable_buoyancy && p.enable_density_gravity) {  // dans Houdini, ce réglage fait partie du bloc Buoyancy
+      const g = p.gravaccel * p.density_gravity_scale, r = p.density_range;
+      for (let j = 1; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const dd = 0.5 * (d[(j - 1) * nx + i] + d[j * nx + i]); if (dd <= 0) continue;
+        v[j * nx + i] -= g * fit01(dd, +r[0], +r[1]) * dt;
+      }
+    }
+    if (p.enable_buoyancy && p.buoyancylift !== 0) {
+      // Houdini (mesuré sur le Pyro Solver 21) : Boussinesq, a = gravity * scale * (T_kelvin - Ambient) / Ambient,
+      // avec T_kelvin = Ambient + t * (Reference - Ambient), donc a = g * scale * t * (Reference - Ambient) / Ambient
+      const Ta = Math.max(1, p.temperature0), g = p.gravaccel * p.buoyancylift * (p.temperature1 - Ta) / Ta;
+      for (let j = 1; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const tt = 0.5 * (T[(j - 1) * nx + i] + T[j * nx + i]); if (tt === 0) continue;
+        v[j * nx + i] += g * tt * dt;
+      }
+    }
+    lap('forces');
+
+    // 9. viscosity
+    if (p.enable_viscosity && p.viscosity > 0) {
+      const sg = C_VISC * p.viscosity * Math.sqrt(dt) / dx;
+      gblur(u, this.u1, nx + 1, ny, sg); gblur(v, this.v1, nx, ny + 1, sg);
+    }
+    lap('visc');
+
+    // 10. shape operators
+    this.shape(p, dt);
+    lap('shape');
+
+    // 11. pressure projection (+ advection-reflection bookkeeping)
+    const refl = p.adv_vel_reflect === 'single';
+    if (refl) { this.pu.set(u); this.pv.set(v); }
+    this.project(p, dt);
+    if (refl) {
+      const a = p.adv_vel_reflectamount, ru = this.ru, rv = this.rv, pu = this.pu, pv = this.pv;
+      for (let k = 0; k < u.length; k++) ru[k] = u[k] + a * (u[k] - pu[k]);
+      for (let k = 0; k < v.length; k++) rv[k] = v[k] + a * (v[k] - pv[k]);
+      this.hasR = true;
+    } else this.hasR = false;
+    // max speed for the CFL substep estimate (+ a safety clamp so extreme settings cannot blow up the page)
+    let m = 0; const VL = 80;
+    for (let k = 0; k < u.length; k++) { let a = u[k]; if (a > VL) a = u[k] = VL; else if (a < -VL) a = u[k] = -VL; if (a < 0) a = -a; if (a > m) m = a; }
+    for (let k = 0; k < v.length; k++) { let a = v[k]; if (a > VL) a = v[k] = VL; else if (a < -VL) a = v[k] = -VL; if (a < 0) a = -a; if (a > m) m = a; }
+    this.maxSpeed = m;
+    lap('project');
+    this.time += dt; this.subCount++;
+  }
+
+  traces(dt, wx, wy, fwd) {
+    const nx = this.nx, ny = this.ny, dx = this.dx, u = this.u, v = this.v, id = 1 / dx;
+    const U = (x, y) => samp(u, nx + 1, ny, x * id, y * id - 0.5) + wx;
+    const V = (x, y) => samp(v, nx, ny + 1, x * id - 0.5, y * id) + wy;
+    const cflStep = 1.5 * dx;
+    // Houdini (Gas Advect Field) : Euler explicite par pas d'au plus 1.5 voxel (Use CFL, CFL Condition 1.5, Max Steps 50)
+    const traceFE = (x, y, sgn) => {
+      const vx = U(x, y), vy = V(x, y), dist = Math.hypot(vx, vy) * dt;
+      const n = Math.min(50, Math.max(1, Math.ceil(dist / cflStep))), h = sgn * dt / n;
+      let px = x - h * vx, py = y - h * vy;
+      for (let s = 1; s < n; s++) { const ux = U(px, py), uy = V(px, py); px -= h * ux; py -= h * uy; }
+      TX = px; TY = py;
+    };
+    const run = (w, h, ox, oy, bx, by, fx, fy) => {
+      for (let j = 0, k = 0; j < h; j++) for (let i = 0; i < w; i++, k++) {
+        const x = (i + ox) * dx, y = (j + oy) * dx;
+        traceFE(x, y, 1); bx[k] = TX; by[k] = TY;
+        if (fwd) { traceFE(x, y, -1); fx[k] = TX; fy[k] = TY; }
+      }
+    };
+    run(nx, ny, 0.5, 0.5, this.cbx, this.cby, this.cfx, this.cfy);
+    run(nx + 1, ny, 0, 0.5, this.ubx, this.uby, this.ufx, this.ufy);
+    run(nx, ny + 1, 0.5, 0, this.vbx, this.vby, this.vfx, this.vfy);
+  }
+  // advect q (grid w×h whose sample k sits at world ((i+ox)dx, (j+oy)dx)) with the chosen scheme
+  adv(q, w, h, ox, oy, bx, by, fx, fy, t1, t2, t3, mn, mx, scheme, clampMode) {
+    const id = 1 / this.dx, n = q.length, gx = -ox, gy = -oy;
+    for (let k = 0; k < n; k++) { t1[k] = sampMM(q, w, h, bx[k] * id + gx, by[k] * id + gy); mn[k] = SMIN; mx[k] = SMAX; }
+    if (scheme === 'sl') { q.set(t1); return; }
+    for (let k = 0; k < n; k++) t2[k] = samp(t1, w, h, fx[k] * id + gx, fy[k] * id + gy);
+    if (scheme === 'mac') { for (let k = 0; k < n; k++) t3[k] = t1[k] + 0.5 * (q[k] - t2[k]); }
+    else {
+      for (let k = 0; k < n; k++) t2[k] = q[k] + 0.5 * (q[k] - t2[k]);
+      for (let k = 0; k < n; k++) t3[k] = samp(t2, w, h, bx[k] * id + gx, by[k] * id + gy);
+    }
+    if (clampMode === 'revert') { for (let k = 0; k < n; k++) { const x = t3[k]; q[k] = (x < mn[k] || x > mx[k]) ? t1[k] : x; } }
+    else if (clampMode === 'clamp') { for (let k = 0; k < n; k++) { const x = t3[k]; q[k] = x < mn[k] ? mn[k] : x > mx[k] ? mx[k] : x; } }
+    else q.set(t3);
+  }
+  advectAll(p, dt, wx, wy) {
+    const sc = p.adv_scheme, cm = p.adv_clampvalues, nx = this.nx, ny = this.ny;
+    this.traces(dt, wx, wy, sc !== 'sl');
+    const C = [this.cbx, this.cby, this.cfx, this.cfy, this.c1, this.c2, this.c3, this.cmn, this.cmx];
+    // comme Houdini (advect_fields) : tous les champs sont transportés par la même vitesse, celle du début du pas
+    this.adv(this.d, nx, ny, 0.5, 0.5, ...C, sc, cm);
+    this.adv(this.T, nx, ny, 0.5, 0.5, ...C, sc, cm);
+    this.adv(this.f, nx, ny, 0.5, 0.5, ...C, sc, cm);
+    if (this.hasR && p.adv_vel_reflect === 'single') { this.u.set(this.ru); this.v.set(this.rv); }
+    this.adv(this.u, nx + 1, ny, 0, 0.5, this.ubx, this.uby, this.ufx, this.ufy, this.u1, this.u2, this.u3, this.umn, this.umx, sc, cm);
+    this.adv(this.v, nx, ny + 1, 0.5, 0, this.vbx, this.vby, this.vfx, this.vfy, this.v1, this.v2, this.v3, this.vmn, this.vmx, sc, cm);
+    // fresh ambient air enters from outside the container; only the container (Dense) or the active tiles (Sparse) keep data
+    const ca = this.cact, d = this.d, T = this.T, f = this.f, bx = this.cbx, by = this.cby;
+    for (let k = 0; k < nx * ny; k++) {
+      const x = bx[k], y = by[k];
+      if (!ca[k] || x < 0 || y < 0 || x > DOM_W || y > DOM_H) { d[k] = 0; T[k] = 0; f[k] = 0; }
+    }
+    this.clearInactiveVel();
+    // speed field (after advection, before forces)
+    const u = this.u, v = this.v, spd = this.spd;
+    for (let j = 0, k = 0; j < ny; j++) for (let i = 0; i < nx; i++, k++) {
+      const uc = 0.5 * (u[j * (nx + 1) + i] + u[j * (nx + 1) + i + 1]), vc = 0.5 * (v[j * nx + i] + v[(j + 1) * nx + i]);
+      spd[k] = Math.sqrt(uc * uc + vc * vc);
+    }
+  }
+  source(p, dt) {
+    const nx = this.nx, ny = this.ny, dx = this.dx, d = this.d, T = this.T, f = this.f, div = this.div, u = this.u, v = this.v;
+    const on = p.src_mode === 'cont' || (p.src_mode === 'burst' && this.srcFrame >= 0 && (this.srcFrame % Math.max(1, p.src_cycle)) < p.src_burst);
+    if (on) {
+      const cx = DOM_W / 2, cy = p.src_height, r = p.src_radius, t = this.time * p.src_noisespeed, sz = p.src_noisesize, amt = p.src_noise;
+      const i0 = Math.max(0, Math.floor((cx - r) / dx)), i1 = Math.min(nx - 1, Math.ceil((cx + r) / dx));
+      const j0 = Math.max(0, Math.floor((cy - r) / dx)), j1 = Math.min(ny - 1, Math.ceil((cy + r) / dx));
+      const soft = r * 0.3 + dx;
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const x = (i + 0.5) * dx, y = (j + 0.5) * dx, dist = Math.hypot(x - cx, y - cy);
+        if (dist > r) continue;
+        const w = Math.min(1, (r - dist) / soft), k = j * nx + i;
+        let n = 1;
+        if (amt > 0) {
+          let nv = p.src_noisetype === 'worley' ? clamp(worleyVex(x / sz, y / sz - t) * 2.4, 0, 1)
+                                                : clamp(0.5 + 0.75 * SN_VEX * snoise3(x / sz, y / sz, t), 0, 1);
+          n = 1 - amt + amt * nv;
+        }
+        const val = w * n;
+        if (p.src_density * val > d[k]) d[k] = p.src_density * val;
+        if (p.src_temperature * val > T[k]) T[k] = p.src_temperature * val;
+        if (p.src_flame * val > f[k]) f[k] = p.src_flame * val;
+        if (p.src_divergence > 0) div[k] += p.src_divergence * w;
+        if (p.src_vel > 0) {
+          const sv = p.src_vel * w;
+          if (v[j * nx + i] < sv) v[j * nx + i] = sv;
+          if (v[(j + 1) * nx + i] < sv) v[(j + 1) * nx + i] = sv;
+        }
+      }
+    }
+    // mouse impulses
+    for (const m of this.imp) {
+      const R = 0.24, i0 = Math.max(0, Math.floor((m.x - R) / dx)), i1 = Math.min(nx - 1, Math.ceil((m.x + R) / dx));
+      const j0 = Math.max(0, Math.floor((m.y - R) / dx)), j1 = Math.min(ny - 1, Math.ceil((m.y + R) / dx));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const x = (i + 0.5) * dx, y = (j + 0.5) * dx, q = 1 - Math.hypot(x - m.x, y - m.y) / R;
+        if (q <= 0) continue;
+        const w = q * q, k = j * nx + i;
+        if (m.heat) { if (0.9 * w > T[k]) T[k] = 0.9 * w; if (0.9 * w > d[k]) d[k] = 0.9 * w; }
+        const ku = j * (nx + 1) + i, kv = j * nx + i, b = w * 0.7;
+        u[ku] += (m.vx - u[ku]) * b; u[ku + 1] += (m.vx - u[ku + 1]) * b;
+        v[kv] += (m.vy - v[kv]) * b; v[kv + nx] += (m.vy - v[kv + nx]) * b;
+      }
+    }
+  }
+  // shape forces fade out over the last 4 voxels of the container and are off outside the active region
+  edge(i, j) {
+    if (!this.cact[j * this.nx + i]) return 0;
+    const e = Math.min(i, this.nx - 1 - i, j, this.ny - 1 - j); return e >= 4 ? 1 : e <= 0 ? 0 : e / 4;
+  }
+  // Houdini resizes the container at every step, in Dense too: bounding box of the Reference Fields (density, flame)
+  // + Padding, clamped to the max size (the lab domain). Dense solves the whole box; Sparse only the tiles near those
+  // fields. Outside: pressure 0 (open border), vel and temperature back to 0. Mesuré sur Houdini 21 : sans ce conteneur
+  // qui colle à la fumée, une boule chaude monte trop lentement dans le labo (l'air doit contourner tout le domaine).
+  updateActive(p) {
+    const nx = this.nx, ny = this.ny, N = nx * ny, ntx = this.ntx, tile = this.tile, cact = this.cact;
+    const d = this.d, f = this.f, r = Math.round(p.resize_padding / this.dx);
+    if (p.solver !== 'sparse') {
+      let i0 = nx, i1 = -1, j0 = ny, j1 = -1;
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        if (d[k] > 0 || f[k] > 0) { if (i < i0) i0 = i; if (i > i1) i1 = i; if (j < j0) j0 = j; if (j > j1) j1 = j; }
+      }
+      cact.fill(0); tile.fill(0); this.box = null; this.nActive = 0;
+      if (i1 >= 0) {
+        i0 = Math.max(0, i0 - r); i1 = Math.min(nx - 1, i1 + r); j0 = Math.max(0, j0 - r); j1 = Math.min(ny - 1, j1 + r);
+        for (let j = j0; j <= j1; j++) cact.fill(1, j * nx + i0, j * nx + i1 + 1);
+        for (let ty = (j0 / TS) | 0; ty <= ((j1 / TS) | 0); ty++) for (let tx = (i0 / TS) | 0; tx <= ((i1 / TS) | 0); tx++) tile[ty * ntx + tx] = 1;
+        this.box = [i0, j0, i1, j1]; this.nActive = (i1 - i0 + 1) * (j1 - j0 + 1);
+      }
+      const T = this.T; for (let k = 0; k < N; k++) if (!cact[k]) T[k] = 0;
+      this.clearInactiveVel();
+      return;
+    }
+    this.box = null;
+    const A = this.mA, B = this.mB;
+    for (let k = 0; k < N; k++) A[k] = (d[k] > 0 || f[k] > 0) ? 1 : 0;
+    if (r > 0) {
+      for (let j = 0; j < ny; j++) {
+        const row = j * nx; let c = 0;
+        for (let i = 0; i < Math.min(r, nx); i++) c += A[row + i];
+        for (let i = 0; i < nx; i++) { if (i + r < nx) c += A[row + i + r]; if (i - r - 1 >= 0) c -= A[row + i - r - 1]; B[row + i] = c > 0 ? 1 : 0; }
+      }
+      for (let i = 0; i < nx; i++) {
+        let c = 0;
+        for (let j = 0; j < Math.min(r, ny); j++) c += B[j * nx + i];
+        for (let j = 0; j < ny; j++) { if (j + r < ny) c += B[(j + r) * nx + i]; if (j - r - 1 >= 0) c -= B[(j - r - 1) * nx + i]; A[j * nx + i] = c > 0 ? 1 : 0; }
+      }
+    }
+    tile.fill(0);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) if (A[j * nx + i]) tile[((j / TS) | 0) * ntx + ((i / TS) | 0)] = 1;
+    let n = 0; for (let t = 0; t < tile.length; t++) n += tile[t];
+    this.nActive = n;
+    for (let j = 0; j < ny; j++) { const tr = ((j / TS) | 0) * ntx; for (let i = 0; i < nx; i++) cact[j * nx + i] = tile[tr + ((i / TS) | 0)]; }
+    if (p.sparse_resetrule === 'inactive') {
+      const T = this.T; for (let k = 0; k < N; k++) if (!cact[k]) T[k] = 0;
+      this.clearInactiveVel();
+    }
+  }
+  // velocity faces with no active cell on either side go back to still air
+  clearInactiveVel() {
+    const nx = this.nx, ny = this.ny, NU = nx + 1, u = this.u, v = this.v, c = this.cact;
+    for (let j = 0; j < ny; j++) for (let i = 0; i <= nx; i++) {
+      if (!(i > 0 && c[j * nx + i - 1]) && !(i < nx && c[j * nx + i])) u[j * NU + i] = 0;
+    }
+    for (let j = 0; j <= ny; j++) for (let i = 0; i < nx; i++) {
+      if (!(j > 0 && c[(j - 1) * nx + i]) && !(j < ny && c[j * nx + i])) v[j * nx + i] = 0;
+    }
+  }
+  // layered block noise (Gas Disturb, Block-Based): returns a vector in BX, BY
+  block(x, y, bs, lac, rough, maxoct, pulse, seed) {
+    const tIdx = Math.floor(this.time / Math.max(0.005, pulse));
+    let sx = 0, sy = 0, sum = 0, amp = 1;
+    for (let o = 0; o < maxoct; o++) {
+      if (o > 0 && bs < this.dx) break;
+      const ix = Math.floor(x / bs), iy = Math.floor(y / bs), s = seed + o * 7919 + tIdx * 104729;
+      const a = rnd(ix, iy, s) * TAU, m = 0.35 + 0.65 * rnd(ix, iy, s + 1);
+      sx += amp * m * Math.cos(a); sy += amp * m * Math.sin(a); sum += amp;
+      bs /= lac; amp *= rough;
+    }
+    BX = sx / sum; BY = sy / sum;
+  }
+  shape(p, dt) {
+    const nx = this.nx, ny = this.ny, dx = this.dx, u = this.u, v = this.v, NU = nx + 1;
+    const gD = this.gD, gT = this.gT, gS = this.gS;
+    gD.fill(0); gT.fill(0); gS.fill(0);
+    // Disturbance: linear random force, where the threshold field is below the cutoff
+    if (p.enable_disturbance && p.disturbance > 0) {
+      const TH = this.field(p.disturbance_thresholdfield), th = p.disturbance_threshold, t0 = +th[0], t1 = +th[1];
+      // constantes mesurées sur Houdini 21 (vitesse RMS de l'air perturbé, Block-Based et Continuous)
+      const cont = p.disturbance_mode === 'cont', cs = 0.83 * Math.pow(p.disturbance_refscale / dx, 1.5), sc = this.subCount;
+      const K = 1.7 * p.disturbance * dt, cC = this.mkCtrl(p, 'disturbance');
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        let m = fit01(TH[k], t0, t1) * this.edge(i, j); if (m <= 0) continue;
+        if (cC) { m *= cC(k); if (m <= 0) continue; }
+        let fx, fy;
+        if (cont) { const a = rnd(i, j, sc * 31 + 5) * TAU, mg = (0.35 + 0.65 * rnd(i, j, sc * 31 + 6)) * cs; fx = Math.cos(a) * mg; fy = Math.sin(a) * mg; }
+        else { this.block((i + 0.5) * dx, (j + 0.5) * dx, p.disturbance_blocksize, p.disturbance_lacunarity, p.disturbance_rough, p.disturbance_maxoct | 0, p.disturbance_pulselength, 1000); fx = BX; fy = BY; }
+        const ax = fx * K * m * 0.5, ay = fy * K * m * 0.5;
+        u[j * NU + i] += ax; u[j * NU + i + 1] += ax; v[k] += ay; v[k + nx] += ay;
+        gD[k] = m * p.disturbance * Math.hypot(fx, fy);
+      }
+    }
+    // Shredding: rotate velocities towards random directions without changing their length
+    if (p.enable_shredding && p.shredding > 0) {
+      const F = this.field(p.shredding_field), r = p.shredding_range, r0 = +r[0], r1 = +r[1];
+      const maxRate = p.shredding * SHRED_K * dt, cC = this.mkCtrl(p, 'shredding');  // mesuré sur Houdini 21
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        let m = fit01(F[k], r0, r1) * this.edge(i, j); if (m <= 0) continue;
+        if (cC) { m *= cC(k); if (m <= 0) continue; }
+        const ku = j * NU + i, uc = 0.5 * (u[ku] + u[ku + 1]), vc = 0.5 * (v[k] + v[k + nx]), sp = Math.hypot(uc, vc);
+        if (sp < 1e-4) continue;
+        this.block((i + 0.5) * dx, (j + 0.5) * dx, p.shredding_blocksize, p.shredding_lacunarity, p.shredding_rough, p.shredding_maxoct | 0, p.shredding_pulselength, 5000);
+        const a = Math.atan2(vc, uc);
+        let dl = Math.atan2(BY, BX) - a; if (dl > Math.PI) dl -= TAU; else if (dl < -Math.PI) dl += TAU;
+        const lim = maxRate * m * Math.min(1, 1.5 * Math.hypot(BX, BY)), rot = dl > lim ? lim : dl < -lim ? -lim : dl;
+        const du = (sp * Math.cos(a + rot) - uc) * 0.5, dv = (sp * Math.sin(a + rot) - vc) * 0.5;
+        u[ku] += du; u[ku + 1] += du; v[k] += dv; v[k + nx] += dv;
+        gS[k] = m * p.shredding;
+      }
+    }
+    // Turbulence: curl of a layered simplex potential, where the threshold field exceeds the cutoff
+    if (p.enable_turbulence && p.turbulence > 0) {
+      const W1 = nx + 1, psi = this.psi, tt = TURB_E * this.time / Math.max(0.01, p.turbulence_pulselength), seed = p.turbulence_seed * 1.37;
+      const fast = p.turbulence_noisetype === 'fast';
+      psi.fill(0);
+      // comme Houdini : chaque niveau a une taille de tourbillon divisée par 2 et une vitesse multipliée par 2 x Roughness
+      const swBase = p.turbulence_swirlsize;
+      let sw = swBase, amp = 1;
+      for (let l = 0; l < (p.turbulence_levels | 0); l++) {
+        if (l > 0 && sw < 2 * dx) break;
+        for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
+          let x = i * dx / sw + seed + l * 31.1, y = j * dx / sw + l * 17.3;
+          if (!fast) { const rx = 0.8 * x - 0.6 * y, ry = 0.6 * x + 0.8 * y; x = rx; y = ry; }
+          psi[j * W1 + i] += amp * swBase * snoise3(x, y, tt + l * 5.1);
+        }
+        sw *= 0.5; amp *= p.turbulence_grain;
+      }
+      const IF = this.field(p.turbulence_influencefield), th = p.turbulence_infthreshold, asR = p.turbulence_infthreshold_asrange;
+      const mk = this.c1, cC = this.mkCtrl(p, 'turbulence');
+      for (let k = 0; k < nx * ny; k++) {
+        let m = asR ? fit01(IF[k], +th[0], +th[1]) : (IF[k] > +th[0] ? 1 : 0);
+        if (m > 0) m *= this.edge(k % nx, (k / nx) | 0);
+        if (m > 0 && cC) m *= cC(k);
+        mk[k] = m;
+      }
+      const s = p.turbulence * TURB_K * dt / dx;  // mesuré sur Houdini 21 (vitesse RMS après 1 à 12 frames)
+      for (let j = 0; j < ny; j++) for (let i = 0; i <= nx; i++) {
+        const m = 0.5 * ((i > 0 ? mk[j * nx + i - 1] : 0) + (i < nx ? mk[j * nx + i] : 0)); if (m <= 0) continue;
+        u[j * NU + i] += (psi[(j + 1) * W1 + i] - psi[j * W1 + i]) * s * m;
+      }
+      for (let j = 0; j <= ny; j++) for (let i = 0; i < nx; i++) {
+        const m = 0.5 * ((j > 0 ? mk[(j - 1) * nx + i] : 0) + (j < ny ? mk[j * nx + i] : 0)); if (m <= 0) continue;
+        v[j * nx + i] -= (psi[j * W1 + i + 1] - psi[j * W1 + i]) * s * m;
+      }
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i; if (mk[k] <= 0) continue;
+        const a = (psi[(j + 1) * W1 + i] - psi[j * W1 + i]) / dx, b = (psi[j * W1 + i + 1] - psi[j * W1 + i]) / dx;
+        gT[k] = mk[k] * p.turbulence * Math.hypot(a, b);
+      }
+    }
+  }
+  project(p, dt) {
+    const nx = this.nx, ny = this.ny, dx = this.dx, u = this.u, v = this.v, pr = this.pr, div = this.div, rhs = this.c1, NU = nx + 1;
+    const floor = !!p.closey;
+    const ca = this.cact, sparse = p.solver === 'sparse';
+    // Open container borders: gas may leave (the border face copies an outgoing inner velocity), but nothing is
+    // blown in from outside; inflow only comes from the pressure solve (pressure 0 outside), so no draught can
+    // feed itself through the borders. A ground plane is a wall (v = 0).
+    for (let j = 0; j < ny; j++) { u[j * NU] = Math.min(0, u[j * NU + 1]); u[j * NU + nx] = Math.max(0, u[j * NU + nx - 1]); }
+    for (let i = 0; i < nx; i++) { v[i] = floor ? 0 : Math.min(0, v[nx + i]); v[ny * nx + i] = Math.max(0, v[(ny - 1) * nx + i]); }
+    if (!sparse || p.sparse_resetrule === 'inactive') this.clearInactiveVel();
+    const s = dx * dx / dt;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      if (!ca[k]) { pr[k] = 0; rhs[k] = 0; continue; }
+      const D = (u[j * NU + i + 1] - u[j * NU + i] + v[k + nx] - v[k]) / dx;
+      rhs[k] = (D - DIVS * div[k]) * s;
+    }
+    this.solvePressure(p, rhs, floor);
+    const g = PROJ_ALPHA * dt / dx;
+    for (let j = 0; j < ny; j++) for (let i = 0; i <= nx; i++) {
+      const al = i > 0 && ca[j * nx + i - 1], ar = i < nx && ca[j * nx + i];
+      if (!al && !ar) continue;
+      const pl = i > 0 ? pr[j * nx + i - 1] : 0, pp = i < nx ? pr[j * nx + i] : 0;
+      u[j * NU + i] -= g * (pp - pl);
+    }
+    for (let j = floor ? 1 : 0; j <= ny; j++) for (let i = 0; i < nx; i++) {
+      const ab = j > 0 && ca[(j - 1) * nx + i], at = j < ny && ca[j * nx + i];
+      if (!ab && !at) continue;
+      const pd = j > 0 ? pr[(j - 1) * nx + i] : 0, pp = j < ny ? pr[j * nx + i] : 0;
+      v[j * nx + i] -= g * (pp - pd);
+    }
+  }
+  // Pressure: conjugate gradient with a MIC(0) preconditioner (Bridson), solved to convergence (residual 1e-4 of
+  // the input) and warm-started from the previous pressure. Active cells only; inactive neighbours and open borders
+  // are pressure 0, a ground plane is a closed wall. A solve that stops before converging keeps the memory of the
+  // previous steps: the blast of a divergence source then rebounds instead of dying out like in Houdini.
+  solvePressure(p, rhs, floor) {
+    const nx = this.nx, ny = this.ny, N = nx * ny, ca = this.cact, x = this.pr;
+    const ad = this.ad, lx = this.lx, ly = this.ly, pc = this.pc, r = this.pres, z = this.pz, s = this.ps, q = this.pq, t = this.pt;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      if (!ca[k]) { ad[k] = lx[k] = ly[k] = 0; continue; }
+      ad[k] = j === 0 && floor ? 3 : 4;
+      lx[k] = i < nx - 1 && ca[k + 1] ? 1 : 0;
+      ly[k] = j < ny - 1 && ca[k + nx] ? 1 : 0;
+    }
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      if (!ad[k]) { pc[k] = 0; continue; }
+      let e = ad[k];
+      if (i > 0 && lx[k - 1]) { const a = pc[k - 1]; e -= a * a * (ly[k - 1] ? 1.97 : 1); }
+      if (j > 0 && ly[k - nx]) { const a = pc[k - nx]; e -= a * a * (lx[k - nx] ? 1.97 : 1); }
+      if (e < 0.25 * ad[k]) e = ad[k];
+      pc[k] = 1 / Math.sqrt(e);
+    }
+    const mulA = (vv, out) => {
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        if (!ad[k]) { out[k] = 0; continue; }
+        let a = ad[k] * vv[k];
+        if (i > 0 && lx[k - 1]) a -= vv[k - 1];
+        if (lx[k]) a -= vv[k + 1];
+        if (j > 0 && ly[k - nx]) a -= vv[k - nx];
+        if (ly[k]) a -= vv[k + nx];
+        out[k] = a;
+      }
+    };
+    const precond = () => {  // z = M^-1 r
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        if (!ad[k]) { t[k] = 0; continue; }
+        let a = r[k];
+        if (i > 0 && lx[k - 1]) a += pc[k - 1] * t[k - 1];
+        if (j > 0 && ly[k - nx]) a += pc[k - nx] * t[k - nx];
+        t[k] = a * pc[k];
+      }
+      for (let j = ny - 1; j >= 0; j--) for (let i = nx - 1; i >= 0; i--) {
+        const k = j * nx + i;
+        if (!ad[k]) { z[k] = 0; continue; }
+        let a = t[k];
+        if (lx[k]) a += pc[k] * z[k + 1];
+        if (ly[k]) a += pc[k] * z[k + nx];
+        z[k] = a * pc[k];
+      }
+    };
+    mulA(x, q);
+    let bmax = 0, rmax = 0;
+    for (let k = 0; k < N; k++) {
+      if (!ad[k]) { r[k] = 0; x[k] = 0; continue; }
+      const b = -rhs[k], a = b - q[k];
+      r[k] = a;
+      if (Math.abs(b) > bmax) bmax = Math.abs(b);
+      if (Math.abs(a) > rmax) rmax = Math.abs(a);
+    }
+    const tol = 1e-4 * bmax + 1e-12, maxIt = Math.max(1, p.proj_iters | 0);
+    let it = 0;
+    if (rmax > tol) {
+      precond();
+      let sigma = 0;
+      for (let k = 0; k < N; k++) { s[k] = z[k]; sigma += z[k] * r[k]; }
+      for (it = 1; it <= maxIt; it++) {
+        mulA(s, q);
+        let sq = 0;
+        for (let k = 0; k < N; k++) sq += s[k] * q[k];
+        if (!(sq > 0)) break;
+        const alpha = sigma / sq;
+        rmax = 0;
+        for (let k = 0; k < N; k++) {
+          if (!ad[k]) continue;
+          x[k] += alpha * s[k];
+          const a = r[k] -= alpha * q[k];
+          if (Math.abs(a) > rmax) rmax = Math.abs(a);
+        }
+        if (rmax <= tol) break;
+        precond();
+        let sn = 0;
+        for (let k = 0; k < N; k++) sn += z[k] * r[k];
+        const beta = sn / sigma; sigma = sn;
+        for (let k = 0; k < N; k++) s[k] = z[k] + beta * s[k];
+      }
+    }
+    this.pIters = it;
+  }
+}
+let BX = 0, BY = 0;
+
+/* ---------------- colour maps ---------------- */
+function lut(stops) {
+  const L = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const t = i / 255; let a = stops[0], b = stops[stops.length - 1];
+    for (let s = 0; s < stops.length - 1; s++) if (t >= stops[s][0] && t <= stops[s + 1][0]) { a = stops[s]; b = stops[s + 1]; break; }
+    const u = b[0] === a[0] ? 0 : (t - a[0]) / (b[0] - a[0]);
+    for (let c = 0; c < 3; c++) L[i * 3 + c] = (a[c + 1] + (b[c + 1] - a[c + 1]) * u) * 255;
+  }
+  return L;
+}
+const FIRE = lut([[0, 0, 0, 0], [0.18, 0.42, 0.03, 0], [0.42, 0.95, 0.3, 0.02], [0.68, 1, 0.62, 0.14], [0.88, 1, 0.87, 0.52], [1, 1, 0.97, 0.86]]);
+const HEAT = lut([[0, 0.05, 0.05, 0.1], [0.25, 0.3, 0.06, 0.42], [0.5, 0.78, 0.17, 0.3], [0.75, 0.98, 0.52, 0.1], [1, 1, 0.96, 0.62]]);
+const VIRI = lut([[0, 0.12, 0.05, 0.25], [0.25, 0.23, 0.32, 0.55], [0.5, 0.13, 0.57, 0.55], [0.75, 0.37, 0.79, 0.38], [1, 0.99, 0.91, 0.14]]);
+const GUIDE = lut([[0, 0.04, 0.09, 0.32], [0.3, 0.0, 0.55, 0.85], [0.65, 0.95, 0.86, 0.15], [1, 1, 0.25, 0.08]]);
+function blackbody(K) {
+  const t = K / 100; let r, g, b;
+  if (t <= 66) { r = 255; g = 99.4708025861 * Math.log(t) - 161.1195681661; b = t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307; }
+  else { r = 329.698727446 * Math.pow(t - 60, -0.1332047592); g = 288.1221695283 * Math.pow(t - 60, -0.0755148492); b = 255; }
+  return [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)];
+}
+function bbLut(p) {
+  const L = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const c = i / 255, K = p.temperature0 + c * (p.temperature1 - p.temperature0), col = blackbody(Math.max(500, K));
+    const dim = Math.pow(clamp((K - p.temperature0) / Math.max(1, p.temperature1 - p.temperature0), 0, 1), 0.6);
+    for (let k = 0; k < 3; k++) L[i * 3 + k] = col[k] * dim;
+  }
+  return L;
+}
+const BG = [23, 25, 28];
+
+/* ---------------- rendering ---------------- */
+function renderSim(sim, off, mode, sg) {
+  const nx = sim.nx, ny = sim.ny;
+  if (off.width !== nx || off.height !== ny) { off.width = nx; off.height = ny; off._img = null; }
+  const ctx = off.getContext('2d');
+  if (!off._img) off._img = ctx.createImageData(nx, ny);
+  const D = off._img.data, p = sim.par(), d = sim.d, T = sim.T, f = sim.f, dx = sim.dx;
+  const put = (i, j, r, g, b) => { const o = ((ny - 1 - j) * nx + i) * 4; D[o] = r; D[o + 1] = g; D[o + 2] = b; D[o + 3] = 255; };
+  const guide = sg === 'disturbance' ? sim.gD : sg === 'turbulence' ? sim.gT : sg === 'shredding' ? sim.gS : null;
+  let gmax = 0;
+  if (guide) { for (let k = 0; k < guide.length; k++) if (guide[k] > gmax) gmax = guide[k]; gmax = Math.max(gmax, 1e-6); }
+  if (mode === 'look' || mode === 'active' || guide) {
+    const act = mode === 'active' ? sim.cact : null;
+    const ds = p.enablesmoke ? p.s_densityscale : 0, sh = p.s_shadowint, sc = p.s_color * 255;
+    const I = p.bind_flame === 'temperature' ? T : f, C = p.bind_temperature === 'temperature' ? T : f;
+    const fr0 = +p.fi_fitsrc[0], fr1 = +p.fi_fitsrc[1], E0 = p.fi_enable ? p.fi_int / 25 * 1.5 : 0;
+    const CL = p.fc_colormode === 'bb' ? bbLut(p) : FIRE;
+    for (let i = 0; i < nx; i++) {
+      let acc = 0;
+      for (let j = ny - 1; j >= 0; j--) {
+        const k = j * nx + i, dd = d[k] * ds, trans = Math.exp(-acc);
+        acc += dd * dx * 6 * sh;
+        const al = 1 - Math.exp(-dd * 1.6), lit = sc * (0.2 + 0.8 * trans);
+        let r = BG[0] + (lit - BG[0]) * al, g = BG[1] + (lit - BG[1]) * al, b = BG[2] + (lit - BG[2]) * al;
+        if (E0 > 0) {
+          const e = fit01(I[k], fr0, fr1) * E0;
+          if (e > 0) {
+            const ci = ((C[k] < 0 ? 0 : C[k] > 1 ? 1 : C[k]) * 255 | 0) * 3;
+            r += (255 - r) * (1 - Math.exp(-e * CL[ci] / 255 * 2));
+            g += (255 - g) * (1 - Math.exp(-e * CL[ci + 1] / 255 * 2));
+            b += (255 - b) * (1 - Math.exp(-e * CL[ci + 2] / 255 * 2));
+          }
+        }
+        if (act) {
+          if (act[k]) { r = r * 0.7 + 18; g = g * 0.7 + 62; b = b * 0.7 + 72; } else { r *= 0.45; g *= 0.45; b *= 0.45; }
+        }
+        if (guide) {
+          const t = guide[k] / gmax;
+          r *= 0.3; g *= 0.3; b *= 0.3;
+          if (t > 0.002) { const gi = (Math.min(1, t) * 255 | 0) * 3, a = Math.min(1, 0.25 + t); r += (GUIDE[gi] - r) * a; g += (GUIDE[gi + 1] - g) * a; b += (GUIDE[gi + 2] - b) * a; }
+        }
+        put(i, j, r, g, b);
+      }
+    }
+  } else {
+    const signed = (i, j, x) => { x = clamp(x, -1, 1); if (x >= 0) put(i, j, BG[0] + (255 - BG[0]) * x, BG[1] + (120 - BG[1]) * x, BG[2] + (50 - BG[2]) * x); else put(i, j, BG[0] + (70 - BG[0]) * -x, BG[1] + (140 - BG[1]) * -x, BG[2] + (255 - BG[2]) * -x); };
+    const ramp = (i, j, L, t) => { const q = (clamp(t, 0, 1) * 255 | 0) * 3; put(i, j, L[q], L[q + 1], L[q + 2]); };
+    let pmax = 1e-6;
+    if (mode === 'pressure') for (let k = 0; k < sim.pr.length; k++) pmax = Math.max(pmax, Math.abs(sim.pr[k]));
+    const u = sim.u, v = sim.v, NU = nx + 1;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      if (mode === 'density') { const g = 1 - Math.exp(-d[k] * 2); put(i, j, BG[0] + (235 - BG[0]) * g, BG[1] + (235 - BG[1]) * g, BG[2] + (235 - BG[2]) * g); }
+      else if (mode === 'temperature') ramp(i, j, HEAT, T[k]);
+      else if (mode === 'flame') ramp(i, j, FIRE, f[k]);
+      else if (mode === 'speed') ramp(i, j, VIRI, sim.spd[k] / 4);
+      else if (mode === 'divergence') signed(i, j, sim.div[k] / 8);
+      else if (mode === 'pressure') signed(i, j, sim.pr[k] / pmax);
+      else {
+        const ip = Math.min(nx - 1, i + 1), im = Math.max(0, i - 1), jp = Math.min(ny - 1, j + 1), jm = Math.max(0, j - 1);
+        const vc = (a, b) => 0.5 * (v[b * nx + a] + v[(b + 1) * nx + a]), uc = (a, b) => 0.5 * (u[b * NU + a] + u[b * NU + a + 1]);
+        const w = ((vc(ip, j) - vc(im, j)) - (uc(i, jp) - uc(i, jm))) / (2 * dx);
+        signed(i, j, w / 15);
+      }
+    }
+  }
+  ctx.putImageData(off._img, 0, 0);
+}
+
+/* ---------------- app state ---------------- */
+const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let sims = [new Sim(null)], compare = 'none';
+let playing = true, dirty = true, inView = true, arrows = false;
+const offs = [document.createElement('canvas'), document.createElement('canvas')];
+const cv = $('cv-sim'), ov = $('cv-ov'), stage = $('stage');
+const PW = 480, PH = 720;
+let cssW = 0, cssH = 0;
+
+const CMP = {
+  disturbance: ['enable_disturbance', 'Disturbance'], turbulence: ['enable_turbulence', 'Turbulence'], shredding: ['enable_shredding', 'Shredding'],
+  buoyancy: ['enable_buoyancy', 'Buoyancy'], wind: ['enable_wind', 'Wind'], expansion: ['div_doadd', 'Flame Expansion'],
+  viscosity: ['enable_viscosity', 'Viscosity'], dissipation: ['enable_dissipation', 'Dissipation'],
+};
+const SCHEME = { sl: 'Semi-Lagrangian', bfecc: 'BFECC', mac: 'Modified MacCormack' };
+function cmpLabels() {
+  if (compare === 'none') return [];
+  if (CMP[compare]) return ['A · sans ' + CMP[compare][1], 'B · avec ' + CMP[compare][1]];
+  if (compare === 'advection') return ['A · Semi-Lagrangian', 'B · ' + SCHEME[P.adv_scheme]];
+  if (compare === 'reflection') return ['A · Reflection Disabled', 'B · Single-Project'];
+  if (compare === 'voxel') return ['A · Voxel Size ' + sims[0].dx, 'B · Voxel Size ' + (+P.divsize)];
+  if (compare === 'sparse') return ['A · Dense', 'B · Sparse'];
+  return [];
+}
+function setCompare(val) {
+  compare = val; $('compare').value = val;
+  if (val === 'none') sims = [new Sim(null)];
+  else if (CMP[val]) {
+    const key = CMP[val][0]; P[key] = true;
+    if (val === 'viscosity' && !(P.viscosity > 0)) P.viscosity = 1;
+    if (val === 'wind' && !(P.wind_strength > 0)) P.wind_strength = 1;
+    sims = [new Sim({ [key]: false }), new Sim(null)];
+  } else if (val === 'advection') { if (P.adv_scheme === 'sl') P.adv_scheme = 'mac'; sims = [new Sim({ adv_scheme: 'sl' }), new Sim(null)]; }
+  else if (val === 'reflection') { P.adv_vel_reflect = 'single'; sims = [new Sim({ adv_vel_reflect: 'off' }), new Sim(null)]; }
+  else if (val === 'voxel') { sims = [new Sim({ divsize: String(Math.min(0.1, +P.divsize * 2)) }), new Sim(null)]; }
+  else if (val === 'sparse') { P.solver = 'sparse'; sims = [new Sim({ solver: 'dense' }), new Sim(null)]; }
+  syncUI(); layout(); dirty = true;
+}
+function resetSims() {
+  if (compare === 'voxel') { setCompare('voxel'); return; }
+  sims.forEach(s => s.reset()); layout(); dirty = true;
+}
+
+/* ---------------- presets (starting points, not Houdini's Quick Setups) ---------------- */
+const PRESETS = {
+  base: {},
+  // Le labo reproduit la buoyancy de Houdini (≈ 88 u/s² pour temperature 1) : les presets restent sur des
+  // températures et des Buoyancy Scale modérées pour garder des panaches lisibles dans ce domaine de 3 x 4.5.
+  smoke: { src_radius: 0.45, src_temperature: 0.5, buoyancylift: 0.35, tempcooling: 0.6, dissipation: 0.03, enable_disturbance: true, disturbance: 0.6,
+    enable_turbulence: true, turbulence: 0.4, turbulence_swirlsize: 0.7 },
+  fire: { divsize: '0.025', src_density: 0, src_temperature: 1, src_flame: 1, src_vel: 0.6, src_radius: 0.45, src_height: 0.5, src_noise: 0.75, src_noisetype: 'worley', src_noisesize: 0.18, src_noisespeed: 1.2,
+    flames_lifespan: 0.7, tempcooling: 0.7, buoyancylift: 0.25, dissipation: 0.06, soot_doemit: true, soot_amount: 0.6, soot_controlrange: [0.02, 0.35], soot_remapcontrol: 'hill',
+    temperature_doadd: true, enable_shredding: true, shredding: 2.5, shredding_blocksize: 0.15, enable_turbulence: true, turbulence: 0.4, turbulence_swirlsize: 0.5,
+    enable_disturbance: true, disturbance: 0.5, fi_int: 30 },
+  explosion: { src_mode: 'burst', src_burst: 4, src_cycle: 96, src_radius: 0.45, src_height: 0.7, src_density: 0.6, src_temperature: 1, src_flame: 1, src_divergence: 6, src_noise: 0.5,
+    flames_lifespan: 0.9, tempcooling: 0.6, dissipation: 0.04, soot_doemit: true, soot_amount: 0.9, soot_controlrange: [0.05, 0.6], soot_remapcontrol: 'hill',
+    temperature_doadd: true, div_doadd: true, div_amount: 0.5, div_controlrange: [0.2, 1], enable_turbulence: true, turbulence: 0.5, turbulence_swirlsize: 0.5,
+    enable_disturbance: true, disturbance: 0.8, enable_shredding: true, shredding: 1, closey: true, substeps: 3, buoyancylift: 0.25 },
+  candle: { divsize: '0.025', src_radius: 0.12, src_height: 0.5, src_density: 0, src_temperature: 1, src_flame: 1, src_vel: 0.5, src_noise: 0.2, flames_lifespan: 0.6, tempcooling: 0.8,
+    buoyancylift: 0.2, enable_viscosity: true, viscosity: 0.3, enable_shredding: true, shredding: 0.5, shredding_blocksize: 0.1, temperature_doadd: true, fi_int: 35 },
+  heavy: { src_density: 1, src_temperature: 0.05, src_vel: 1.5, src_noise: 0.5, src_height: 1.2, enable_density_gravity: true, density_gravity_scale: 1, dissipation: 0.03,
+    enable_disturbance: true, disturbance: 0.4, closey: true },
+};
+function applyPreset(name, keepCompare) {
+  Object.assign(P, JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(JSON.stringify(PRESETS[name] || {})));
+  $('preset').value = name;
+  if (keepCompare) syncUI();
+  else { compare = 'none'; $('compare').value = 'none'; sims = [new Sim(null)]; syncUI(); layout(); }
+  dirty = true;
+}
+
+/* ---------------- parameter panel ---------------- */
+const CTL = {};
+function fmtNum(it, x) {
+  if (it[2] === 'i') return String(Math.round(x));
+  const st = it[6] || 0.01;
+  return st >= 1 ? String(Math.round(x)) : st < 0.01 ? x.toFixed(3) : x.toFixed(2);
+}
+function buildPanel() {
+  const tabsEl = $('tabs'), panesEl = $('panes');
+  for (const t of TABS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = 'tab-' + t.id; b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'pane-' + t.id);
+    b.setAttribute('aria-selected', t.id === 'shape' ? 'true' : 'false'); b.textContent = t.label;
+    b.addEventListener('click', () => selectTab(t.id));
+    tabsEl.appendChild(b);
+    const pane = document.createElement('div');
+    pane.className = 'pane'; pane.id = 'pane-' + t.id; pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', 'tab-' + t.id);
+    pane.hidden = t.id !== 'shape';
+    for (const g of t.groups) {
+      const G = document.createElement('div'); G.className = 'grp';
+      const H = document.createElement('div'); H.className = 'grp-h';
+      if (g.enable) { H.innerHTML = `<label><input type="checkbox" id="p-${g.enable[0]}"> ${g.title}</label>`; CTL[g.enable[0]] = { type: 'b', grp: G }; G.dataset.enable = g.enable[0]; }
+      else H.innerHTML = `<span class="gt">${g.title}</span>`;
+      const tools = document.createElement('span'); tools.style.display = 'inline-flex'; tools.style.gap = '6px';
+      if (g.guide) { const m = document.createElement('button'); m.type = 'button'; m.className = 'mini'; m.textContent = 'Guide'; m.title = 'Afficher le Shape Guide'; m.addEventListener('click', () => showShapeGuide(g.guide)); tools.appendChild(m); }
+      if (g.compare) { const m = document.createElement('button'); m.type = 'button'; m.className = 'mini'; m.textContent = 'A/B'; m.title = 'Comparer sans / avec'; m.addEventListener('click', () => setCompare(g.compare)); tools.appendChild(m); }
+      H.appendChild(tools); G.appendChild(H);
+      if (g.note) G.insertAdjacentHTML('beforeend', `<p class="grp-note">${g.note}</p>`);
+      const B = document.createElement('div'); B.className = 'grp-b';
+      for (const it of g.items) B.appendChild(row(it));
+      G.appendChild(B); pane.appendChild(G);
+    }
+    panesEl.appendChild(pane);
+  }
+  for (const key of Object.keys(CTL)) bind(key);
+}
+function row(it) {
+  const [key, label, type, , a, b, step, hint] = it;
+  if (key === 'sub') { const s = document.createElement('div'); s.className = 'sub'; s.textContent = label; return s; }
+  const w = document.createElement('div'); w.className = 'prm' + (type === 'b' ? ' chk' : ''); w.dataset.key = key;
+  if (type === 'b') w.innerHTML = `<label><input type="checkbox" id="p-${key}"> ${label}</label>`;
+  else if (type === 's') w.innerHTML = `<label class="lbl" for="p-${key}"><span>${label}</span></label><select id="p-${key}">${a.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
+  else if (type === 'r') w.innerHTML = `<span class="lbl"><span>${label}</span></span><div class="pair"><input type="number" id="p-${key}-0" step="0.01" aria-label="${label} (début)"><input type="number" id="p-${key}-1" step="0.01" aria-label="${label} (fin)"></div>`;
+  else w.innerHTML = `<label class="lbl" for="p-${key}"><span>${label}</span><output id="o-${key}"></output></label><input type="range" id="p-${key}" min="${a}" max="${b}" step="${step}">`;
+  if (hint) w.insertAdjacentHTML('beforeend', `<span class="hint" id="h-${key}">${hint}</span>`);
+  CTL[key] = { type, it, row: w };
+  return w;
+}
+function bind(key) {
+  const c = CTL[key];
+  const on = () => { onParam(key); };
+  if (c.type === 'r') {
+    [0, 1].forEach(n => $(`p-${key}-${n}`).addEventListener('input', e => { const x = parseFloat(e.target.value); if (!isNaN(x)) { P[key][n] = x; on(); } }));
+  } else {
+    const el = $('p-' + key);
+    el.addEventListener(c.type === 's' || c.type === 'b' ? 'change' : 'input', () => {
+      if (c.type === 'b') P[key] = el.checked;
+      else if (c.type === 's') P[key] = el.value;
+      else { P[key] = parseFloat(el.value); $('o-' + key).textContent = fmtNum(c.it, P[key]); }
+      on();
+    });
+  }
+}
+function onParam(key) {
+  if (key === 'divsize') { resetSims(); }
+  if (key === 'solver') sims.forEach(s => s.updateActive(s.par()));
+  refreshStates(); dirty = true;
+}
+function syncUI() {
+  for (const key of Object.keys(CTL)) {
+    const c = CTL[key];
+    if (c.type === 'r') { $(`p-${key}-0`).value = P[key][0]; $(`p-${key}-1`).value = P[key][1]; }
+    else if (c.type === 'b') $('p-' + key).checked = !!P[key];
+    else if (c.type === 's') $('p-' + key).value = P[key];
+    else { $('p-' + key).value = P[key]; $('o-' + key).textContent = fmtNum(c.it, P[key]); }
+  }
+  refreshStates();
+}
+function refreshStates() {
+  document.querySelectorAll('.grp[data-enable]').forEach(G => G.classList.toggle('off', !P[G.dataset.enable]));
+  const cont = P.disturbance_mode === 'cont';
+  CTL.disturbance_refscale.row.hidden = !cont;
+  ['disturbance_blocksize', 'disturbance_rough', 'disturbance_pulselength', 'disturbance_maxoct', 'disturbance_lacunarity'].forEach(k => CTL[k].row.hidden = cont);
+  const dx = +P.divsize, h = $('h-divsize');
+  if (h) h.textContent = `Grille ${Math.round(DOM_W / dx)} × ${Math.round(DOM_H / dx)} = ${(Math.round(DOM_W / dx) * Math.round(DOM_H / dx)).toLocaleString('fr-FR')} voxels (domaine 3 × 4.5 unités). En 3D : ÷2 → ×8 voxels.`;
+}
+function selectTab(id) {
+  TABS.forEach(t => { $('tab-' + t.id).setAttribute('aria-selected', t.id === id ? 'true' : 'false'); $('pane-' + t.id).hidden = t.id !== id; });
+}
+function showShapeGuide(name) {
+  P['enable_' + name] = true; syncUI();
+  $('shapeguide').value = name; $('fieldguide').value = 'look'; dirty = true;
+}
+
+/* ---------------- layout & drawing ---------------- */
+function layout() {
+  const panels = sims.length, avail = stage.clientWidth || 600;
+  let h = Math.min(700, Math.max(420, window.innerHeight * 0.74));
+  let w = h * (2 / 3) * panels;
+  if (w > avail) { w = avail; h = w / panels * 1.5; }
+  cssW = Math.floor(w); cssH = Math.floor(h);
+  cv.width = PW * panels; cv.height = PH;
+  cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  ov.width = Math.round(cssW * dpr); ov.height = Math.round(cssH * dpr);
+  ov.style.width = cssW + 'px'; ov.style.height = cssH + 'px';
+  dirty = true;
+}
+function draw() {
+  const mode = $('fieldguide').value, sg = $('shapeguide').value, ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  sims.forEach((s, i) => { renderSim(s, offs[i], mode, sg); ctx.drawImage(offs[i], i * PW, 0, PW, PH); });
+  const o = ov.getContext('2d'), dpr = ov.width / cssW, pw = cssW / sims.length;
+  o.setTransform(dpr, 0, 0, dpr, 0, 0); o.clearRect(0, 0, cssW, cssH);
+  const labels = cmpLabels();
+  sims.forEach((s, idx) => {
+    const x0 = idx * pw, p = s.par(), sx = pw / DOM_W, sy = cssH / DOM_H;
+    // source outline
+    if (p.src_mode !== 'off') {
+      o.save(); o.setLineDash([4, 4]); o.strokeStyle = 'rgba(255,255,255,.22)'; o.lineWidth = 1;
+      o.beginPath(); o.arc(x0 + DOM_W / 2 * sx, cssH - p.src_height * sy, p.src_radius * sx, 0, TAU); o.stroke(); o.restore();
+    }
+    if (mode === 'active' && p.solver === 'sparse') {
+      const cw = pw / s.nx, chh = cssH / s.ny;
+      o.strokeStyle = 'rgba(110,210,225,.55)'; o.lineWidth = 1;
+      for (let ty = 0; ty < s.nty; ty++) for (let tx = 0; tx < s.ntx; tx++) {
+        if (!s.tile[ty * s.ntx + tx]) continue;
+        const x = x0 + tx * TS * cw, w = Math.min(TS, s.nx - tx * TS) * cw, h = Math.min(TS, s.ny - ty * TS) * chh, y = cssH - ty * TS * chh - h;
+        o.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      }
+    } else if (mode === 'active' && s.box) {
+      const cw = pw / s.nx, chh = cssH / s.ny, [i0, j0, i1, j1] = s.box;
+      o.strokeStyle = 'rgba(110,210,225,.8)'; o.lineWidth = 1.5;
+      o.strokeRect(x0 + i0 * cw + 0.75, cssH - (j1 + 1) * chh + 0.75, (i1 - i0 + 1) * cw - 1.5, (j1 - j0 + 1) * chh - 1.5);
+    }
+    if (arrows) {
+      const step = Math.max(1, Math.round(0.16 / s.dx)), cell = pw / s.nx, NU = s.nx + 1;
+      o.strokeStyle = 'rgba(150,205,255,.85)'; o.lineWidth = 1.2; o.beginPath();
+      for (let j = Math.floor(step / 2); j < s.ny; j += step) for (let i = Math.floor(step / 2); i < s.nx; i += step) {
+        const uc = 0.5 * (s.u[j * NU + i] + s.u[j * NU + i + 1]), vc = 0.5 * (s.v[j * s.nx + i] + s.v[(j + 1) * s.nx + i]), L = Math.hypot(uc, vc);
+        if (L < 0.05) continue;
+        const len = Math.min(1, L / 3) * step * cell * 1.1, dxp = uc / L * len, dyp = -vc / L * len;
+        const px = x0 + (i + 0.5) * cell, py = cssH - (j + 0.5) * cell, ex = px + dxp, ey = py + dyp, a = Math.atan2(dyp, dxp);
+        o.moveTo(px, py); o.lineTo(ex, ey);
+        o.moveTo(ex, ey); o.lineTo(ex - 4 * Math.cos(a - 0.5), ey - 4 * Math.sin(a - 0.5));
+        o.moveTo(ex, ey); o.lineTo(ex - 4 * Math.cos(a + 0.5), ey - 4 * Math.sin(a + 0.5));
+      }
+      o.stroke();
+    }
+    if (labels[idx]) {
+      o.font = '600 12px "JetBrains Mono", Consolas, monospace';
+      const tw = o.measureText(labels[idx]).width;
+      o.fillStyle = 'rgba(10,11,13,.78)'; o.fillRect(x0 + 8, 8, tw + 14, 22);
+      o.fillStyle = idx ? '#FFB48A' : '#C9D1D8'; o.fillText(labels[idx], x0 + 15, 23);
+    }
+    if (idx > 0) { o.fillStyle = 'rgba(255,255,255,.18)'; o.fillRect(x0, 0, 1, cssH); }
+  });
+}
+
+/* ---------------- HUD & pipeline ---------------- */
+const pipe = $('pipe'), ema = {};
+pipe.innerHTML = `<div class="pipe-title"><span>Coût par étape</span><span>ms / frame</span></div>` +
+  STAGES.map(([k, l]) => `<div class="row"><span>${l}</span><div><div class="bar" id="bar-${k}" style="width:0"></div></div><span id="ms-${k}">0</span></div>`).join('');
+function updateHud() {
+  const s = sims[sims.length - 1];
+  let tot = 0, mx = 1e-6;
+  for (const [k] of STAGES) { const v = s.tmFrame[k] || 0; ema[k] = ema[k] === undefined ? v : ema[k] * 0.8 + v * 0.2; tot += ema[k]; mx = Math.max(mx, ema[k]); }
+  for (const [k] of STAGES) { $('bar-' + k).style.width = (ema[k] / mx * 100).toFixed(1) + '%'; $('ms-' + k).textContent = ema[k].toFixed(2); }
+  const a = sims.length > 1 ? ` · A : ${sims[0].nx}×${sims[0].ny}` : '';
+  const act = s.par().solver === 'sparse' ? `<span>Zone active <b>${s.nActive}/${s.tile.length}</b> tuiles (${Math.round(s.nActive / s.tile.length * 100)} %)</span>`
+    : s.box ? `<span>Conteneur Dense <b>${s.box[2] - s.box[0] + 1}×${s.box[3] - s.box[1] + 1}</b> (${Math.round(s.nActive / (s.nx * s.ny) * 100)} %)</span>` : '<span>Conteneur Dense vide</span>';
+  $('hud').innerHTML = `<span>Frame <b>${s.frame}</b></span><span>Grille <b>${s.nx}×${s.ny}</b> = ${(s.nx * s.ny).toLocaleString('fr-FR')} voxels${a}</span>${act}<span>Substeps <b>${s.subs}</b></span><span>Sim <b>${tot.toFixed(1)} ms</b>/frame</span><span>Vitesse max <b>${s.maxSpeed.toFixed(2)}</b> u/s</span>${playing ? '' : '<span><b>En pause</b></span>'}`;
+}
+
+/* ---------------- controls ---------------- */
+function setPlaying(v) { playing = v; const b = $('b-play'); b.textContent = v ? 'Pause' : 'Play'; b.classList.toggle('primary', v); }
+$('b-play').addEventListener('click', () => setPlaying(!playing));
+$('b-reset').addEventListener('click', () => { resetSims(); updateHud(); });
+$('b-step').addEventListener('click', () => { setPlaying(false); sims.forEach(s => s.stepFrame()); dirty = true; updateHud(); });
+$('preset').addEventListener('change', e => { applyPreset(e.target.value); });
+$('compare').addEventListener('change', e => setCompare(e.target.value));
+$('fieldguide').addEventListener('change', () => { if ($('fieldguide').value !== 'look') $('shapeguide').value = 'none'; dirty = true; });
+$('shapeguide').addEventListener('change', () => { const v = $('shapeguide').value; if (v !== 'none') showShapeGuide(v); dirty = true; });
+$('b-arrows').addEventListener('click', e => { arrows = !arrows; e.currentTarget.setAttribute('aria-pressed', arrows ? 'true' : 'false'); dirty = true; });
+
+// mouse: push or heat
+let drag = null;
+function worldAt(e) {
+  const r = ov.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, pw = r.width / sims.length;
+  const lx = x - Math.floor(x / pw) * pw;
+  return { x: lx / pw * DOM_W, y: (1 - y / r.height) * DOM_H, t: performance.now() };
+}
+ov.addEventListener('pointerdown', e => { drag = worldAt(e); ov.setPointerCapture(e.pointerId); });
+ov.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const w = worldAt(e), dt = Math.max(0.008, (w.t - drag.t) / 1000);
+  const vx = clamp((w.x - drag.x) / dt, -8, 8), vy = clamp((w.y - drag.y) / dt, -8, 8);
+  const heat = $('mousemode').value === 'heat';
+  sims.forEach(s => s.imp.push({ x: w.x, y: w.y, vx, vy, heat }));
+  drag = w;
+});
+const endDrag = () => { drag = null; };
+ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
+
+// course buttons
+document.querySelectorAll('[data-compare],[data-preset],[data-guide],[data-shapeguide]').forEach(b => {
+  if (b.closest('.lab')) return;
+  b.addEventListener('click', () => {
+    const ds = b.dataset;
+    if (ds.preset) applyPreset(ds.preset, !!ds.compare);
+    if (ds.compare) setCompare(ds.compare);
+    if (ds.guide) { $('fieldguide').value = ds.guide; $('shapeguide').value = 'none'; }
+    if (ds.shapeguide) showShapeGuide(ds.shapeguide);
+    if (!ds.guide && !ds.shapeguide) { $('fieldguide').value = 'look'; }
+    setPlaying(true); dirty = true;
+    $('lab').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  });
+});
+
+/* ---------------- main loop ---------------- */
+let last = performance.now(), acc = 0, lastHud = 0;
+function tick(now) {
+  const dtR = Math.min(0.1, (now - last) / 1000); last = now;
+  if (playing && inView) {
+    acc += dtR; let steps = 0;
+    while (acc >= 1 / 24 && steps < 2) { sims.forEach(s => s.stepFrame()); acc -= 1 / 24; steps++; dirty = true; }
+    if (steps === 2) acc = 0;
+  }
+  if (dirty) { draw(); dirty = false; }
+  if (now - lastHud > 300) { updateHud(); lastHud = now; }
+  requestAnimationFrame(tick);
+}
+new IntersectionObserver(es => { inView = es[0].isIntersecting; }).observe($('lab'));
+let rsT = null;
+window.addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(layout, 100); });
+
+buildPanel();
+applyPreset('smoke');
+for (let i = 0; i < 40; i++) sims.forEach(s => s.stepFrame());
+layout(); draw(); updateHud();
+requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>

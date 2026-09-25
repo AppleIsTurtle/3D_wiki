@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Wiki 3D : cours interactifs sur Houdini, la simulation pyro, les noises et le lookdev.">
+<title>Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#EDEFF1; --surface:#F8F9FA; --ink:#14171A; --ink-2:#4A5259; --ink-3:#6C757C;
+  --line:#D3D8DC; --code:#E1E5E8;
+  --c-sim:#C8410F; --c-proc:#11707E; --c-look:#8A5A00;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+    --line:#2A3136; --code:#1D2327;
+    --c-sim:#FF7A3A; --c-proc:#3DB7C7; --c-look:#FFB53D;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+  --line:#2A3136; --code:#1D2327;
+  --c-sim:#FF7A3A; --c-proc:#3DB7C7; --c-look:#FFB53D;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding-inline:clamp(16px,4vw,44px);padding-block:48px 96px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.08;margin:0}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+p{margin:0}
+:focus-visible{outline:2px solid var(--c-sim);outline-offset:3px}
+.eyebrow{font:600 .74rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.hero{display:grid;gap:14px;padding-bottom:36px}
+.lead{font-size:1.14rem;color:var(--ink-2);max-width:62ch}
+.lead strong{color:var(--ink)}
+
+.topic{display:grid;gap:14px;padding-block:28px;border-top:1px solid var(--line)}
+.topic[data-t="sim"]{--c:var(--c-sim)} .topic[data-t="proc"]{--c:var(--c-proc)} .topic[data-t="look"]{--c:var(--c-look)}
+.topic-h{display:flex;gap:10px;align-items:baseline;font:600 .78rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.topic-h .num{color:var(--c)}
+.pages{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.page{display:grid;grid-template-columns:112px minmax(0,1fr) auto;gap:22px;align-items:center;padding:14px 20px 14px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;text-decoration:none;transition:border-color .15s}
+.page:hover{border-color:var(--c)}
+.page:focus-visible{outline-color:var(--c)}
+.thumb svg{display:block;width:112px;height:112px;border-radius:8px}
+.txt{display:grid;gap:6px;min-width:0}
+.path{font:600 .74rem/1.3 var(--mono);color:var(--ink-3)}
+.path b{color:var(--c);font-weight:600}
+.page h3{font-size:1.55rem;font-weight:700;letter-spacing:-.01em}
+.desc{color:var(--ink-2);max-width:62ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tags span{font:600 .72rem/1 var(--mono);padding:5px 8px;border-radius:5px;background:var(--code);color:var(--ink-2)}
+.go{font:700 1.5rem/1 var(--display);color:var(--ink-3);transition:transform .15s,color .15s}
+.page:hover .go{transform:translateX(4px);color:var(--c)}
+@media (max-width:620px){
+  .page{grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:start;padding:12px}
+  .thumb svg{width:72px;height:72px}
+  .page h3{font-size:1.3rem}
+  .go{display:none}
+}
+@media (prefers-reduced-motion: reduce){.page,.go{transition:none}}
+footer{padding-top:32px;border-top:1px solid var(--line);color:var(--ink-3);font-size:.88rem;max-width:72ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Cours 3D · Houdini · FX · Lookdev</span>
+  <h1>Wiki 3D</h1>
+  <p class="lead">Des cours interactifs. Chaque page contient un <strong>labo qui tourne dans ton navigateur</strong> et les explications pour comprendre ce que tu y vois, avec les noms de paramètres que tu retrouves dans Houdini.</p>
+</header>
+
+<nav aria-label="Sommaire">
+
+  <section class="topic" data-t="sim" aria-labelledby="t-sim">
+    <h2 class="topic-h" id="t-sim"><span class="num">01</span>Simulation</h2>
+    <ul class="pages">
+      <li>
+        <a class="page" href="/pyro/">
+          <span class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 112 112">
+              <defs>
+                <radialGradient id="g-flame" cx="50%" cy="80%" r="62%">
+                  <stop offset="0" stop-color="#FFF3C4"/>
+                  <stop offset=".3" stop-color="#FFC04D"/>
+                  <stop offset=".62" stop-color="#F0621F"/>
+                  <stop offset="1" stop-color="#9E2A0B"/>
+                </radialGradient>
+                <radialGradient id="g-smoke">
+                  <stop offset="0" stop-color="#9AA1A7" stop-opacity=".6"/>
+                  <stop offset="1" stop-color="#9AA1A7" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <rect width="112" height="112" fill="#16181B"/>
+              <circle cx="44" cy="30" r="24" fill="url(#g-smoke)"/>
+              <circle cx="70" cy="20" r="20" fill="url(#g-smoke)"/>
+              <circle cx="58" cy="40" r="16" fill="url(#g-smoke)"/>
+              <path d="M56 102 C34 102 28 84 38 68 C41 76 46 78 48 74 C44 60 50 48 58 38 C58 52 66 56 70 50 C72 58 84 70 80 86 C77 98 68 102 56 102 Z" fill="url(#g-flame)"/>
+            </svg>
+          </span>
+          <span class="txt">
+            <span class="path"><b>/pyro</b> · Pyro Solver SOP · Houdini 21</span>
+            <h3>Labo Pyro</h3>
+            <span class="desc">Une vraie simulation de fumée et de feu, en 2D, avec les paramètres du Pyro Solver rangés dans les mêmes onglets que dans Houdini. Affiche les champs, regarde où agit chaque opérateur et compare deux simulations côte à côte.</span>
+            <span class="tags"><span>Field Guide</span><span>Shape Guide</span><span>Comparer A/B</span><span>Shape operators</span><span>Recettes</span></span>
+          </span>
+          <span class="go" aria-hidden="true">→</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="topic" data-t="proc" aria-labelledby="t-proc">
+    <h2 class="topic-h" id="t-proc"><span class="num">02</span>Procédural</h2>
+    <ul class="pages">
+      <li>
+        <a class="page" href="/noise/">
+          <span class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 112 112">
+              <defs>
+                <radialGradient id="g-cell">
+                  <stop offset="0" stop-color="#062226"/>
+                  <stop offset="1" stop-color="#8FDCE5"/>
+                </radialGradient>
+              </defs>
+              <rect width="112" height="112" fill="#8FDCE5"/>
+              <g fill="url(#g-cell)" style="isolation:isolate">
+                <circle cx="18" cy="20" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="60" cy="10" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="98" cy="28" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="32" cy="58" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="72" cy="50" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="102" cy="74" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="12" cy="98" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="52" cy="92" r="34" style="mix-blend-mode:darken"/>
+                <circle cx="88" cy="106" r="34" style="mix-blend-mode:darken"/>
+              </g>
+            </svg>
+          </span>
+          <span class="txt">
+            <span class="path"><b>/noise</b> · Attribute Noise SOP · Unified Noise VOP</span>
+            <h3>Atlas des noises</h3>
+            <span class="desc">Les 15 types du menu Noise Type, expliqués et manipulables en direct : ce que chaque algorithme « voit », les quatre familles, le fractal, les pièges classiques en production, et un quiz pour s'entraîner à les reconnaître.</span>
+            <span class="tags"><span>Explorateur</span><span>4 familles</span><span>Fractal</span><span>Antisèche</span><span>Quiz</span></span>
+          </span>
+          <span class="go" aria-hidden="true">→</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="topic" data-t="look" aria-labelledby="t-look">
+    <h2 class="topic-h" id="t-look"><span class="num">03</span>Lookdev</h2>
+    <ul class="pages">
+      <li>
+        <a class="page" href="/ior/">
+          <span class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 112 112">
+              <defs>
+                <linearGradient id="g-floor" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#262A2F"/>
+                  <stop offset="1" stop-color="#0E1012"/>
+                </linearGradient>
+                <radialGradient id="g-sphere">
+                  <stop offset="0" stop-color="#1B252D"/>
+                  <stop offset=".7" stop-color="#2C3C48"/>
+                  <stop offset=".92" stop-color="#9DBDDB"/>
+                  <stop offset="1" stop-color="#F1F5FA"/>
+                </radialGradient>
+              </defs>
+              <rect width="112" height="112" fill="url(#g-floor)"/>
+              <ellipse cx="56" cy="94" rx="30" ry="6" fill="#000" opacity=".5"/>
+              <circle cx="56" cy="54" r="34" fill="url(#g-sphere)"/>
+              <ellipse cx="44" cy="38" rx="9" ry="5.5" fill="#FFF" opacity=".85" transform="rotate(-32 44 38)"/>
+            </svg>
+          </span>
+          <span class="txt">
+            <span class="path"><b>/ior</b> · Indice de réfraction · Fresnel</span>
+            <h3>Sphère de Fresnel</h3>
+            <span class="desc">Une sphère diélectrique en ray tracing. Change l'indice de réfraction et regarde la part réfléchie monter vers les bords, puis compare deux matériaux.</span>
+            <span class="tags"><span>Indices A/B</span><span>Coefficient F</span><span>Réflexion / réfraction</span><span>Dispersion</span><span>Courbe F(θ)</span></span>
+          </span>
+          <span class="go" aria-hidden="true">→</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+</nav>
+
+<footer>
+  <p>Tout tourne dans ton navigateur : rien à installer, aucun compte. Les labos pyro et noise sont des versions pédagogiques en 2D : ils montrent le principe et les ordres de grandeur, pas le résultat exact de Houdini.</p>
+</footer>
+
+</div>
+</body>
+</html>

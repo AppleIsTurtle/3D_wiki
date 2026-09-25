@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cours interactif : les 15 types de noise de Houdini expliqués pour les étudiants FX.">
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Atlas des noises</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#EDEFEA; --surface:#F8F9F5; --stage:#F3F4EF; --ink:#15181B; --ink-2:#4B5358; --ink-3:#6E767A;
+  --line:#D2D7D0; --accent:#C9501A; --accent-soft:#F6DCCD; --code:#E2E6DF;
+  --f-lattice:#C9501A; --f-cell:#11707E; --f-conv:#7A4FB0; --f-cloud:#2F68B3;
+  --ok:#2E7D4F; --bad:#B3261E;
+  --hou-bg:#2F3033; --hou-ink:#D4D4D2; --hou-hover:#3E4044; --hou-line:#232426;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101315; --surface:#181C1F; --stage:#14181A; --ink:#E5E8E3; --ink-2:#A6AEAA; --ink-3:#7F8884;
+    --line:#2B3236; --accent:#FF7B3F; --accent-soft:#3A2418; --code:#1E2427;
+    --f-lattice:#FF7B3F; --f-cell:#3DB7C7; --f-conv:#B38CEB; --f-cloud:#78A7EC;
+    --ok:#5BC286; --bad:#FF7A70;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101315; --surface:#181C1F; --stage:#14181A; --ink:#E5E8E3; --ink-2:#A6AEAA; --ink-3:#7F8884;
+  --line:#2B3236; --accent:#FF7B3F; --accent-soft:#3A2418; --code:#1E2427;
+  --f-lattice:#FF7B3F; --f-cell:#3DB7C7; --f-conv:#B38CEB; --f-cloud:#78A7EC;
+  --ok:#5BC286; --bad:#FF7A70;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:clamp(16px,4vw,44px);padding-block:36px 96px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.08;margin:0}
+h1{font-size:clamp(2.6rem,6vw,4.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;letter-spacing:-.015em}
+h3{font-size:1.25rem;font-weight:700}
+p{margin:0}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--code);padding:.08em .38em;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font:600 .74rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.lead{font-size:1.14rem;color:var(--ink-2);max-width:62ch}
+.muted{color:var(--ink-2)}
+.small{font-size:.86rem}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:14px;padding-bottom:28px}
+.hero .lead strong{color:var(--ink)}
+
+/* ---------- explorer ---------- */
+.explorer{display:grid;grid-template-columns:220px minmax(0,1fr) 280px;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.hmenu{background:var(--hou-bg);border:1px solid var(--hou-line);border-radius:6px;padding:6px 0;align-self:start;display:flex;flex-direction:column}
+.hmenu .hm-title{font:600 .7rem/1 var(--mono);color:#9A9C9F;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px 8px}
+.hmenu button{all:unset;cursor:pointer;display:flex;align-items:center;gap:9px;padding:5px 12px;color:var(--hou-ink);font:400 .9rem/1.35 var(--body)}
+.hmenu button:hover{background:var(--hou-hover)}
+.hmenu button[aria-pressed="true"]{background:#4A4C51;color:#fff;box-shadow:inset 3px 0 0 #F29A2E}
+.hmenu button:focus-visible{outline:2px solid #F29A2E;outline-offset:-2px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c)}
+[data-fam="lattice"]{--c:var(--f-lattice)} [data-fam="cell"]{--c:var(--f-cell)} [data-fam="conv"]{--c:var(--f-conv)} [data-fam="cloud"]{--c:var(--f-cloud)}
+.hmenu [data-fam="lattice"]{--c:#FF8A4C} .hmenu [data-fam="cell"]{--c:#4CC3D2} .hmenu [data-fam="conv"]{--c:#BC98F0} .hmenu [data-fam="cloud"]{--c:#86B2F2}
+
+.viewcol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.stage{position:relative;width:100%;aspect-ratio:1/1;background:#000;border-radius:6px;overflow:hidden}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cv-ov{cursor:crosshair;touch-action:none}
+.probe{font:400 .8rem/1.4 var(--mono);color:var(--ink-2);min-height:1.4em;font-variant-numeric:tabular-nums}
+.profile-wrap{display:grid;gap:4px}
+.profile-wrap canvas{width:100%;height:96px;display:block;background:var(--stage);border-radius:6px;border:1px solid var(--line)}
+.caption-row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.params{display:flex;flex-direction:column;gap:14px;min-width:0}
+.info{display:grid;gap:6px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.info h3{font-size:1.35rem}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 .72rem/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--c)}
+.info p{font-size:.92rem;color:var(--ink-2);line-height:1.5}
+.prm{display:grid;gap:3px}
+.prm label,.prm .lbl{display:flex;justify-content:space-between;gap:8px;font:600 .8rem/1.2 var(--mono)}
+.prm label span:last-child,.prm output{font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.prm .hint{font-size:.78rem;color:var(--ink-3);line-height:1.35}
+.prm[hidden]{display:none!important}
+input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0}
+select{font:400 .88rem var(--body);padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem}
+.checks label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.checks input{accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font:600 .8rem/1 var(--body);color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.group-title{font:600 .7rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px 12px;font:600 .82rem var(--body)}
+.btn:hover{border-color:var(--ink-3)}
+
+@media (max-width:1020px){
+  .explorer{grid-template-columns:minmax(0,1fr) 260px}
+  .hmenu{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;padding:6px}
+  .hmenu .hm-title{width:100%}
+  .hmenu button{border-radius:4px}
+}
+@media (max-width:700px){
+  .explorer{grid-template-columns:minmax(0,1fr);padding:12px}
+}
+
+/* ---------- sections ---------- */
+section.sec{padding-block:64px;border-top:1px solid var(--line);display:grid;gap:26px}
+.sec-head{display:grid;gap:10px;max-width:68ch}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.prose{display:grid;gap:14px;max-width:64ch}
+.prose ul,.prose ol{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.keep{border-left:3px solid var(--accent);padding:4px 0 4px 14px;font-weight:700}
+.figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
+.figs.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.figs.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:520px){.figs.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+figure{margin:0;display:grid;gap:6px;align-content:start}
+figure canvas.th{width:100%;aspect-ratio:1/1;display:block;border-radius:6px;background:#000}
+figcaption{font-size:.84rem;color:var(--ink-2);line-height:1.4}
+figcaption b{font:600 .8rem/1.3 var(--mono);color:var(--ink);display:block}
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px}
+.demo canvas{width:100%;display:block}
+.demo-bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.demo-bar .prm{min-width:150px;flex:1}
+
+.fams{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+@media (max-width:900px){.fams{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.fams{grid-template-columns:minmax(0,1fr)}}
+.fam{display:grid;gap:8px;align-content:start;padding-top:12px;border-top:3px solid var(--c)}
+.fam h3{font-size:1.1rem}
+.fam p{font-size:.92rem;color:var(--ink-2)}
+.fam .mono{color:var(--ink-3);font-size:.78rem}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.gallery button{all:unset;cursor:pointer;display:grid;gap:6px;border-radius:8px;padding:6px;margin:-6px}
+.gallery button:hover{background:var(--surface)}
+.gallery button:focus-visible{outline:2px solid var(--accent)}
+.gallery canvas{width:100%;aspect-ratio:1/1;display:block;border-radius:6px;background:#000}
+.gallery .gname{display:flex;align-items:center;gap:7px;font:600 .78rem/1.25 var(--mono)}
+
+.metric-shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.metric-shapes svg{width:100%;height:auto;display:block}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:.9rem}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .72rem/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--bg);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.tn{font:600 .84rem/1.35 var(--mono);white-space:nowrap}
+td.tn .dot{display:inline-block;margin-right:7px;vertical-align:1px}
+td code{white-space:nowrap}
+
+.tips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 40px}
+@media (max-width:820px){.tips{grid-template-columns:minmax(0,1fr)}}
+.tip{display:grid;gap:6px;align-content:start}
+.tip .pname{font:600 .82rem/1.2 var(--mono);color:var(--accent)}
+.tip h3{font-size:1.08rem}
+.tip p{font-size:.95rem;color:var(--ink-2)}
+pre{margin:0;background:var(--code);border-radius:8px;padding:14px 16px;overflow-x:auto;font:400 .84rem/1.55 var(--mono)}
+pre .c{color:var(--ink-3)}
+
+.quiz{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:640px){.quiz{grid-template-columns:minmax(0,1fr)}}
+.quiz canvas{width:100%;aspect-ratio:1/1;border-radius:8px;display:block;background:#000}
+.qopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:420px){.qopts{grid-template-columns:minmax(0,1fr)}}
+.qopts button{cursor:pointer;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:12px 14px;font:600 .88rem/1.3 var(--mono)}
+.qopts button:hover:not(:disabled){border-color:var(--ink-3)}
+.qopts button.right{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
+.qopts button.wrong{border-color:var(--bad);color:var(--bad)}
+.qopts button:disabled{cursor:default}
+.qfeed{min-height:3em;color:var(--ink-2)}
+.score{font:600 .9rem var(--mono);font-variant-numeric:tabular-nums}
+.crumb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:600 .78rem/1.2 var(--mono);color:var(--ink-3)}
+.crumb a{color:var(--ink-2);text-decoration:none}
+.crumb a:hover{color:var(--accent);text-decoration:underline}
+footer{padding-top:40px;border-top:1px solid var(--line);color:var(--ink-3);font-size:.85rem;display:grid;gap:6px;max-width:80ch}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <nav class="crumb" aria-label="Fil d'Ariane"><a href="/">Wiki 3D</a><span aria-hidden="true">/</span><span>Atlas des noises</span></nav>
+  <span class="eyebrow">Cours FX · 3<sup>e</sup> année · Houdini</span>
+  <h1>Atlas des noises</h1>
+  <p class="lead">Les 15 types du menu <strong>Noise Type</strong> de l'Attribute Noise SOP (et de la Unified Noise VOP), expliqués et manipulables en direct. Choisis un type dans le menu, active <strong>Montrer la structure</strong> pour voir ce que l'algorithme « voit », et survole l'image pour sonder les valeurs.</p>
+</header>
+
+<!-- ================= EXPLORER ================= -->
+<div class="explorer" id="explorer">
+  <nav class="hmenu" id="nmenu" aria-label="Noise Type">
+    <div class="hm-title">Noise Type</div>
+  </nav>
+
+  <div class="viewcol">
+    <div class="stage" id="stage">
+      <canvas id="cv-main" aria-hidden="true"></canvas>
+      <canvas id="cv-ov" role="img" aria-label="Aperçu du noise sélectionné"></canvas>
+    </div>
+    <div class="caption-row">
+      <span class="probe" id="probe">Survole l'image pour lire la valeur du noise.</span>
+      <span class="probe" id="structnote"></span>
+    </div>
+    <div class="profile-wrap">
+      <div class="caption-row"><span class="eyebrow">Coupe 1D le long de la ligne pointillée</span><span class="eyebrow">0 → 1</span></div>
+      <canvas id="cv-prof" aria-label="Profil 1D du noise"></canvas>
+    </div>
+  </div>
+
+  <div class="params">
+    <div class="info" id="info"></div>
+
+    <div class="prm">
+      <span class="lbl">Affichage</span>
+      <div class="seg" id="viewseg">
+        <button type="button" data-v="image" aria-pressed="true">Image</button>
+        <button type="button" data-v="relief" aria-pressed="false">Relief</button>
+      </div>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="p-struct" checked> Montrer la structure</label>
+      <label><input type="checkbox" id="p-comp"> Complement (1 − x)</label>
+    </div>
+
+    <div class="group-title">Noise Pattern</div>
+    <div class="prm">
+      <label for="p-es"><span>Element Size</span><span id="o-es">1.00</span></label>
+      <input type="range" id="p-es" min="0.25" max="3" step="0.01" value="1">
+      <span class="hint">Taille des motifs. Fréquence = 1 / Element Size.</span>
+    </div>
+    <div class="prm">
+      <label for="p-off"><span>Offset</span><span id="o-off">0.37</span></label>
+      <input type="range" id="p-off" min="-10" max="10" step="0.01" value="0.37">
+      <div class="checks"><label><input type="checkbox" id="p-anim"> Animer (<code>$T*0.25</code>)</label></div>
+    </div>
+    <div class="prm" id="row-flow" hidden>
+      <label for="p-flow"><span>Flow Rotation</span><span id="o-flow">0.00</span></label>
+      <input type="range" id="p-flow" min="0" max="1" step="0.005" value="0">
+      <div class="checks"><label><input type="checkbox" id="p-animflow"> Animer la rotation</label></div>
+    </div>
+    <div class="prm" id="row-dist" hidden>
+      <label for="p-dist"><span>Distortion</span><span id="o-dist">0.50</span></label>
+      <input type="range" id="p-dist" min="-1" max="1" step="0.01" value="0.5">
+    </div>
+
+    <div class="group-title">Fractal</div>
+    <div class="prm" id="row-frac">
+      <label for="p-frac"><span>Fractal Type</span></label>
+      <select id="p-frac">
+        <option value="none">None</option>
+        <option value="standard">Standard</option>
+        <option value="terrain">Terrain</option>
+        <option value="hybrid">Hybrid</option>
+      </select>
+      <span class="hint" id="frac-hint"></span>
+    </div>
+    <div class="prm" id="row-oct">
+      <label for="p-oct"><span>Max Octaves</span><span id="o-oct">5</span></label>
+      <input type="range" id="p-oct" min="1" max="8" step="1" value="5">
+    </div>
+    <div class="prm" id="row-lac">
+      <label for="p-lac"><span>Lacunarity</span><span id="o-lac">2.00</span></label>
+      <input type="range" id="p-lac" min="1.2" max="4" step="0.01" value="2">
+    </div>
+    <div class="prm" id="row-rough">
+      <label for="p-rough"><span>Roughness</span><span id="o-rough">0.50</span></label>
+      <input type="range" id="p-rough" min="0" max="1" step="0.01" value="0.5">
+    </div>
+  </div>
+</div>
+
+<!-- ================= GALLERY ================= -->
+<section class="sec" id="galerie">
+  <div class="sec-head">
+    <span class="eyebrow">Vue d'ensemble</span>
+    <h2>Les 15 types d'un coup d'œil</h2>
+    <p class="muted">Même Element Size, même Offset, pas de fractal : seul l'algorithme change. Clique une vignette pour la charger dans l'explorateur. La couleur de la pastille indique la famille.</p>
+  </div>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<!-- ================= WHY ================= -->
+<section class="sec" id="pourquoi">
+  <div class="cols">
+    <div class="prose">
+      <span class="eyebrow">Les bases</span>
+      <h2>Pourquoi pas simplement <code>rand()</code> ?</h2>
+      <p><code>rand()</code> donne une valeur totalement indépendante pour chaque point : deux points voisins n'ont rien à voir. C'est du <b>bruit blanc</b>, de la « neige » de télé. Inutilisable pour déformer une surface ou pousser de la fumée : ça grésille.</p>
+      <p>Un <b>noise cohérent</b> (Perlin, Worley…) respecte quatre règles :</p>
+      <ul>
+        <li><b>Continu</b> : deux points proches ont des valeurs proches.</li>
+        <li><b>Déterministe</b> : même position → même valeur, à chaque frame, sur chaque machine. C'est ce qui rend le résultat stable au render et au cache.</li>
+        <li><b>Taille de détail contrôlée</b> : les motifs ont une taille typique (l'<i>Element Size</i>).</li>
+        <li><b>Pas de répétition visible</b>, alors qu'il est calculé à partir d'une petite grille.</li>
+      </ul>
+      <p>L'astuce commune : <b>on place du hasard seulement sur une grille</b> (ou sur des points épars), puis <b>on interpole en douceur</b> entre ces points. Compare les trois modes à droite :</p>
+      <ul>
+        <li><b>Value noise</b> : une valeur aléatoire à chaque point de grille, on relie en courbe douce. Simple, mais on devine la grille (les pics tombent sur les points).</li>
+        <li><b>Gradient noise</b> (le principe de Perlin) : à chaque point de grille on tire une <b>pente</b> aléatoire, et la courbe vaut 0 sur le point. Les bosses tombent <i>entre</i> les points de grille : beaucoup plus naturel.</li>
+      </ul>
+      <p class="keep">Un noise, c'est du hasard « rangé » sur une grille, puis lissé. Chaque famille change juste la façon de ranger et de lisser.</p>
+    </div>
+    <div class="demo">
+      <div class="demo-bar">
+        <div class="seg" id="introseg" role="group" aria-label="Type de bruit 1D">
+          <button type="button" data-m="white" aria-pressed="false">Aléatoire pur</button>
+          <button type="button" data-m="value" aria-pressed="false">Value noise</button>
+          <button type="button" data-m="grad" aria-pressed="true">Gradient noise</button>
+        </div>
+        <button class="btn" type="button" id="in-seed">Nouveau tirage</button>
+      </div>
+      <canvas id="cv-intro" height="260" aria-label="Comparaison 1D : aléatoire, value noise, gradient noise"></canvas>
+      <div class="prm">
+        <label for="in-n"><span>Points de grille visibles</span><span id="o-in-n">8</span></label>
+        <input type="range" id="in-n" min="3" max="20" step="1" value="8">
+      </div>
+      <p class="small muted" id="intro-cap"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAMILIES ================= -->
+<section class="sec" id="familles">
+  <div class="sec-head">
+    <span class="eyebrow">Carte mentale</span>
+    <h2>Quatre familles derrière les 15 noms</h2>
+    <p class="muted">Le menu de Houdini a l'air long, mais il n'y a que quatre idées. Retiens la famille, tu devines le look.</p>
+  </div>
+  <div class="fams">
+    <div class="fam" data-fam="lattice"><span class="chip"><span class="dot"></span>Gradient sur grille</span><h3>Fast, Perlin, Perlin Flow, Simplex</h3><p>Une pente aléatoire à chaque coin d'une grille, interpolation douce. Look : collines, vagues, fumée.</p><span class="mono">noise() · onoise() · flownoise() · xnoise()</span></div>
+    <div class="fam" data-fam="cell"><span class="chip"><span class="dot"></span>Cellulaire (Worley)</span><h3>Worley, Manhattan, Chebyshev · F1 / F2-F1</h3><p>Des points semés au hasard ; on mesure la distance aux plus proches. Look : cellules, cratères, fissures.</p><span class="mono">wnoise() · mwnoise() · cwnoise()</span></div>
+    <div class="fam" data-fam="conv"><span class="chip"><span class="dot"></span>Convolution éparse</span><h3>Sparse Convolution, Alligator</h3><p>Des « tampons » arrondis posés sur des points aléatoires, additionnés ou superposés. Look : blobs, bosses.</p><span class="mono">snoise() · anoise()</span></div>
+    <div class="fam" data-fam="cloud"><span class="chip"><span class="dot"></span>Cloud (fractal distordu)</span><h3>Perlin, Simplex, Fast Simplex Cloud</h3><p>Un noise fractal dont chaque couche est déformée par la précédente. Look : nuages cotonneux.</p><span class="mono">Cloud Noise VOP</span></div>
+  </div>
+</section>
+
+<!-- ================= GRADIENT ================= -->
+<section class="sec" id="gradient">
+  <div class="cols">
+    <div class="prose">
+      <span class="chip" data-fam="lattice"><span class="dot"></span>Famille 1 · Gradient sur grille</span>
+      <h2>Perlin et ses cousins</h2>
+      <p><b>Comment ça marche (Perlin)</b>, pour un point P :</p>
+      <ol>
+        <li>On trouve la case de la grille qui contient P (4 coins en 2D, 8 en 3D).</li>
+        <li>Chaque coin possède un <b>vecteur gradient</b> aléatoire mais fixe (tiré d'une table avec un hash des coordonnées du coin : c'est ça, le côté déterministe).</li>
+        <li>Pour chaque coin : <code>dot(gradient, P − coin)</code>. Si P est « dans le sens » de la flèche, la valeur monte.</li>
+        <li>On mélange les 4 résultats avec une courbe de <b>fade</b> en S (<code>6t⁵−15t⁴+10t³</code>) pour que les jonctions entre cases soient invisibles.</li>
+      </ol>
+      <p>Dans l'explorateur, active <b>Montrer la structure</b> sur <i>Perlin</i> : les flèches orange sont les gradients. Les zones claires sont devant les flèches, les zones sombres derrière.</p>
+      <p><b>Les variantes du menu :</b></p>
+      <ul>
+        <li><b>Fast</b> : basé sur la fonction VEX <code>onoise()</code>. Même principe, calcul moins cher, look légèrement différent. Houdini multiplie sa fréquence par 1.25, donc à Element Size égal les motifs sont plus petits.</li>
+        <li><b>Simplex</b> (<code>xnoise()</code>) : la grille carrée est remplacée par des triangles (tétraèdres en 3D). Moins de coins à évaluer (3 au lieu de 4 en 2D, <b>4 au lieu de 8 en 3D, 5 au lieu de 16 en 4D</b>) et moins d'alignements sur les axes. Intéressant en noise animé 4D.</li>
+        <li><b>Perlin Flow</b> (<code>flownoise()</code>) : au lieu de translater le noise dans le temps, on <b>fait tourner les gradients</b> avec <i>Flow Rotation</i>. Le motif bouillonne sur place au lieu de glisser. Une rotation de 0 à 1 fait un tour complet, donc l'animation <b>boucle parfaitement</b>. Active « Animer la rotation » dans l'explorateur et regarde les flèches.</li>
+      </ul>
+      <p class="keep">Perlin vaut toujours « zéro » (0.5 en sortie) pile sur les coins de la grille. C'est pour ça que la doc Houdini conseille un Offset non nul : autour de 0, on voit apparaître des artefacts.</p>
+    </div>
+    <div class="figs two">
+      <figure><canvas class="th" data-cfg='{"type":"perlin","struct":1,"span":3.2}'></canvas><figcaption><b>Perlin + structure</b>Grille et gradients de l'octave de base.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"fast","struct":1,"span":3.2}'></canvas><figcaption><b>Fast</b>Même idée, fréquence ×1.25.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"simplex","struct":1,"span":3.2}'></canvas><figcaption><b>Simplex + structure</b>Grille de triangles au lieu de carrés.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"flow","struct":1,"span":3.2,"flow":0.18}'></canvas><figcaption><b>Perlin Flow · rotation 0.18</b>Mêmes coins que Perlin, gradients tournés.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CELLULAR ================= -->
+<section class="sec" id="cellulaire">
+  <div class="cols">
+    <div class="prose">
+      <span class="chip" data-fam="cell"><span class="dot"></span>Famille 2 · Cellulaire</span>
+      <h2>Worley : tout est question de distance</h2>
+      <p><b>Comment ça marche</b> :</p>
+      <ol>
+        <li>On découpe l'espace en cases et on sème <b>un point aléatoire par case</b> (les « feature points »).</li>
+        <li>Pour un point P, on regarde les points des cases voisines (3×3 en 2D, 3×3×3 en 3D).</li>
+        <li><b>F1</b> = distance au point le plus proche. <b>F2</b> = distance au deuxième plus proche.</li>
+      </ol>
+      <p><b>F1</b> vaut 0 sur chaque feature point et grandit en s'éloignant : taches sombres, dômes, cratères. <b>F2 − F1</b> vaut 0 quand P est à égale distance de deux points, c'est-à-dire <b>pile sur la frontière entre deux cellules</b> : on obtient un réseau de lignes (fissures, écailles, sol sec, caustiques).</p>
+      <p>Dans l'explorateur, choisis <i>Worley Cellular F2-F1</i> et survole l'image : la ligne pleine va au point F1, la ligne pointillée au point F2, et le cercle a un rayon égal à F1.</p>
+      <p><b>Manhattan</b> et <b>Chebyshev</b> ne changent qu'une chose : <b>la formule de la distance</b>. Le « cercle » de rayon 1 change de forme, et toutes les cellules héritent de cette forme.</p>
+      <p>Bonus VEX : <code>wnoise()</code> renvoie aussi un <code>seed</code> unique par cellule. <code>@Cd = rand(seed);</code> donne une couleur par cellule, pratique pour des variations par morceau.</p>
+      <p class="keep">F1 = « à quelle distance est le point le plus proche ? ». F2 − F1 = « suis-je près d'une frontière ? ».</p>
+    </div>
+    <div style="display:grid;gap:24px">
+      <div class="figs two">
+        <figure><canvas class="th" data-cfg='{"type":"wf1","struct":1}'></canvas><figcaption><b>Worley F1</b>Sombre sur les points (distance 0).</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"wf21","struct":1}'></canvas><figcaption><b>Worley F2-F1</b>Sombre sur les frontières.</figcaption></figure>
+      </div>
+      <div class="metric-shapes" aria-label="Forme du cercle unité selon la distance">
+        <figure>
+          <svg viewBox="0 0 120 120" role="img" aria-label="Cercle euclidien"><line x1="60" y1="8" x2="60" y2="112" stroke="var(--line)" stroke-width="1.5"/><line x1="8" y1="60" x2="112" y2="60" stroke="var(--line)" stroke-width="1.5"/><circle cx="60" cy="60" r="42" fill="none" stroke="var(--f-cell)" stroke-width="3"/><circle cx="60" cy="60" r="3.5" fill="var(--ink)"/></svg>
+          <figcaption><b>Euclidienne (Worley)</b><code>√(dx² + dy²)</code></figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 120 120" role="img" aria-label="Losange de Manhattan"><line x1="60" y1="8" x2="60" y2="112" stroke="var(--line)" stroke-width="1.5"/><line x1="8" y1="60" x2="112" y2="60" stroke="var(--line)" stroke-width="1.5"/><polygon points="60,18 102,60 60,102 18,60" fill="none" stroke="var(--f-cell)" stroke-width="3"/><circle cx="60" cy="60" r="3.5" fill="var(--ink)"/></svg>
+          <figcaption><b>Manhattan</b><code>|dx| + |dy|</code></figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 120 120" role="img" aria-label="Carré de Chebyshev"><line x1="60" y1="8" x2="60" y2="112" stroke="var(--line)" stroke-width="1.5"/><line x1="8" y1="60" x2="112" y2="60" stroke="var(--line)" stroke-width="1.5"/><rect x="18" y="18" width="84" height="84" fill="none" stroke="var(--f-cell)" stroke-width="3"/><circle cx="60" cy="60" r="3.5" fill="var(--ink)"/></svg>
+          <figcaption><b>Chebyshev</b><code>max(|dx|, |dy|)</code></figcaption>
+        </figure>
+      </div>
+      <div class="figs three">
+        <figure><canvas class="th" data-cfg='{"type":"wf21"}'></canvas><figcaption><b>Worley F2-F1</b>Cellules arrondies, organiques.</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"mf21"}'></canvas><figcaption><b>Manhattan F2-F1</b>Angles à 45°, look circuit.</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"cf21"}'></canvas><figcaption><b>Chebyshev F2-F1</b>Rectangles, pavés, pixels.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONVOLUTION ================= -->
+<section class="sec" id="convolution">
+  <div class="cols">
+    <div class="prose">
+      <span class="chip" data-fam="conv"><span class="dot"></span>Famille 3 · Convolution éparse</span>
+      <h2>Sparse Convolution et Alligator : des tampons</h2>
+      <p>Imagine un tampon encreur rond et doux (un <b>noyau</b>, ou <i>kernel</i>) : fort au centre, nul à son bord, comme un metaball. On le pose à plein d'endroits aléatoires. C'est la <b>convolution éparse</b> : « éparse » parce qu'on ne pose des tampons qu'à quelques points, pas partout.</p>
+      <ul>
+        <li><b>Sparse Convolution</b> (<code>snoise()</code>) : chaque tampon a un poids aléatoire, <b>positif ou négatif</b>, et on <b>additionne</b> tous ceux qui touchent P. Résultat : des blobs doux, sans grille visible du tout. La doc Houdini parle d'un roll-off « comme un metaball ». Dans les vignettes, les points orange poussent vers le haut, les bleus vers le bas.</li>
+        <li><b>Alligator</b> (<code>anoise()</code>) : chaque point porte une <b>bosse</b> de hauteur aléatoire, et on garde <b>la plus haute</b>. Là où deux bosses se rencontrent, on obtient un pli net en « V ». Ça ressemble à de la peau d'alligator, d'où le nom. Houdini précise que c'est un cousin du Worley qu'on ne peut pas reproduire exactement avec les fonctions Worley.</li>
+      </ul>
+      <p>Attention à l'échelle : dans Unified Noise, Sparse Convolution a une fréquence ×1.25 et Alligator ×1.64. Passer de Perlin à Alligator sans toucher à l'Element Size donne donc des motifs plus petits.</p>
+      <p class="keep">Sparse = tampons additionnés (blobs). Alligator = on garde la bosse la plus haute (bosses + plis).</p>
+    </div>
+    <div class="figs two">
+      <figure><canvas class="th" data-cfg='{"type":"sparse","struct":1,"span":3.4}'></canvas><figcaption><b>Sparse Convolution</b>Cercles = portée de chaque tampon.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"alligator","struct":1,"span":2.6}'></canvas><figcaption><b>Alligator</b>Taille du point = hauteur de la bosse.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"sparse","view":"relief","span":3.4}'></canvas><figcaption><b>Sparse en relief</b>Collines molles.</figcaption></figure>
+      <figure><canvas class="th" data-cfg='{"type":"alligator","view":"relief","span":2.6}'></canvas><figcaption><b>Alligator en relief</b>Bosses et plis nets.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FRACTAL ================= -->
+<section class="sec" id="fractal">
+  <div class="cols">
+    <div class="prose">
+      <span class="eyebrow">Pour tous les types</span>
+      <h2>Fractal : empiler des octaves</h2>
+      <p>Un noise seul a une seule taille de détail. La nature, non : une montagne a des crêtes, puis des rochers, puis des cailloux. On empile donc plusieurs copies du même noise, de plus en plus petites et de plus en plus faibles. C'est le <b>fBm</b> (fractional Brownian motion). Dans Houdini, c'est l'onglet <i>Fractal</i>.</p>
+      <ul>
+        <li><b>Max Octaves</b> : combien de couches. Chaque octave coûte un calcul complet de plus.</li>
+        <li><b>Lacunarity</b> : combien la fréquence est multipliée à chaque couche (2 = deux fois plus petit à chaque fois).</li>
+        <li><b>Roughness</b> : combien l'amplitude est multipliée à chaque couche (0.5 = deux fois plus faible). Près de 1 = très rugueux, près de 0 = lisse.</li>
+      </ul>
+      <p><b>Fractal Type</b> change la façon d'additionner :</p>
+      <ul>
+        <li><b>Standard</b> : on additionne tout, partout pareil.</li>
+        <li><b>Terrain</b> : le détail ajouté est multiplié par la valeur actuelle. Les vallées (valeurs basses) restent lisses, les sommets deviennent accidentés. Comme un vrai relief érodé.</li>
+        <li><b>Hybrid</b> : proche de Terrain, avec des vallées plus marquées.</li>
+      </ul>
+      <p>Un détail qui compte en FX : <b>le détail plus petit que l'espacement de tes points est perdu</b>, voire se transforme en grésillement (aliasing). 8 octaves sur une grille de 100×100 points, c'est du calcul pour rien. Houdini arrête d'ailleurs d'ajouter des octaves quand il n'y a « plus de place » pour le détail.</p>
+      <p class="keep">Lacunarity = de combien ça rétrécit. Roughness = de combien ça s'affaiblit. Octaves = combien de fois.</p>
+    </div>
+    <div style="display:grid;gap:24px">
+      <div class="demo">
+        <canvas id="cv-frac" aria-label="Octaves empilées et leur somme"></canvas>
+        <div class="demo-bar">
+          <div class="prm"><label for="fo"><span>Max Octaves</span><span id="o-fo">4</span></label><input type="range" id="fo" min="1" max="8" step="1" value="4"></div>
+          <div class="prm"><label for="fl"><span>Lacunarity</span><span id="o-fl">2.00</span></label><input type="range" id="fl" min="1.2" max="4" step="0.01" value="2"></div>
+          <div class="prm"><label for="fr"><span>Roughness</span><span id="o-fr">0.50</span></label><input type="range" id="fr" min="0" max="1" step="0.01" value="0.5"></div>
+        </div>
+      </div>
+      <div class="figs three">
+        <figure><canvas class="th" data-cfg='{"type":"perlin","frac":"standard","oct":6,"view":"relief","span":4}'></canvas><figcaption><b>Standard</b>Détail uniforme partout.</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"perlin","frac":"terrain","oct":6,"view":"relief","span":4}'></canvas><figcaption><b>Terrain</b>Vallées lisses, crêtes rugueuses.</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"perlin","frac":"hybrid","oct":6,"view":"relief","span":4}'></canvas><figcaption><b>Hybrid</b>Contraste vallées / sommets.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLOUD ================= -->
+<section class="sec" id="cloud">
+  <div class="cols">
+    <div class="prose">
+      <span class="chip" data-fam="cloud"><span class="dot"></span>Famille 4 · Cloud</span>
+      <h2>Perlin, Simplex et Fast Simplex Cloud</h2>
+      <p>Les trois derniers types du menu viennent de la <b>Cloud Noise VOP</b> (Houdini 20+). Ce sont des fractals avec une astuce en plus : à chaque octave, la position de lecture est <b>décalée selon la pente de l'octave précédente</b>. Les petits détails « glissent » autour des gros volumes, ce qui donne des bords gonflés et cotonneux, comme un cumulus.</p>
+      <ul>
+        <li><b>Distortion</b> : la force et le sens de ce décalage. Positif : vers les valeurs décroissantes ; négatif : vers les valeurs croissantes. Compare −1, 0 et +1 ci-contre.</li>
+        <li><b>Perlin Cloud</b> : base Perlin. <b>Simplex Cloud</b> : base Simplex, moins d'alignements. <b>Fast Simplex Cloud</b> : autre structure de grille et accumulation moins chère, pour les gros volumes.</li>
+        <li>Dans l'Attribute Noise, ces types débloquent aussi <i>Stretch</i>, <i>Droop</i> (faire « pendre » le noise dans une direction) et <i>Worley Details</i> (ajouter des puffs Worley). À essayer sur un volume de densité.</li>
+      </ul>
+      <p class="keep">Cloud = fractal + chaque couche déformée par la précédente → formes de nuage.</p>
+    </div>
+    <div style="display:grid;gap:24px">
+      <div class="figs three">
+        <figure><canvas class="th" data-cfg='{"type":"pcloud","dist":-1,"span":4}'></canvas><figcaption><b>Distortion −1</b></figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"pcloud","dist":0,"span":4}'></canvas><figcaption><b>Distortion 0</b>= fractal normal.</figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"pcloud","dist":1,"span":4}'></canvas><figcaption><b>Distortion +1</b></figcaption></figure>
+      </div>
+      <div class="figs three">
+        <figure><canvas class="th" data-cfg='{"type":"pcloud","span":4}'></canvas><figcaption><b>Perlin Cloud</b></figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"scloud","span":4}'></canvas><figcaption><b>Simplex Cloud</b></figcaption></figure>
+        <figure><canvas class="th" data-cfg='{"type":"fscloud","span":4}'></canvas><figcaption><b>Fast Simplex Cloud</b></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RECAP ================= -->
+<section class="sec" id="recap">
+  <div class="sec-head">
+    <span class="eyebrow">Antisèche</span>
+    <h2>Quel noise pour quel effet ?</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Noise Type</th><th>Famille</th><th>Ce qu'il fait</th><th>Look</th><th>VEX</th><th>Usages FX typiques</th></tr></thead>
+      <tbody id="recap-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= HOUDINI TIPS ================= -->
+<section class="sec" id="houdini">
+  <div class="sec-head">
+    <span class="eyebrow">En production</span>
+    <h2>Les pièges classiques dans Houdini</h2>
+  </div>
+  <div class="tips">
+    <div class="tip"><span class="pname">Location Attribute → rest</span><h3>Le noise « glisse » sur ma géo animée</h3><p>Par défaut le noise est lu à la position <code>P</code>. Si la géo bouge, elle traverse le champ de noise, qui a l'air de défiler dessus. Fais un <i>Rest Position</i> SOP avant l'animation et mets <code>rest</code> dans Location Attribute : le noise reste collé.</p></div>
+    <div class="tip"><span class="pname">Offset · Animate Noise · Flow Rotation</span><h3>Trois façons d'animer</h3><p><b>Offset</b> <code>$T*0.25</code> : le noise translate. Le moins cher, mais ça « glisse ». <b>Animate Noise</b> : noise 4D, évolue sur place, plus cher. <b>Perlin Flow</b> + Flow Rotation <code>$FF/100</code> : tourbillonne et boucle. Pas <code>$F</code> : toutes les valeurs entières donnent le même résultat (un tour complet).</p></div>
+    <div class="tip"><span class="pname">Noise Type × Element Size</span><h3>J'ai changé de type et tout a rétréci</h3><p>Fast et Sparse Convolution ont une fréquence ×1.25, Alligator ×1.64. Réajuste l'Element Size après un changement de type pour comparer à taille égale.</p></div>
+    <div class="tip"><span class="pname">Output Raw Value</span><h3>Mon noise est tout gris</h3><p>Brut, un noise tombe surtout autour du milieu de sa plage (distribution en cloche). Output Raw Value <b>off</b> étale les valeurs uniformément. Sinon, joue avec la Remap Ramp, Gain et Contrast.</p></div>
+    <div class="tip"><span class="pname">Offset ≠ 0</span><h3>Artefacts près de l'origine</h3><p>Les noises de gradient valent 0.5 sur chaque coin de grille, et plusieurs fonctions ont des zones figées autour de l'origine. Toujours démarrer avec un Offset non nul, par exemple <code>0.37</code>.</p></div>
+    <div class="tip"><span class="pname">Max Octaves</span><h3>Détail invisible, calcul visible</h3><p>Chaque octave recalcule tout le noise. Si ta résolution (points, voxels) ne peut pas afficher le détail, tu paies pour rien, voire tu crées de l'aliasing qui scintille d'une frame à l'autre.</p></div>
+    <div class="tip"><span class="pname">Vector noise sur v</span><h3>Pour de la vitesse : curl noise</h3><p>Un noise vectoriel classique crée des « puits » où les particules s'agglutinent. Pour une vitesse (POP, Pyro, advection), préfère <code>curlnoise()</code> ou le Curl Noise VOP : champ sans divergence, les particules tourbillonnent sans se tasser.</p></div>
+    <div class="tip"><span class="pname">Periodic</span><h3>Texture qui se répète sans couture</h3><p>Dans Unified Noise, Periodic rend le noise répétable (tiles, loops). Ça ne marche que si Lacunarity = 2, sinon les octaves n'ont plus la même période.</p></div>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3>Le fractal Perlin à la main, en VEX</h3>
+      <p class="muted">Ce que fait l'Attribute Noise en mode Standard, en simplifié. À coller dans un Point Wrangle, puis cliquer sur le bouton « Create spare parameters ».</p>
+<pre><span class="c">// Point Wrangle : displacement fractal le long de N</span>
+vector pos = v@rest / chf("element_size") + chv("offset");
+float n = 0, amp = 1;
+for (int i = 0; i &lt; chi("octaves"); i++) {
+    n   += amp * (noise(pos) - 0.5); <span class="c">// Perlin centré sur 0</span>
+    pos *= chf("lacunarity");        <span class="c">// ex. 2 : détail 2× plus petit</span>
+    amp *= chf("roughness");         <span class="c">// ex. 0.5 : 2× plus faible</span>
+}
+@P += @N * n * chf("amp");</pre>
+    </div>
+    <div class="prose">
+      <h3>Worley F2 − F1 et couleur par cellule</h3>
+      <p class="muted">Base de fissures, d'écailles ou de pré-fracture.</p>
+<pre><span class="c">// Point Wrangle</span>
+int   seed;
+float f1, f2;
+wnoise(v@P * chf("freq"), seed, f1, f2);
+f@cracks = f2 - f1;   <span class="c">// 0 sur les frontières</span>
+@Cd      = rand(seed); <span class="c">// une couleur par cellule</span>
+<span class="c">// Manhattan : mwnoise()   Chebyshev : cwnoise()</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="sec" id="quiz">
+  <div class="sec-head">
+    <span class="eyebrow">Entraînement</span>
+    <h2>Devine le noise</h2>
+    <p class="muted">Un type au hasard, un offset au hasard. Retrouve-le à l'œil, comme quand on analyse une référence.</p>
+  </div>
+  <div class="quiz">
+    <canvas id="cv-quiz" aria-label="Noise mystère"></canvas>
+    <div style="display:grid;gap:14px">
+      <div class="qopts" id="qopts"></div>
+      <p class="qfeed" id="qfeed" aria-live="polite"></p>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <button class="btn" type="button" id="qnext">Question suivante</button>
+        <span class="score" id="qscore">0 / 0</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Les images de cette page sont calculées en direct dans le navigateur, en 2D, avec des versions pédagogiques des algorithmes. Elles reproduisent le principe et le look de chaque type, pas le code exact de SideFX : pour des valeurs identiques pixel pour pixel, fais le test dans Houdini.</p>
+  <p>Sources : aide Houdini, pages Attribute Noise SOP, Unified Noise VOP, Cloud Noise VOP, et fonctions VEX <code>noise</code>, <code>onoise</code>, <code>snoise</code>, <code>anoise</code>, <code>flownoise</code>, <code>wnoise</code>, <code>mwnoise</code>, <code>cwnoise</code>.</p>
+</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const TAU = Math.PI * 2;
+const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= hashing ================= */
+function h32(x, y, s) {
+  let h = Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul((y | 0) + 0x3c6ef372, 0x165667b1) ^ Math.imul((s | 0) + 0x7f4a7c15, 0x9e3779b9);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+const rnd = (x, y, s) => h32(x, y, s) / 4294967296;
+
+let _seed = 1337;
+function mb() { _seed = (_seed + 0x6D2B79F5) | 0; let t = Math.imul(_seed ^ (_seed >>> 15), 1 | _seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+const GUX = new Float32Array(256), GUY = new Float32Array(256);
+for (let i = 0; i < 256; i++) { const a = mb() * TAU; GUX[i] = Math.cos(a); GUY[i] = Math.sin(a); }
+const G8X = [1, -1, 0, 0, .7071, -.7071, .7071, -.7071], G8Y = [0, 0, 1, -1, .7071, .7071, -.7071, -.7071];
+
+/* ================= gradient noises ================= */
+let _gx = 0, _gy = 0, FC = 1, FS = 0;
+function setFlow(f) { const a = f * TAU; FC = Math.cos(a); FS = Math.sin(a); }
+// mode 0 = Perlin, 1 = Fast (onoise-like), 2 = Perlin Flow
+function grad(ix, iy, mode) {
+  const h = h32(ix, iy, 7);
+  if (mode === 1) { const k = h & 7; _gx = G8X[k]; _gy = G8Y[k]; return; }
+  let gx = GUX[h & 255], gy = GUY[h & 255];
+  if (mode === 2) { const s = (h & 256) ? FS : -FS; const nx = gx * FC - gy * s; gy = gx * s + gy * FC; gx = nx; }
+  _gx = gx; _gy = gy;
+}
+function perlin(x, y, mode) {
+  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+  let u, v;
+  if (mode === 1) { u = fx * fx * (3 - 2 * fx); v = fy * fy * (3 - 2 * fy); }
+  else { u = fx * fx * fx * (fx * (fx * 6 - 15) + 10); v = fy * fy * fy * (fy * (fy * 6 - 15) + 10); }
+  grad(ix, iy, mode); const n00 = _gx * fx + _gy * fy;
+  grad(ix + 1, iy, mode); const n10 = _gx * (fx - 1) + _gy * fy;
+  grad(ix, iy + 1, mode); const n01 = _gx * fx + _gy * (fy - 1);
+  grad(ix + 1, iy + 1, mode); const n11 = _gx * (fx - 1) + _gy * (fy - 1);
+  const a = n00 + u * (n10 - n00), b = n01 + u * (n11 - n01);
+  return a + v * (b - a);
+}
+const F2 = 0.5 * (Math.sqrt(3) - 1), G2 = (3 - Math.sqrt(3)) / 6;
+function sCorner(i, j, x, y, cheap) {
+  let t = 0.5 - x * x - y * y; if (t <= 0) return 0;
+  const h = h32(i, j, 5);
+  if (cheap) return t * t * ((h & 255) / 127.5 - 1) * 4;
+  t *= t; return t * t * (GUX[h & 255] * x + GUY[h & 255] * y);
+}
+function simplex(xin, yin, cheap) {
+  const s = (xin + yin) * F2, i = Math.floor(xin + s), j = Math.floor(yin + s);
+  const t = (i + j) * G2, x0 = xin - (i - t), y0 = yin - (j - t);
+  const i1 = x0 > y0 ? 1 : 0, j1 = 1 - i1;
+  const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2, x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
+  const n = sCorner(i, j, x0, y0, cheap) + sCorner(i + i1, j + j1, x1, y1, cheap) + sCorner(i + 1, j + 1, x2, y2, cheap);
+  return cheap ? n : 70 * n;
+}
+
+/* ================= cellular & sparse ================= */
+let WF1 = 0, WF2 = 0, WP1X = 0, WP1Y = 0, WP2X = 0, WP2Y = 0;
+function worley(x, y, m) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  let f1 = 1e9, f2 = 1e9;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+    const cx = ix + i, cy = iy + j;
+    const px = cx + rnd(cx, cy, 11), py = cy + rnd(cx, cy, 12);
+    const dx = Math.abs(px - x), dy = Math.abs(py - y);
+    const d = m === 0 ? Math.sqrt(dx * dx + dy * dy) : m === 1 ? dx + dy : Math.max(dx, dy);
+    if (d < f1) { f2 = f1; WP2X = WP1X; WP2Y = WP1Y; f1 = d; WP1X = px; WP1Y = py; }
+    else if (d < f2) { f2 = d; WP2X = px; WP2Y = py; }
+  }
+  WF1 = f1; WF2 = f2;
+}
+function sparse(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y); let s = 0;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+    const cx = ix + i, cy = iy + j;
+    for (let k = 0; k < 2; k++) {
+      const dx = cx + rnd(cx, cy, 21 + k * 2) - x, dy = cy + rnd(cx, cy, 22 + k * 2) - y, d2 = dx * dx + dy * dy;
+      if (d2 < 1) { const t = 1 - d2; s += (rnd(cx, cy, 31 + k) * 2 - 1) * t * t * t; }
+    }
+  }
+  return s;
+}
+function alligator(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y); let m = 0;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+    const cx = ix + i, cy = iy + j;
+    const dx = cx + rnd(cx, cy, 11) - x, dy = cy + rnd(cx, cy, 12) - y, d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 1) { const t = 1 - d, v = (0.25 + 0.75 * rnd(cx, cy, 41)) * t * t * (3 - 2 * t); if (v > m) m = v; }
+  }
+  return m;
+}
+
+/* ================= registry ================= */
+const BASE = {
+  fast: (x, y) => 0.5 + perlin(x, y, 1) * 0.72,
+  perlin: (x, y) => 0.5 + perlin(x, y, 0) * 0.72,
+  flow: (x, y) => 0.5 + perlin(x, y, 2) * 0.72,
+  simplex: (x, y) => 0.5 + simplex(x, y, false) * 0.5,
+  fsimplex: (x, y) => 0.5 + simplex(x, y, true) * 0.4,
+  sparse: (x, y) => 0.5 + sparse(x, y) * 0.33,
+  alligator: (x, y) => alligator(x, y),
+  wf1: (x, y) => (worley(x, y, 0), WF1), wf21: (x, y) => (worley(x, y, 0), WF2 - WF1),
+  mf1: (x, y) => (worley(x, y, 1), WF1), mf21: (x, y) => (worley(x, y, 1), WF2 - WF1),
+  cf1: (x, y) => (worley(x, y, 2), WF1), cf21: (x, y) => (worley(x, y, 2), WF2 - WF1),
+};
+const FAMNAME = { lattice: 'Gradient sur grille', cell: 'Cellulaire', conv: 'Convolution éparse', cloud: 'Cloud' };
+const TYPES = [
+  { id: 'fast', name: 'Fast', fam: 'lattice', base: 'fast', fs: 1.25, struct: 'grid', gmode: 1, vex: 'onoise()',
+    what: 'Variante de Perlin basée sur onoise() : gradients sur une grille, interpolation plus simple et moins chère.',
+    look: 'Proche de Perlin, un peu plus « nerveux ». Fréquence ×1.25.',
+    fx: 'Breakup rapide sur des millions de points, variations de couleur, masques.' },
+  { id: 'sparse', name: 'Sparse Convolution', fam: 'conv', base: 'sparse', fs: 1.25, struct: 'sparse', vex: 'snoise()',
+    what: 'Des tampons arrondis (roll-off type metaball) posés sur des points aléatoires, poids + ou −, additionnés.',
+    look: 'Blobs doux et organiques, aucune trace de grille. Fréquence ×1.25.',
+    fx: 'Densité de fumée, masques organiques, variations de surface sans artefacts.' },
+  { id: 'alligator', name: 'Alligator', fam: 'conv', base: 'alligator', fs: 1.64, struct: 'bumps', vex: 'anoise()',
+    what: 'Chaque point porte une bosse de hauteur aléatoire ; on garde la plus haute. Deux bosses qui se touchent font un pli net.',
+    look: 'Bosses arrondies serrées, creux en « V ». Fréquence ×1.64.',
+    fx: 'Peau, écailles, roche, lave refroidie, détails de nuages.' },
+  { id: 'perlin', name: 'Perlin', fam: 'lattice', base: 'perlin', fs: 1, struct: 'grid', gmode: 0, vex: 'noise()',
+    what: 'Grille régulière, un vecteur gradient aléatoire par coin, interpolation douce entre les 4 coins (8 en 3D).',
+    look: 'Collines douces, détails tous à peu près de la même taille.',
+    fx: 'Le couteau suisse : displacement, disturbance, variations d\'attributs, terrain.' },
+  { id: 'flow', name: 'Perlin Flow', fam: 'lattice', base: 'flow', fs: 1, struct: 'grid', gmode: 2, vex: 'flownoise()',
+    what: 'Perlin dont les gradients tournent avec Flow Rotation : le motif se transforme sur place au lieu de glisser.',
+    look: 'Comme Perlin ; animé, il tourbillonne et boucle de 0 à 1.',
+    fx: 'Lave, eau, fumée, textures animées en boucle.' },
+  { id: 'simplex', name: 'Simplex', fam: 'lattice', base: 'simplex', fs: 1, struct: 'tri', vex: 'xnoise()',
+    what: 'Même idée que Perlin sur une grille de triangles (tétraèdres en 3D) : moins de coins à évaluer.',
+    look: 'Proche de Perlin, moins d\'alignements sur les axes.',
+    fx: 'Comme Perlin, surtout en 3D/4D animé où il coûte moins cher.' },
+  { id: 'wf1', name: 'Worley Cellular F1', fam: 'cell', base: 'wf1', fs: 1, struct: 'pts', metric: 0, vex: 'wnoise() → f1',
+    what: 'Un point aléatoire par cellule. Valeur = distance au point le plus proche (F1).',
+    look: 'Sombre sur les points, clair entre eux : dômes, bulles, cratères.',
+    fx: 'Cratères, pores, bulles, mousse, cellules.' },
+  { id: 'wf21', name: 'Worley Cellular F2-F1', fam: 'cell', base: 'wf21', fs: 1, struct: 'pts', metric: 0, vex: 'wnoise() → f2 − f1',
+    what: 'F2 − F1 : différence entre les 2 points les plus proches. Vaut 0 pile sur la frontière entre deux cellules.',
+    look: 'Réseau de lignes : craquelures, écailles.',
+    fx: 'Fissures, sol sec, écailles, caustiques, veines, pré-fracture.' },
+  { id: 'mf1', name: 'Manhattan Cellular F1', fam: 'cell', base: 'mf1', fs: 1, struct: 'pts', metric: 1, vex: 'mwnoise() → f1',
+    what: 'Worley F1 avec la distance Manhattan |dx| + |dy| : le cercle devient un losange.',
+    look: 'Losanges, angles à 45°.',
+    fx: 'Look sci-fi, circuits, motifs graphiques.' },
+  { id: 'mf21', name: 'Manhattan Cellular F2-F1', fam: 'cell', base: 'mf21', fs: 1, struct: 'pts', metric: 1, vex: 'mwnoise() → f2 − f1',
+    what: 'Worley F2 − F1 avec la distance Manhattan.',
+    look: 'Frontières droites et diagonales à 45°.',
+    fx: 'Panneaux, circuits, craquelures « techniques ».' },
+  { id: 'cf1', name: 'Chebyshev Cellular F1', fam: 'cell', base: 'cf1', fs: 1, struct: 'pts', metric: 2, vex: 'cwnoise() → f1',
+    what: 'Worley F1 avec la distance Chebyshev max(|dx|, |dy|) : le cercle devient un carré.',
+    look: 'Carrés emboîtés.',
+    fx: 'Pixels, tuiles, hard-surface.' },
+  { id: 'cf21', name: 'Chebyshev Cellular F2-F1', fam: 'cell', base: 'cf21', fs: 1, struct: 'pts', metric: 2, vex: 'cwnoise() → f2 − f1',
+    what: 'Worley F2 − F1 avec la distance Chebyshev.',
+    look: 'Rectangles, pavés, dallage.',
+    fx: 'Pavés, dalles, greebles, paneling.' },
+  { id: 'pcloud', name: 'Perlin Cloud', fam: 'cloud', base: 'perlin', fs: 1, struct: 'grid', gmode: -1, cloud: true, vex: 'Cloud Noise VOP',
+    what: 'Fractal Perlin dont chaque octave est décalée selon la pente de la précédente (Distortion).',
+    look: 'Formes cotonneuses, bords gonflés.',
+    fx: 'Nuages, volumes de densité, brouillard.' },
+  { id: 'scloud', name: 'Simplex Cloud', fam: 'cloud', base: 'simplex', fs: 1, struct: 'tri', cloud: true, vex: 'Cloud Noise VOP',
+    what: 'Même principe sur une base Simplex.',
+    look: 'Cotonneux, moins d\'alignements que Perlin Cloud.',
+    fx: 'Nuages, cumulus, fumée volumique.' },
+  { id: 'fscloud', name: 'Fast Simplex Cloud', fam: 'cloud', base: 'fsimplex', fs: 1, struct: 'tri', cloud: true, vex: 'Cloud Noise VOP',
+    what: 'Variante plus rapide : autre structure de grille et accumulation moins chère.',
+    look: 'Plus doux et « pâteux ».',
+    fx: 'Gros volumes où la vitesse compte.' },
+];
+const TM = Object.fromEntries(TYPES.map(t => [t.id, t]));
+
+/* ================= fractal & cloud ================= */
+function fractal(b, x, y, type, oct, lac, rough) {
+  let f = 1, amp = 1;
+  if (type === 'standard') {
+    let s = 0;
+    for (let o = 0; o < oct; o++) { s += amp * (b(x * f + o * 13.7, y * f + o * 7.3) - 0.5); amp *= rough; f *= lac; }
+    return 0.5 + s;
+  }
+  if (type === 'terrain') {
+    let v = b(x, y);
+    for (let o = 1; o < oct; o++) { f *= lac; amp *= rough; v += (b(x * f + o * 13.7, y * f + o * 7.3) - 0.5) * amp * 2 * Math.max(v, 0); }
+    return v;
+  }
+  let result = b(x, y) - 0.5 + 0.7, weight = result;
+  for (let o = 1; o < oct; o++) {
+    f *= lac; amp *= rough; if (weight > 1) weight = 1;
+    const sig = (b(x * f + o * 13.7, y * f + o * 7.3) - 0.5 + 0.7) * amp;
+    result += weight * sig; weight *= sig * 2;
+  }
+  return result;
+}
+function cloud(b, x, y, oct, lac, rough, dist) {
+  let sum = 0, amp = 1, norm = 0, f = 1, px = x, py = y; const e = 0.01;
+  for (let o = 0; o < oct; o++) {
+    const sx = px * f + o * 13.7, sy = py * f + o * 7.3, n = b(sx, sy);
+    sum += amp * n; norm += amp;
+    if (dist !== 0) { const gx = (b(sx + e, sy) - n) / e, gy = (b(sx, sy + e) - n) / e; px -= dist * gx * 0.16 / f; py -= dist * gy * 0.16 / f; }
+    amp *= rough; f *= lac;
+  }
+  return sum / norm;
+}
+function makeEval(c) {
+  const T = TM[c.type], b = BASE[T.base];
+  if (T.cloud) return (x, y) => cloud(b, x, y, c.oct, c.lac, c.rough, c.dist);
+  if (c.frac === 'none') return b;
+  return (x, y) => fractal(b, x, y, c.frac, c.oct, c.lac, c.rough);
+}
+const DEF = { es: 1, ox: 0.37, oy: 0.21, frac: 'none', oct: 5, lac: 2, rough: 0.5, dist: 0.5, flow: 0, span: 4, comp: false };
+
+function computeField(c, W) {
+  const T = TM[c.type]; setFlow(c.flow || 0);
+  const ev = makeEval(c), k = c.span / W / c.es * T.fs;
+  const vals = new Float32Array(W * W);
+  for (let y = 0, i = 0; y < W; y++) { const ny = (y + .5) * k + c.oy; for (let x = 0; x < W; x++, i++) vals[i] = ev((x + .5) * k + c.ox, ny); }
+  let lo, hi;
+  if (c.range) { [lo, hi] = c.range; }
+  else {
+    const s = []; for (let i = 0; i < vals.length; i += 5) s.push(vals[i]);
+    s.sort((a, b) => a - b); lo = s[Math.floor(s.length * 0.005)]; hi = s[Math.floor(s.length * 0.995)];
+    if (!(hi - lo > 1e-6)) hi = lo + 1;
+  }
+  const inv = 1 / (hi - lo);
+  for (let i = 0; i < vals.length; i++) { let v = (vals[i] - lo) * inv; v = v < 0 ? 0 : v > 1 ? 1 : v; vals[i] = c.comp ? 1 - v : v; }
+  return { vals, lo, hi, W, ev };
+}
+
+/* ================= painting ================= */
+function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function colors() { return { ink: tok('--ink'), ink2: tok('--ink-2'), stage: tok('--stage'), accent: tok('--accent'), cell: tok('--f-cell'), line: tok('--line') }; }
+const _off = document.createElement('canvas');
+function paintGray(ctx, f, w, h) {
+  _off.width = f.W; _off.height = f.W;
+  const octx = _off.getContext('2d'), img = octx.createImageData(f.W, f.W), d = img.data;
+  for (let i = 0, j = 0; i < f.vals.length; i++, j += 4) { const g = f.vals[i] * 255; d[j] = d[j + 1] = d[j + 2] = g; d[j + 3] = 255; }
+  octx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(_off, 0, 0, w, h);
+}
+function paintRelief(ctx, f, w, h, col, rows) {
+  const W = f.W; ctx.fillStyle = col.stage; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = col.ink; ctx.lineWidth = Math.max(1, w / 420); ctx.lineJoin = 'round';
+  const step = Math.max(1, Math.floor(W / 150));
+  for (let r = 0; r < rows; r++) {
+    const t = r / (rows - 1), sy = Math.min(W - 1, Math.round(t * (W - 1)));
+    const base = h * 0.22 + t * h * 0.72, amp = h * 0.19;
+    const line = new Path2D();
+    for (let x = 0; x < W; x += step) { const px = x / (W - 1) * w, py = base - f.vals[sy * W + x] * amp; x === 0 ? line.moveTo(px, py) : line.lineTo(px, py); }
+    line.lineTo(w, base - f.vals[sy * W + W - 1] * amp);
+    const fill = new Path2D(line); fill.lineTo(w, h); fill.lineTo(0, h); fill.closePath();
+    ctx.fillStyle = col.stage; ctx.fill(fill); ctx.stroke(line);
+  }
+}
+// structure overlay: grid / triangles / feature points
+function drawStructure(ctx, c, w, h, col, scale) {
+  const T = TM[c.type], range = c.span / c.es * T.fs, ppu = w / range;
+  if (ppu < 16 * scale) return false;
+  const X = nx => (nx - c.ox) * ppu, Y = ny => (ny - c.oy) * ppu;
+  const x0 = Math.floor(c.ox) - 1, x1 = Math.ceil(c.ox + range) + 1, y0 = Math.floor(c.oy) - 1, y1 = Math.ceil(c.oy + range * h / w) + 1;
+  const acc = '#FF7B3F', halo = 'rgba(0,0,0,.55)';
+  ctx.save(); ctx.lineWidth = 1.2 * scale; setFlow(c.flow || 0);
+  const arrow = (x, y, gx, gy) => {
+    const L = ppu * 0.36, ex = x + gx * L, ey = y + gy * L, a = Math.atan2(gy, gx), hs = 5 * scale;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey);
+    ctx.moveTo(ex, ey); ctx.lineTo(ex - hs * Math.cos(a - .5), ey - hs * Math.sin(a - .5));
+    ctx.moveTo(ex, ey); ctx.lineTo(ex - hs * Math.cos(a + .5), ey - hs * Math.sin(a + .5));
+    ctx.strokeStyle = halo; ctx.lineWidth = 3.4 * scale; ctx.stroke();
+    ctx.strokeStyle = acc; ctx.lineWidth = 1.8 * scale; ctx.stroke();
+  };
+  const dot = (x, y, r, fill) => { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 1.2 * scale; ctx.strokeStyle = halo; ctx.stroke(); };
+  if (T.struct === 'grid') {
+    ctx.strokeStyle = 'rgba(255,123,63,.6)'; ctx.lineWidth = 1 * scale; ctx.beginPath();
+    for (let i = x0; i <= x1; i++) { ctx.moveTo(X(i), 0); ctx.lineTo(X(i), h); }
+    for (let j = y0; j <= y1; j++) { ctx.moveTo(0, Y(j)); ctx.lineTo(w, Y(j)); }
+    ctx.stroke();
+    for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
+      if (T.gmode >= 0) { grad(i, j, T.gmode); const n = Math.hypot(_gx, _gy) || 1; arrow(X(i), Y(j), _gx / n, _gy / n); }
+      dot(X(i), Y(j), 2.4 * scale, acc);
+    }
+  } else if (T.struct === 'tri') {
+    const cs = [[c.ox, c.oy], [c.ox + range, c.oy], [c.ox, c.oy + range], [c.ox + range, c.oy + range]].map(([x, y]) => [x + (x + y) * F2, y + (x + y) * F2]);
+    const i0 = Math.floor(Math.min(...cs.map(p => p[0]))) - 1, i1 = Math.ceil(Math.max(...cs.map(p => p[0]))) + 1;
+    const j0 = Math.floor(Math.min(...cs.map(p => p[1]))) - 1, j1 = Math.ceil(Math.max(...cs.map(p => p[1]))) + 1;
+    const PX = (i, j) => X(i - (i + j) * G2), PY = (i, j) => Y(j - (i + j) * G2);
+    ctx.strokeStyle = 'rgba(255,123,63,.6)'; ctx.lineWidth = 1 * scale; ctx.beginPath();
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      ctx.moveTo(PX(i, j), PY(i, j)); ctx.lineTo(PX(i + 1, j), PY(i + 1, j));
+      ctx.moveTo(PX(i, j), PY(i, j)); ctx.lineTo(PX(i, j + 1), PY(i, j + 1));
+      ctx.moveTo(PX(i, j), PY(i, j)); ctx.lineTo(PX(i + 1, j + 1), PY(i + 1, j + 1));
+    }
+    ctx.stroke();
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const x = PX(i, j), y = PY(i, j); if (x < -20 || y < -20 || x > w + 20 || y > h + 20) continue;
+      if (T.base === 'simplex') { const k = h32(i, j, 5) & 255; arrow(x, y, GUX[k], GUY[k]); }
+      dot(x, y, 2.4 * scale, acc);
+    }
+  } else {
+    const plus = '#FF7B3F', minus = '#4CC3D2';
+    for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
+      if (T.struct === 'pts') dot(X(i + rnd(i, j, 11)), Y(j + rnd(i, j, 12)), 3.2 * scale, acc);
+      else if (T.struct === 'bumps') { const a = 0.25 + 0.75 * rnd(i, j, 41); dot(X(i + rnd(i, j, 11)), Y(j + rnd(i, j, 12)), (1.2 + a * 4.4) * scale, acc); }
+      else for (let k = 0; k < 2; k++) {
+        const x = X(i + rnd(i, j, 21 + k * 2)), y = Y(j + rnd(i, j, 22 + k * 2)), wgt = rnd(i, j, 31 + k) * 2 - 1;
+        ctx.beginPath(); ctx.arc(x, y, ppu, 0, TAU); ctx.strokeStyle = wgt > 0 ? 'rgba(255,123,63,.28)' : 'rgba(76,195,210,.28)'; ctx.lineWidth = 1 * scale; ctx.stroke();
+        dot(x, y, (1.5 + Math.abs(wgt) * 3.2) * scale, wgt > 0 ? plus : minus);
+      }
+    }
+  }
+  ctx.restore(); return true;
+}
+
+/* ================= thumbnails (queued) ================= */
+const queue = []; let pumping = false;
+function enqueue(fn) { queue.push(fn); if (!pumping) { pumping = true; setTimeout(pump, 0); } }
+function pump() { const fn = queue.shift(); if (fn) fn(); if (queue.length) setTimeout(pump, 0); else pumping = false; }
+function renderThumb(cv) {
+  const c = Object.assign({}, DEF, { ox: 3.37, oy: 5.21, span: 5 }, JSON.parse(cv.dataset.cfg));
+  const res = c.res || 150, out = res * 2;
+  cv.width = out; cv.height = out;
+  const ctx = cv.getContext('2d'), f = computeField(c, res), col = colors();
+  if (c.view === 'relief') paintRelief(ctx, f, out, out, col, 26); else paintGray(ctx, f, out, out);
+  if (c.struct) drawStructure(ctx, c, out, out, col, 1.4);
+}
+function renderAllThumbs() { document.querySelectorAll('canvas.th').forEach(cv => enqueue(() => renderThumb(cv))); }
+
+/* ================= explorer ================= */
+const S = { type: 'perlin', es: 1, ox: 0.37, oy: 0.21, frac: 'none', oct: 5, lac: 2, rough: 0.5, dist: 0.5, flow: 0, span: 4, comp: false, view: 'image', struct: true, anim: false, animFlow: false };
+const rangeCache = new Map();
+let field = null, hover = null;
+const $ = id => document.getElementById(id);
+const cvMain = $('cv-main'), cvOv = $('cv-ov'), cvProf = $('cv-prof'), stage = $('stage');
+
+const menu = $('nmenu');
+TYPES.forEach(t => {
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.id = t.id; b.dataset.fam = t.fam;
+  b.setAttribute('aria-pressed', t.id === S.type ? 'true' : 'false');
+  b.innerHTML = `<span class="dot"></span><span>${t.name}</span>`;
+  b.addEventListener('click', () => setType(t.id));
+  menu.appendChild(b);
+});
+function setType(id) {
+  S.type = id;
+  menu.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === id ? 'true' : 'false'));
+  syncUI(); schedule();
+}
+function syncUI() {
+  const T = TM[S.type];
+  $('info').innerHTML = `<span class="chip" data-fam="${T.fam}"><span class="dot"></span>${FAMNAME[T.fam]}</span><h3>${T.name}</h3><p>${T.what}</p><p><span class="mono">${T.vex}</span></p>`;
+  $('row-flow').hidden = S.type !== 'flow';
+  $('row-dist').hidden = !T.cloud;
+  $('p-frac').disabled = !!T.cloud;
+  $('frac-hint').textContent = T.cloud ? 'Les types Cloud ont leur propre fractal intégré : Octaves, Lacunarity et Roughness s\'appliquent directement.' : '';
+  const useOct = T.cloud || S.frac !== 'none';
+  ['p-oct', 'p-lac', 'p-rough'].forEach(id => $(id).disabled = !useOct);
+  if (!useOct) { $('frac-hint').textContent = 'Choisis Standard, Terrain ou Hybrid pour empiler des octaves.'; }
+}
+function key() { return [S.type, S.es, T_frac(), S.oct, S.lac, S.rough, S.dist, S.comp].join('|'); }
+function T_frac() { return TM[S.type].cloud ? 'c' : S.frac; }
+
+let pending = false;
+function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; renderExplorer(); }); } }
+
+function sizeCanvas(cv, cssW, cssH) { const d = DPR(); const w = Math.round(cssW * d), h = Math.round(cssH * d); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } return [w, h]; }
+
+function renderExplorer() {
+  const moving = S.anim || S.animFlow;
+  const res = moving ? 170 : 300;
+  const k = key();
+  const c = Object.assign({}, S, { range: rangeCache.get(k) });
+  field = computeField(c, res);
+  if (!rangeCache.has(k)) rangeCache.set(k, [field.lo, field.hi]);
+  field.cfg = c;
+  const cssW = stage.clientWidth || 400;
+  const [w, h] = sizeCanvas(cvMain, cssW, cssW);
+  const ctx = cvMain.getContext('2d'), col = colors();
+  if (S.view === 'relief') paintRelief(ctx, field, w, h, col, 46); else paintGray(ctx, field, w, h);
+  drawOverlay(); drawProfile();
+}
+function drawOverlay() {
+  if (!field) return;
+  const cssW = stage.clientWidth || 400, d = DPR();
+  const [w, h] = sizeCanvas(cvOv, cssW, cssW);
+  const ctx = cvOv.getContext('2d'); ctx.clearRect(0, 0, w, h);
+  const c = field.cfg, T = TM[c.type];
+  let note = '';
+  if (S.struct && S.view === 'image') {
+    const ok = drawStructure(ctx, c, w, h, colors(), d);
+    note = ok ? ({ grid: T.gmode >= 0 ? 'Grille + gradients' : 'Grille', tri: 'Grille triangulaire', pts: 'Feature points', sparse: 'Tampons ± et portée', bumps: 'Bosses (taille = hauteur)' }[T.struct] + (T.cloud || c.frac !== 'none' ? ' · octave de base' : '')) : 'Structure trop dense : augmente Element Size';
+  }
+  $('structnote').textContent = note;
+  // slice line
+  ctx.save(); ctx.setLineDash([6 * d, 5 * d]); ctx.lineWidth = 1.5 * d;
+  ctx.strokeStyle = S.view === 'image' ? 'rgba(255,255,255,.75)' : tok('--accent');
+  const yMid = S.view === 'image' ? h / 2 : h * 0.22 + 0.5 * h * 0.72;
+  ctx.beginPath(); ctx.moveTo(0, yMid); ctx.lineTo(w, yMid); ctx.stroke(); ctx.restore();
+  if (hover && S.view === 'image') drawHover(ctx, w, h, d);
+}
+function drawHover(ctx, w, h, d) {
+  const c = field.cfg, T = TM[c.type], range = c.span / c.es * T.fs, ppu = w / range;
+  const nx = c.ox + hover.x * range, ny = c.oy + hover.y * range;
+  const px = hover.x * w, py = hover.y * h;
+  setFlow(c.flow);
+  let v = (field.ev(nx, ny) - field.lo) / (field.hi - field.lo); v = Math.min(1, Math.max(0, v)); if (c.comp) v = 1 - v;
+  let txt = `Valeur ${v.toFixed(2)}`;
+  ctx.save();
+  if (T.metric !== undefined) {
+    worley(nx, ny, T.metric);
+    const p1x = (WP1X - c.ox) * ppu, p1y = (WP1Y - c.oy) * ppu, p2x = (WP2X - c.ox) * ppu, p2y = (WP2Y - c.oy) * ppu, r = WF1 * ppu;
+    ctx.lineWidth = 2 * d; ctx.strokeStyle = '#FF7B3F';
+    ctx.beginPath();
+    if (T.metric === 0) ctx.arc(px, py, r, 0, TAU);
+    else if (T.metric === 1) { ctx.moveTo(px, py - r); ctx.lineTo(px + r, py); ctx.lineTo(px, py + r); ctx.lineTo(px - r, py); ctx.closePath(); }
+    else ctx.rect(px - r, py - r, 2 * r, 2 * r);
+    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(p1x, p1y); ctx.stroke();
+    ctx.setLineDash([5 * d, 4 * d]); ctx.strokeStyle = '#4CC3D2'; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(p2x, p2y); ctx.stroke(); ctx.setLineDash([]);
+    [[p1x, p1y, '#FF7B3F'], [p2x, p2y, '#4CC3D2']].forEach(([x, y, cc]) => { ctx.beginPath(); ctx.arc(x, y, 4.5 * d, 0, TAU); ctx.fillStyle = cc; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 1.2 * d; ctx.stroke(); });
+    txt += ` · F1 ${WF1.toFixed(2)} · F2 ${WF2.toFixed(2)} · F2−F1 ${(WF2 - WF1).toFixed(2)}`;
+  }
+  ctx.beginPath(); ctx.arc(px, py, 3.5 * d, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5 * d; ctx.stroke();
+  ctx.restore();
+  $('probe').textContent = txt;
+}
+function drawProfile() {
+  const cssW = cvProf.clientWidth || 400, cssH = 96, d = DPR();
+  const [w, h] = sizeCanvas(cvProf, cssW, cssH);
+  const ctx = cvProf.getContext('2d'); ctx.clearRect(0, 0, w, h);
+  const pad = 10 * d, top = pad, bot = h - pad;
+  ctx.strokeStyle = tok('--line'); ctx.lineWidth = 1 * d;
+  [0, 0.5, 1].forEach(t => { const y = bot - t * (bot - top); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); });
+  const W = field.W, row = Math.floor(W / 2) * W;
+  const path = new Path2D();
+  for (let x = 0; x < W; x++) { const X = x / (W - 1) * w, Y = bot - field.vals[row + x] * (bot - top); x ? path.lineTo(X, Y) : path.moveTo(X, Y); }
+  const area = new Path2D(path); area.lineTo(w, bot); area.lineTo(0, bot); area.closePath();
+  ctx.fillStyle = tok('--accent-soft'); ctx.fill(area);
+  ctx.strokeStyle = tok('--accent'); ctx.lineWidth = 2 * d; ctx.lineJoin = 'round'; ctx.stroke(path);
+}
+
+// hover
+function onMove(e) {
+  const r = cvOv.getBoundingClientRect();
+  hover = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+  if (hover.x < 0 || hover.x > 1 || hover.y < 0 || hover.y > 1) hover = null;
+  drawOverlay();
+}
+cvOv.addEventListener('pointermove', onMove);
+cvOv.addEventListener('pointerdown', onMove);
+cvOv.addEventListener('pointerleave', () => { hover = null; $('probe').textContent = 'Survole l\'image pour lire la valeur du noise.'; drawOverlay(); });
+
+// params
+function bindRange(id, prop, outId, fmt) {
+  const el = $(id);
+  el.addEventListener('input', () => { S[prop] = parseFloat(el.value); $(outId).textContent = fmt(S[prop]); syncUI(); schedule(); });
+}
+const f2 = v => v.toFixed(2);
+bindRange('p-es', 'es', 'o-es', f2);
+bindRange('p-off', 'ox', 'o-off', f2);
+bindRange('p-flow', 'flow', 'o-flow', f2);
+bindRange('p-dist', 'dist', 'o-dist', f2);
+bindRange('p-oct', 'oct', 'o-oct', v => String(v));
+bindRange('p-lac', 'lac', 'o-lac', f2);
+bindRange('p-rough', 'rough', 'o-rough', f2);
+$('p-frac').addEventListener('change', e => { S.frac = e.target.value; syncUI(); schedule(); });
+$('p-struct').addEventListener('change', e => { S.struct = e.target.checked; drawOverlay(); });
+$('p-comp').addEventListener('change', e => { S.comp = e.target.checked; schedule(); });
+$('viewseg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  S.view = b.dataset.v; $('viewseg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); schedule();
+}));
+
+// animation
+let raf = null, last = 0;
+function tick(t) {
+  if (!S.anim && !S.animFlow) { raf = null; schedule(); return; }
+  const dt = last ? Math.min(0.1, (t - last) / 1000) : 0; last = t;
+  if (S.anim) { S.ox += dt * 0.25; if (S.ox > 10) S.ox -= 20; $('p-off').value = S.ox; $('o-off').textContent = f2(S.ox); }
+  if (S.animFlow) { S.flow = (S.flow + dt * 0.08) % 1; $('p-flow').value = S.flow; $('o-flow').textContent = f2(S.flow); }
+  renderExplorer();
+  raf = requestAnimationFrame(tick);
+}
+function startAnim() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
+$('p-anim').addEventListener('change', e => { S.anim = e.target.checked; startAnim(); });
+$('p-animflow').addEventListener('change', e => { S.animFlow = e.target.checked; startAnim(); });
+
+/* ================= gallery ================= */
+const gal = $('gallery');
+TYPES.forEach(t => {
+  const b = document.createElement('button'); b.type = 'button';
+  b.setAttribute('aria-label', `Charger ${t.name} dans l'explorateur`);
+  b.innerHTML = `<canvas class="th" data-cfg='{"type":"${t.id}","span":5}'></canvas><span class="gname" data-fam="${t.fam}"><span class="dot"></span>${t.name}</span>`;
+  b.addEventListener('click', () => { setType(t.id); $('explorer').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); });
+  gal.appendChild(b);
+});
+
+/* ================= recap table ================= */
+$('recap-body').innerHTML = TYPES.map(t => `<tr><td class="tn" data-fam="${t.fam}"><span class="dot"></span>${t.name}</td><td>${FAMNAME[t.fam]}</td><td>${t.what}</td><td>${t.look}</td><td><code>${t.vex}</code></td><td>${t.fx}</td></tr>`).join('');
+
+/* ================= intro 1D demo ================= */
+let introMode = 'grad', introSeed = 3;
+const cvIntro = $('cv-intro');
+const introCaps = {
+  white: 'Une valeur indépendante par échantillon : aucun lien entre voisins. Les traits verticaux sont la grille, ici ignorée.',
+  value: 'Une valeur aléatoire (point) sur chaque trait de grille, puis une courbe douce qui passe par ces points. Les pics et creux tombent sur la grille.',
+  grad: 'Une pente aléatoire (segment) sur chaque trait de grille. La courbe vaut 0 sur la grille et suit les pentes : les bosses tombent entre les traits. C\'est le principe de Perlin.',
+};
+function drawIntro() {
+  const n = parseInt($('in-n').value, 10); $('o-in-n').textContent = n;
+  const cssW = cvIntro.clientWidth || 500, cssH = 260, d = DPR();
+  const [w, h] = sizeCanvas(cvIntro, cssW, cssH); cvIntro.style.height = cssH + 'px';
+  const ctx = cvIntro.getContext('2d'); ctx.clearRect(0, 0, w, h);
+  const mid = h / 2, amp = h * 0.38, ppu = w / n;
+  const ink = tok('--ink'), acc = tok('--accent'), line = tok('--line'), ink3 = tok('--ink-3');
+  ctx.strokeStyle = line; ctx.lineWidth = 1 * d;
+  for (let i = 0; i <= n; i++) { ctx.beginPath(); ctx.moveTo(i * ppu, 8 * d); ctx.lineTo(i * ppu, h - 8 * d); ctx.stroke(); }
+  ctx.setLineDash([3 * d, 4 * d]); ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke(); ctx.setLineDash([]);
+  const val = i => rnd(i, introSeed, 1) * 2 - 1, slope = i => rnd(i, introSeed, 2) * 2 - 1;
+  ctx.strokeStyle = acc; ctx.lineWidth = 2.2 * d; ctx.lineJoin = 'round'; ctx.beginPath();
+  if (introMode === 'white') {
+    const step = 4 * d; let k = 0;
+    for (let x = 0; x <= w; x += step, k++) { const y = mid - (rnd(k, introSeed, 9) * 2 - 1) * amp; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+  } else {
+    for (let px = 0; px <= w; px += 1) {
+      const x = px / ppu, i = Math.floor(x), f = x - i;
+      let y;
+      if (introMode === 'value') { const u = f * f * (3 - 2 * f); y = val(i) + u * (val(i + 1) - val(i)); }
+      else { const u = f * f * f * (f * (f * 6 - 15) + 10); const a = slope(i) * f, b = slope(i + 1) * (f - 1); y = (a + u * (b - a)) * 1.9; }
+      const Y = mid - y * amp; px ? ctx.lineTo(px, Y) : ctx.moveTo(px, Y);
+    }
+    ctx.stroke();
+    for (let i = 0; i <= n; i++) {
+      const X = i * ppu;
+      if (introMode === 'value') { ctx.beginPath(); ctx.arc(X, mid - val(i) * amp, 5 * d, 0, TAU); ctx.fillStyle = ink; ctx.fill(); }
+      else {
+        const s = slope(i) * 1.9, dx = 0.28;
+        ctx.beginPath(); ctx.moveTo(X - dx * ppu, mid + s * dx * amp); ctx.lineTo(X + dx * ppu, mid - s * dx * amp);
+        ctx.strokeStyle = ink; ctx.lineWidth = 2.6 * d; ctx.stroke();
+        ctx.beginPath(); ctx.arc(X, mid, 4 * d, 0, TAU); ctx.fillStyle = ink; ctx.fill();
+      }
+    }
+  }
+  ctx.fillStyle = ink3; ctx.font = `${11 * d}px ${tok('--mono')}`; ctx.fillText('grille', 6 * d, h - 12 * d);
+  $('intro-cap').textContent = introCaps[introMode];
+}
+$('introseg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  introMode = b.dataset.m; $('introseg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); drawIntro();
+}));
+$('in-n').addEventListener('input', drawIntro);
+$('in-seed').addEventListener('click', () => { introSeed++; drawIntro(); });
+
+/* ================= fractal 1D demo ================= */
+const cvFrac = $('cv-frac');
+function p1(x, s) { const i = Math.floor(x), f = x - i, g0 = rnd(i, s, 3) * 2 - 1, g1 = rnd(i + 1, s, 3) * 2 - 1, u = f * f * f * (f * (f * 6 - 15) + 10), a = g0 * f, b = g1 * (f - 1); return (a + u * (b - a)) * 2; }
+function drawFrac() {
+  const oct = parseInt($('fo').value, 10), lac = parseFloat($('fl').value), rough = parseFloat($('fr').value);
+  $('o-fo').textContent = oct; $('o-fl').textContent = f2(lac); $('o-fr').textContent = f2(rough);
+  const laneH = 34, sumH = 150, cssH = oct * laneH + sumH + 26, cssW = cvFrac.clientWidth || 500, d = DPR();
+  cvFrac.style.height = cssH + 'px';
+  const [w, h] = sizeCanvas(cvFrac, cssW, cssH);
+  const ctx = cvFrac.getContext('2d'); ctx.clearRect(0, 0, w, h);
+  const span = 5, N = Math.floor(w / d), acc = tok('--accent'), ink = tok('--ink'), ink3 = tok('--ink-3'), line = tok('--line');
+  const sum = new Float32Array(N + 1);
+  ctx.font = `${10.5 * d}px ${tok('--mono')}`;
+  for (let o = 0; o < oct; o++) {
+    const f = Math.pow(lac, o), a = Math.pow(rough, o), cy = (o * laneH + laneH / 2) * d;
+    ctx.strokeStyle = line; ctx.lineWidth = 1 * d; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+    ctx.globalAlpha = 1 - o / (oct + 2); ctx.strokeStyle = acc; ctx.lineWidth = 1.6 * d; ctx.beginPath();
+    for (let k = 0; k <= N; k++) { const x = k / N * span, v = p1(x * f + o * 31.7, o + 1) * a; sum[k] += v; const Y = cy - v * laneH * 0.42 * d; k ? ctx.lineTo(k * d, Y) : ctx.moveTo(0, Y); }
+    ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillStyle = ink3; ctx.fillText(`octave ${o + 1} · fréq ×${f.toFixed(f < 10 ? 2 : 0)} · amp ×${a.toFixed(3)}`, 6 * d, (o * laneH + 11) * d);
+  }
+  const top = (oct * laneH + 22) * d, cy = top + sumH / 2 * d;
+  let m = 0.3; for (let k = 0; k <= N; k++) m = Math.max(m, Math.abs(sum[k]));
+  ctx.strokeStyle = line; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+  ctx.strokeStyle = ink; ctx.lineWidth = 2.4 * d; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (let k = 0; k <= N; k++) { const Y = cy - sum[k] / m * sumH * 0.44 * d; k ? ctx.lineTo(k * d, Y) : ctx.moveTo(0, Y); }
+  ctx.stroke();
+  ctx.fillStyle = ink; ctx.font = `600 ${11.5 * d}px ${tok('--mono')}`; ctx.fillText('SOMME = le noise fractal', 6 * d, top + 4 * d);
+}
+['fo', 'fl', 'fr'].forEach(id => $(id).addEventListener('input', drawFrac));
+
+/* ================= quiz ================= */
+const POOL = ['perlin', 'simplex', 'wf1', 'wf21', 'mf21', 'cf1', 'cf21', 'alligator', 'sparse', 'pcloud'];
+let qAns = null, qRight = 0, qTotal = 0;
+const cvQuiz = $('cv-quiz');
+function newQuestion() {
+  qAns = POOL[Math.floor(Math.random() * POOL.length)];
+  const others = POOL.filter(p => p !== qAns).sort(() => Math.random() - 0.5).slice(0, 3);
+  const opts = [qAns, ...others].sort(() => Math.random() - 0.5);
+  cvQuiz.dataset.cfg = JSON.stringify({ type: qAns, ox: Math.random() * 50 + 2, oy: Math.random() * 50 + 2, span: 5, res: 180 });
+  renderThumb(cvQuiz);
+  $('qfeed').textContent = '';
+  const box = $('qopts'); box.innerHTML = '';
+  opts.forEach(id => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = TM[id].name;
+    b.addEventListener('click', () => {
+      qTotal++; const ok = id === qAns; if (ok) qRight++;
+      box.querySelectorAll('button').forEach(x => { x.disabled = true; if (x.textContent === TM[qAns].name) x.classList.add('right'); });
+      if (!ok) b.classList.add('wrong');
+      $('qfeed').innerHTML = `${ok ? '<b>Bien vu.</b>' : `<b>Non, c'était ${TM[qAns].name}.</b>`} ${TM[qAns].look}`;
+      $('qscore').textContent = `${qRight} / ${qTotal}`;
+    });
+    box.appendChild(b);
+  });
+}
+$('qnext').addEventListener('click', newQuestion);
+
+/* ================= boot & theme ================= */
+function redrawAll() { renderExplorer(); drawIntro(); drawFrac(); renderAllThumbs(); if (cvQuiz.dataset.cfg) renderThumb(cvQuiz); }
+syncUI();
+renderExplorer();
+drawIntro();
+drawFrac();
+newQuestion();
+renderAllThumbs();
+let rT = null;
+new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => { renderExplorer(); drawIntro(); drawFrac(); }, 80); }).observe(document.body);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawIntro(); drawFrac(); });
+})();
+</script>
+
+</body>
+</html>
