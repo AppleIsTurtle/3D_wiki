@@ -87,6 +87,8 @@
   .btn:hover { border-color: var(--muted); }
   .btn[aria-pressed=true] { border-color: var(--sodium); color: var(--sodium); }
   .btn svg { width: 10px; height: 10px; fill: currentColor; }
+  .back { display: flex; width: max-content; margin-bottom: 14px; color: var(--muted); text-decoration: none; }
+  .back:hover { color: var(--ink); }
 
   .switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; font-size: 13px; }
   .switch input { position: absolute; opacity: 0; pointer-events: none; }
@@ -158,6 +160,10 @@
 <div class="app">
   <aside class="ctl" aria-label="Réglages">
     <header>
+      <!-- Lien absolu : cette page est aussi servie sur pommetortue.tech/ior, où « / » n'est pas le wiki. -->
+      <a class="btn back" href="https://wiki.pommetortue.tech/">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M4.5 1.5 1 5l3.5 3.5M1 5h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wiki 3D</span>
+      </a>
       <h1>Sphère de Fresnel</h1>
       <p>Une sphère diélectrique lancée en ray tracing. Changez l'indice de réfraction et regardez la part réfléchie monter vers les bords.</p>
     </header>
