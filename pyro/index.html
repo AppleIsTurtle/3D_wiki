@@ -144,8 +144,25 @@ button.ptab:hover{color:#FFF}
 .hud .k{color:#A9B0B6}
 .hud .nn{color:var(--h-sel);font-weight:600}
 .legend{position:absolute;left:10px;bottom:10px;width:200px;padding:7px 9px 8px;border-radius:5px;background:rgba(18,18,18,.78);font:11px/1.3 var(--mono);color:#DDD;pointer-events:none;display:grid;gap:5px}
+.legend.lift{bottom:44px}
 .legend .lg-bar{height:8px;border-radius:2px}
 .legend .lg-ends{display:flex;justify-content:space-between;color:#AAA}
+.notice{position:absolute;top:8px;right:10px;z-index:2;width:min(340px,calc(100% - 20px));max-height:calc(100% - 16px);overflow:auto;padding:9px 11px 11px;border-radius:6px;
+  background:rgba(26,22,19,.94);border:1px solid #6A4A34;box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:12px;line-height:1.4;color:#E8E8E8}
+.nt-h{display:flex;align-items:center;gap:8px}
+.nt-k{all:unset;flex:1;cursor:pointer;font:600 10.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#FFB48A}
+.nt-k:focus-visible{outline:2px solid var(--h-sel)}
+.notice.min{width:auto;padding:6px 8px 6px 11px}
+.notice.min .nt-t,.notice.min ul{display:none}
+.nt-x{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:4px;color:#BBB;font-size:16px}
+.nt-x:hover{background:#3A3A3A;color:#FFF}
+.nt-x:focus-visible{outline:2px solid var(--h-sel)}
+.nt-t{display:block;margin:4px 0 8px;color:#FFF;font-size:12.5px}
+.notice ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.notice li{display:grid;gap:1px;padding-left:9px;border-left:2px solid #6A4A34}
+.nt-p{font:600 11.5px var(--mono);color:#FFF}
+.nt-v{font:11.5px var(--mono);color:var(--h-sel)}
+.nt-w{color:#B9B9B9}
 .disp{flex:none;width:36px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;background:var(--h-pane-2);border-left:1px solid var(--h-line)}
 .dbtn{all:unset;width:28px;height:28px;display:grid;place-items:center;border-radius:5px;color:var(--h-ink-2)}
 .dbtn:hover{background:#444;color:#FFF}
@@ -263,6 +280,7 @@ button.ptab:hover{color:#FFF}
   .hsel{display:grid;gap:3px;font-size:11px}
   .hud{font-size:10px}
   .legend{width:160px}
+  .notice{top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:60%}
   .prow{grid-template-columns:112px minmax(0,1fr)}
 }
 
@@ -540,6 +558,11 @@ footer p{max-width:92ch}
         </div>
         <div class="hud" id="hud"></div>
         <div class="legend" id="legend" hidden></div>
+        <div class="notice" id="notice" role="status" hidden>
+          <div class="nt-h"><button class="nt-k" type="button" id="notice-k" aria-expanded="true">Activé pour que ça se voie</button><button class="nt-x" type="button" id="notice-x" aria-label="Fermer">×</button></div>
+          <b class="nt-t" id="notice-t"></b>
+          <ul id="notice-list"></ul>
+        </div>
       </div>
       <div class="disp" role="toolbar" aria-label="Options d'affichage" aria-orientation="vertical">
         <button class="dbtn" type="button" id="b-arrows" aria-pressed="false" title="Flèches de vitesse (vel)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20 11 13M11 13v4.5M11 13H6.5"/><path d="M13 11l7-7M20 4v4.5M20 4h-4.5"/></svg><span class="sr">Flèches de vitesse</span></button>
@@ -841,7 +864,7 @@ footer p{max-width:92ch}
           </div></div>
           <div class="try"><span class="try-l">Dans le labo</span>
             <button class="btn hot" type="button" data-compare="wind">Comparer sans / avec</button>
-            <button class="btn" type="button" data-guide="speed">Voir speed (sans le vent)</button>
+            <button class="btn" type="button" data-compare="wind" data-guide="speed">Comparer speed sans / avec vent</button>
           </div>
         </aside>
       </div>
@@ -2168,7 +2191,7 @@ function setCompare(val) {
   else if (val === 'reflection') { P.adv_vel_reflect = 'single'; sims = [new Sim({ adv_vel_reflect: 'off' }), new Sim(null)]; }
   else if (val === 'voxel') { sims = [new Sim({ divsize: String(Math.min(0.1, +P.divsize * 2)) }), new Sim(null)]; }
   else if (val === 'sparse') { P.solver = 'sparse'; sims = [new Sim({ solver: 'dense' }), new Sim(null)]; }
-  syncUI(); layout(); dirty = true;
+  syncUI(); layout(); updateLegend(); dirty = true;
 }
 function resetSims() {
   if (compare === 'voxel') { setCompare('voxel'); return; }
@@ -2197,9 +2220,10 @@ const PRESETS = {
 };
 function applyPreset(name, keepCompare) {
   Object.assign(P, JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(JSON.stringify(PRESETS[name] || {})));
+  $('notice').hidden = true;
   document.querySelectorAll('[data-shelf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.shelf === name ? 'true' : 'false'));
   if (keepCompare) syncUI();
-  else { compare = 'none'; $('compare').value = 'none'; sims = [new Sim(null)]; syncUI(); layout(); }
+  else { compare = 'none'; $('compare').value = 'none'; sims = [new Sim(null)]; syncUI(); layout(); updateLegend(); }
   dirty = true;
 }
 
@@ -2262,7 +2286,7 @@ function folder(g) {
   H.appendChild(tg);
   const tools = document.createElement('span'); tools.className = 'fold-tools';
   if (g.guide) { const m = document.createElement('button'); m.type = 'button'; m.className = 'mini'; m.textContent = 'Guide'; m.title = 'Afficher le Shape Guide'; m.addEventListener('click', () => showShapeGuide(g.guide)); tools.appendChild(m); }
-  if (g.compare) { const m = document.createElement('button'); m.type = 'button'; m.className = 'mini'; m.textContent = 'A/B'; m.title = 'Comparer sans / avec'; m.addEventListener('click', () => setCompare(g.compare)); tools.appendChild(m); }
+  if (g.compare) { const m = document.createElement('button'); m.type = 'button'; m.className = 'mini'; m.textContent = 'A/B'; m.title = 'Comparer sans / avec'; m.addEventListener('click', () => startCompare(g.compare)); tools.appendChild(m); }
   H.appendChild(tools);
   const B = document.createElement('div'); B.className = 'fold-b';
   if (g.note) B.insertAdjacentHTML('beforeend', `<p class="fold-note">${g.note}</p>`);
@@ -2397,8 +2421,192 @@ function revealCompare(val) {
 }
 function showShapeGuide(name) {
   P['enable_' + name] = true; syncUI();
+  prepare('Shape Guide · ' + optLabel('shapeguide', name), OP_TESTS[name]);
   $('shapeguide').value = name; $('fieldguide').value = 'look';
   openFolder('solver', 'shape', `.fold[data-enable="enable_${name}"]`);
+  updateLegend(); dirty = true;
+}
+
+/* ---------------- prérequis des tests ----------------
+   Chaque test (comparaison A/B, Shape Guide, Field Guide, flèches) liste ce qui doit être actif pour que
+   l'effet se voie. Au lancement, ce qui manque est activé et un encart dans la vue dit quoi et pourquoi. */
+const PINFO = {};
+for (const nd of NODES) for (const t of nd.tabs) for (const g of t.groups) {
+  if (g.enable) PINFO[g.enable[0]] = nd.name + ' › ' + g.title;
+  for (const it of g.items) if (it[0] !== 'sub') PINFO[it[0]] = nd.name + ' › ' + it[1];
+}
+function fmtVal(key, v) {
+  const c = CTL[key];
+  if (Array.isArray(v)) return v[0] + ' → ' + v[1];
+  if (typeof v === 'boolean') return v ? 'on' : 'off';
+  if (c && c.type === 's') { const o = c.it[4].find(o => o[0] === v); return o ? o[1] : String(v); }
+  if (c && c.it && typeof v === 'number') return fmtNum(c.it, v);
+  return String(v);
+}
+const below = t => v => !(v >= t);
+function need(fx, key, bad, to, why) {
+  if (!bad(P[key])) return;
+  fx.push({ name: PINFO[key] || key, from: fmtVal(key, P[key]), to: fmtVal(key, to), why });
+  P[key] = to;
+}
+function needSource(fx) { need(fx, 'src_mode', v => v === 'off', 'cont', 'la source doit émettre'); }
+function needMotion(fx, why) {
+  needSource(fx);
+  if (P.src_vel >= 0.5 || P.src_divergence > 0) return;
+  const w = why || 'il faut que le gaz bouge pour voir une différence';
+  need(fx, 'enable_buoyancy', v => !v, true, w);
+  need(fx, 'buoyancylift', below(0.1), 0.35, w);
+  need(fx, 'src_temperature', below(0.3), 0.5, 'la montée vient de la chaleur');
+  need(fx, 'temperature1', v => !(v > P.temperature0 + 100), 3000, 'Reference Temp doit dépasser Ambient Temp');
+  need(fx, 'gravaccel', below(1), 9.8, 'la poussée est proportionnelle à la gravité');
+}
+// le champ doit exister dans la sim : il faut le sourcer (min = valeur sourcée en dessous de laquelle on la remonte)
+function needField(fx, field, why, min = 0.3) {
+  needSource(fx);
+  if (field === 'density') need(fx, 'src_density', below(min), 1, why);
+  else if (field === 'temperature') {
+    need(fx, 'src_temperature', below(min), Math.max(0.5, min), why);
+    need(fx, 'tempcooling', v => v > 0.9, 0.6, 'sinon la chaleur retombe aussitôt à l\'ambiant');
+  } else if (field === 'flame') {
+    need(fx, 'src_flame', below(min), 1, why);
+    need(fx, 'flames_lifespan', below(0.3), 0.7, 'sinon la flamme se consume aussitôt');
+    need(fx, 'fi_enable', v => !v, true, 'pour afficher le feu');
+  } else if (field === 'speed') needMotion(fx, why);
+}
+// il faut quelque chose à regarder : de la fumée affichée ou du feu qui brille
+function needVisible(fx) {
+  needSource(fx);
+  const smoke = P.src_density >= 0.3 || (P.soot_doemit && P.src_flame >= 0.3);
+  const fire = P.src_flame >= 0.3 && P.fi_enable;
+  if (!smoke && !fire) need(fx, 'src_density', below(0.3), 1, 'sans fumée ni feu, il n\'y a rien à voir');
+  if (P.src_density >= 0.3 || (P.soot_doemit && P.src_flame >= 0.3)) {
+    need(fx, 'enablesmoke', v => !v, true, 'pour afficher la fumée');
+    need(fx, 's_densityscale', below(0.2), 1, 'pour afficher la fumée');
+  } else need(fx, 'fi_int', below(5), 25, 'pour que le feu brille');
+}
+function needTurbField(fx, why) {
+  need(fx, 'turbulence_infthreshold', v => !P.turbulence_infthreshold_asrange && +v[0] > 0.5, [0.01, 0], 'seuil trop haut : Turbulence n\'agirait nulle part');
+  if (P.turbulence_infthreshold_asrange) return;
+  const f = P.turbulence_influencefield;
+  needField(fx, f, why || 'Turbulence n\'agit que là où ' + f + ' dépasse son seuil (Threshold Field)', Math.max(0.05, +P.turbulence_infthreshold[0] * 3));
+}
+const OP_TESTS = {
+  buoyancy: fx => {
+    need(fx, 'buoyancylift', below(0.1), 0.35, 'Buoyancy Scale à 0 ne pousse rien');
+    need(fx, 'enable_density_gravity', v => v, false, 'elle fait partie du bloc Buoyancy : couper la buoyancy la couperait aussi, et la fumée dense retomberait dans B');
+    need(fx, 'src_vel', v => v > 0.6, 0, 'une vitesse de départ fait monter le gaz même sans buoyancy : on la retire pour isoler la poussée');
+    needField(fx, 'temperature', 'la buoyancy vient de la chaleur : sans temperature, rien ne monte');
+    need(fx, 'temperature1', v => !(v > P.temperature0 + 100), 3000, 'la poussée dépend de l\'écart entre Reference et Ambient Temp');
+    need(fx, 'gravaccel', below(1), 9.8, 'la poussée est proportionnelle à la gravité');
+    needVisible(fx);
+  },
+  disturbance: fx => {
+    need(fx, 'disturbance', below(0.2), 0.6, 'une force trop faible ne se voit pas');
+    needVisible(fx); needMotion(fx, 'Disturbance casse les formes d\'une fumée qui bouge');
+  },
+  turbulence: fx => {
+    need(fx, 'turbulence', below(0.05), 0.3, 'une force trop faible ne se voit pas');
+    needTurbField(fx);
+    needVisible(fx);
+  },
+  shredding: fx => {
+    need(fx, 'shredding', below(0.2), 1, 'une rotation trop faible ne se voit pas');
+    need(fx, 'shredding_range', v => +v[0] > 0.8 && +v[1] > 0.8, [0.1, 1], 'seuil trop haut : Shredding n\'agirait nulle part');
+    const f = P.shredding_field, r0 = Math.min(+P.shredding_range[0], +P.shredding_range[1]);
+    needField(fx, f, 'Shredding n\'agit que là où il y a de la ' + f + ' (Threshold Field)', Math.max(0.3, r0 + 0.2));
+    needVisible(fx); needMotion(fx, 'Shredding fait tourner la vitesse : il faut que le gaz bouge');
+  },
+  wind: fx => {
+    need(fx, 'wind_strength', below(0.3), 1, 'un vent trop faible ne se voit pas');
+    need(fx, 'wind_angle', v => Math.abs(Math.sin(v * Math.PI / 180)) > 0.9, 0, 'un vent vertical se confond avec la montée');
+    needVisible(fx);
+  },
+  expansion: fx => {
+    need(fx, 'div_amount', v => !(Math.abs(v) >= 0.2), 0.7, 'un Expansion Rate trop faible ne se voit pas');
+    need(fx, 'div_controlrange', v => +v[0] > 0.8 && +v[1] > 0.8, [0, 1], 'Flame Range hors des valeurs de flame');
+    needField(fx, 'flame', 'Flame Expansion ne gonfle le gaz que là où il y a de la flame');
+    needVisible(fx);
+  },
+  viscosity: fx => {
+    need(fx, 'viscosity', below(0.3), 1, 'une viscosity trop faible ne se voit pas');
+    needVisible(fx); needMotion(fx);
+    const detail = (P.enable_disturbance && P.disturbance >= 0.2) || (P.enable_turbulence && P.turbulence >= 0.05)
+      || (P.enable_shredding && P.shredding >= 0.2 && P.src_flame >= 0.3);
+    if (!detail) {
+      need(fx, 'enable_turbulence', v => !v, true, 'Viscosity lisse le détail : il faut du détail à lisser');
+      need(fx, 'turbulence', below(0.05), 0.3, 'Viscosity lisse le détail : il faut du détail à lisser');
+      needTurbField(fx, 'la Turbulence ajoutée n\'agit que dans le gaz chaud');
+    }
+  },
+  dissipation: fx => {
+    need(fx, 'dissipation', below(0.02), 0.1, 'une dissipation trop faible ne se voit pas');
+    if (!(P.soot_doemit && P.src_flame >= 0.3)) needField(fx, 'density', 'Dissipation n\'agit que sur la fumée (density)');
+    needVisible(fx);
+  },
+  advection: fx => { needVisible(fx); needMotion(fx, 'le flou de l\'advection ne se voit que sur une fumée qui bouge'); },
+  reflection: fx => {
+    need(fx, 'adv_vel_reflectamount', below(0.5), 0.95, 'une réflexion trop faible ne se voit pas');
+    needVisible(fx); needMotion(fx, 'la réflexion garde les tourbillons d\'une fumée qui bouge');
+  },
+  voxel: fx => {
+    need(fx, 'divsize', v => +v >= 0.075, '0.035', 'à cette taille, la sim A (voxel × 2, plafonné à 0.1) serait presque identique');
+    needVisible(fx); needMotion(fx);
+  },
+  sparse: fx => { needVisible(fx); needMotion(fx, 'la zone active suit une fumée qui bouge'); },
+};
+const FIELD_TESTS = {
+  density: fx => needField(fx, 'density', 'le champ density reste vide si la source n\'émet pas de fumée', 0.05),
+  temperature: fx => needField(fx, 'temperature', 'le champ temperature reste vide si la source n\'émet pas de chaleur', 0.05),
+  flame: fx => needField(fx, 'flame', 'le champ flame reste vide si la source n\'émet pas de flame', 0.05),
+  speed: fx => needMotion(fx, 'speed est nul tant que le gaz ne bouge pas'),
+  pressure: fx => needMotion(fx, 'la pression n\'apparaît que si le gaz bouge'),
+  curl: fx => needMotion(fx, 'la vorticité n\'apparaît que si le gaz bouge'),
+  divergence: fx => {
+    if (P.src_divergence > 0 || (P.div_doadd && P.src_flame >= 0.3)) return;
+    need(fx, 'div_doadd', v => !v, true, 'divergence reste vide sans source de divergence ni Flame Expansion');
+    need(fx, 'div_amount', v => !(Math.abs(v) >= 0.2), 0.7, 'un Expansion Rate trop faible ne se voit pas');
+    needField(fx, 'flame', 'Flame Expansion écrit dans divergence là où il y a de la flame');
+  },
+};
+let noticeT = -1e9, noticeTimer = null;
+function showNotice(title, items) {
+  const box = $('notice'), now = performance.now(), merge = !box.hidden && now - noticeT < 250;
+  noticeT = now;
+  $('notice-t').textContent = merge ? $('notice-t').textContent + ' + ' + title : title;
+  const html = items.map(f => `<li><span class="nt-p">${f.name}</span><span class="nt-v">${f.from} → ${f.to}</span><span class="nt-w">${f.why}</span></li>`).join('');
+  if (merge) $('notice-list').insertAdjacentHTML('beforeend', html); else $('notice-list').innerHTML = html;
+  box.hidden = false; noticeMin(false);
+  clearTimeout(noticeTimer); noticeTimer = setTimeout(() => noticeMin(true), 7000);
+}
+// après quelques secondes l'encart se replie en pastille pour ne pas cacher la simulation
+function noticeMin(on) {
+  const n = $('notice-list').children.length;
+  $('notice').classList.toggle('min', on);
+  $('notice-k').setAttribute('aria-expanded', on ? 'false' : 'true');
+  $('notice-k').textContent = on ? `${n} réglage${n > 1 ? 's' : ''} activé${n > 1 ? 's' : ''} ▸` : 'Activé pour que ça se voie';
+}
+$('notice-k').addEventListener('click', () => { clearTimeout(noticeTimer); noticeMin(!$('notice').classList.contains('min')); });
+$('notice-x').addEventListener('click', () => { clearTimeout(noticeTimer); $('notice').hidden = true; });
+function prepare(title, run) {
+  const fx = [];
+  run(fx);
+  if (fx.length) { syncUI(); showNotice(title, fx); dirty = true; }
+  return fx;
+}
+const optLabel = (sel, v) => { const o = [...$(sel).options].find(o => o.value === v); return o ? o.textContent : v; };
+function startCompare(val) {
+  if (val !== 'none' && OP_TESTS[val]) prepare('Comparer A/B · ' + optLabel('compare', val), OP_TESTS[val]);
+  setCompare(val); revealCompare(val);
+  if (val === 'sparse' && $('fieldguide').value !== 'active') {
+    const from = optLabel('fieldguide', $('fieldguide').value);
+    $('fieldguide').value = 'active'; $('shapeguide').value = 'none'; updateLegend();
+    showNotice('Comparer A/B · Sparse vs Dense', [{ name: 'Scene View › Field Guide', from, to: 'Active Region', why: 'c\'est là que les deux modes diffèrent : toute la boîte en Dense, seulement les tuiles proches de la fumée en Sparse' }]);
+  }
+}
+function setFieldGuide(name) {
+  $('fieldguide').value = name;
+  if (name !== 'look') $('shapeguide').value = 'none';
+  if (FIELD_TESTS[name]) prepare('Field Guide · ' + optLabel('fieldguide', name), FIELD_TESTS[name]);
   updateLegend(); dirty = true;
 }
 
@@ -2481,8 +2689,8 @@ function draw() {
       o.font = '600 12px "Source Code Pro", Consolas, monospace';
       const tw = o.measureText(labels[idx]).width;
       const lx = x0 + Math.max(8, (pw - tw - 14) / 2);
-      o.fillStyle = 'rgba(10,11,13,.78)'; o.fillRect(lx, 8, tw + 14, 22);
-      o.fillStyle = idx ? '#FFB48A' : '#C9D1D8'; o.fillText(labels[idx], lx + 7, 23);
+      o.fillStyle = 'rgba(10,11,13,.78)'; o.fillRect(lx, cssH - 30, tw + 14, 22);
+      o.fillStyle = idx ? '#FFB48A' : '#C9D1D8'; o.fillText(labels[idx], lx + 7, cssH - 15);
     }
     if (idx > 0) { o.fillStyle = 'rgba(255,255,255,.22)'; o.fillRect(x0, 0, 1, cssH); }
   });
@@ -2501,7 +2709,7 @@ function updateLegend() {
   else if (m === 'pressure') t = ['pressure (normalisée)', SIGNED, '−max', '+max'];
   else if (m === 'curl') t = ['vorticité (curl)', SIGNED, '−15', '+15'];
   else if (m === 'active') t = ['Active Region', 'linear-gradient(90deg,rgb(10,11,12),rgb(34,80,92))', 'inactif', 'actif'];
-  el.hidden = !t;
+  el.hidden = !t; el.classList.toggle('lift', sims.length > 1);
   if (t) el.innerHTML = `<span>${t[0]}</span><span class="lg-bar" style="background:${t[1]}"></span><span class="lg-ends"><span>${t[2]}</span><span>${t[3]}</span></span>`;
 }
 
@@ -2539,13 +2747,16 @@ function setPlaying(v) {
 }
 function stepOnce() { setPlaying(false); sims.forEach(s => s.stepFrame()); dirty = true; updateHud(); }
 function resetAll() { resetSims(); updateHud(); }
-function setArrows(v) { arrows = v; $('b-arrows').setAttribute('aria-pressed', v ? 'true' : 'false'); dirty = true; }
+function setArrows(v) {
+  if (v) prepare('Flèches de vitesse', fx => needMotion(fx, 'les flèches montrent vel : il faut que le gaz bouge'));
+  arrows = v; $('b-arrows').setAttribute('aria-pressed', v ? 'true' : 'false'); dirty = true;
+}
 $('b-play').addEventListener('click', () => setPlaying(!playing));
 $('b-reset').addEventListener('click', resetAll);
 $('b-step').addEventListener('click', stepOnce);
 document.querySelectorAll('[data-shelf]').forEach(b => b.addEventListener('click', () => { applyPreset(b.dataset.shelf); setPlaying(true); }));
-$('compare').addEventListener('change', e => { setCompare(e.target.value); revealCompare(e.target.value); });
-$('fieldguide').addEventListener('change', () => { if ($('fieldguide').value !== 'look') $('shapeguide').value = 'none'; updateLegend(); dirty = true; });
+$('compare').addEventListener('change', e => startCompare(e.target.value));
+$('fieldguide').addEventListener('change', () => setFieldGuide($('fieldguide').value));
 $('shapeguide').addEventListener('change', () => { const v = $('shapeguide').value; if (v !== 'none') showShapeGuide(v); updateLegend(); dirty = true; });
 $('b-arrows').addEventListener('click', () => setArrows(!arrows));
 $('b-src').addEventListener('click', e => { showSrc = !showSrc; e.currentTarget.setAttribute('aria-pressed', showSrc ? 'true' : 'false'); dirty = true; });
@@ -2596,10 +2807,10 @@ document.querySelectorAll('.course [data-compare], .course [data-preset], .cours
   b.addEventListener('click', () => {
     const ds = b.dataset;
     if (ds.preset) applyPreset(ds.preset, !!ds.compare);
-    if (ds.compare) { setCompare(ds.compare); revealCompare(ds.compare); }
-    if (ds.guide) { $('fieldguide').value = ds.guide; $('shapeguide').value = 'none'; }
-    if (ds.shapeguide) showShapeGuide(ds.shapeguide);
     if (!ds.guide && !ds.shapeguide) { $('fieldguide').value = 'look'; $('shapeguide').value = 'none'; }
+    if (ds.compare) startCompare(ds.compare);
+    if (ds.guide) setFieldGuide(ds.guide);
+    if (ds.shapeguide) showShapeGuide(ds.shapeguide);
     if (ds.arrows) setArrows(true);
     if (ds.tab) { selectNode('solver'); selectTab('solver', ds.tab); }
     if (ds.perf) showBottom('perf');
