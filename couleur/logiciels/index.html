@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Où se règle chaque étape de la chaîne des couleurs dans Houdini 22 (Karma), Redshift, Nuke 17.1 et DaVinci Resolve 21.1 : config, textures, espace de travail, EXR, viewer, preview, livraison, HDR. Wiki 3D, section Couleur.">
+<title>Logiciels · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.versions{font:600 .78rem/1.6 var(--mono);color:var(--ink-2)}
+#tbl table{font-size:.86rem;min-width:760px}
+#tbl td:first-child,#tbl th:first-child{position:sticky;left:0;background:var(--surface);z-index:1;min-width:110px}
+#tbl th:first-child{background:var(--code)}
+#tbl td{min-width:170px}
+#tbl tr:target td{background:color-mix(in srgb,var(--c-color) 12%,var(--surface))}
+#tbl[data-show] table{min-width:0}
+#tbl[data-show="h"] :is(td,th):is(:nth-child(3),:nth-child(4),:nth-child(5)),
+#tbl[data-show="r"] :is(td,th):is(:nth-child(2),:nth-child(4),:nth-child(5)),
+#tbl[data-show="n"] :is(td,th):is(:nth-child(2),:nth-child(3),:nth-child(5)),
+#tbl[data-show="v"] :is(td,th):is(:nth-child(2),:nth-child(3),:nth-child(4)){display:none}
+.na{color:var(--ink-2);font-style:italic}
+.pieges{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.pieges div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.pieges h3{margin:0 0 6px}
+.pieges ul{margin:0;padding-left:18px;font-size:.92rem}
+.flux{counter-reset:f;list-style:none;padding:0}
+.flux li{counter-increment:f;padding-left:2.2em;position:relative;margin:6px 0}
+.flux li::before{content:counter(f);position:absolute;left:0;font:700 .9rem/1.6 var(--mono);color:var(--c-color)}
+</style>
+</head>
+<body data-page="logiciels">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 8</span>
+  <h1>Logiciels</h1>
+  <p class="une-phrase">Où se règle <strong>chaque étape de la chaîne</strong>, dans chaque logiciel.</p>
+  <p class="versions">Vérifié le 30 septembre 2026 : Houdini 22.0.429 (Karma), Redshift 2026.9.0 dans Houdini 22.0.368, Nuke 17.1v1 (notes pour Nuke 16.0v8), DaVinci Resolve Studio 21.1 (d'après son manuel). Les menus changent d'une version à l'autre.</p>
+
+  <div class="demo-controls"><div class="seg" id="show" role="group" aria-label="Logiciel affiché">
+    <button type="button" data-s="" aria-pressed="true">Tous</button><button type="button" data-s="h" aria-pressed="false">Houdini</button><button type="button" data-s="r" aria-pressed="false">Redshift</button><button type="button" data-s="n" aria-pressed="false">Nuke</button><button type="button" data-s="v" aria-pressed="false">Resolve</button>
+  </div></div>
+
+  <div class="tbl-wrap" id="tbl"><table>
+    <thead><tr><th>Étape</th><th>Houdini 22 · Karma</th><th>Redshift</th><th>Nuke 17.1</th><th>Resolve 21.1</th></tr></thead>
+    <tbody>
+      <tr id="config"><td><b>Config</b></td>
+        <td><code>$OCIO</code> avant le lancement ; sinon <code>packages/ocio.json</code> charge <code>houdini-config</code> (ACES 2.0). Éditeur : <code>Edit > Preferences > OCIO</code>.</td>
+        <td><code>Redshift > Globals > Rendering Color Space</code> : <code>OCIO Config From</code> reprend le <code>$OCIO</code> de Houdini, donc houdini-config par défaut (le package de Houdini définit toujours <code>$OCIO</code>).</td>
+        <td><code>Project Settings > Color</code> : <code>color management</code> = <code>OCIO</code>, puis <code>OCIO config</code> (4 configs ACES <code>fn-nuke</code>, <code>nuke-default</code> ou <code>custom</code>). Défauts des nouveaux projets : <code>Preferences > Project Defaults > Color Management</code>.</td>
+        <td>Pas de config OCIO de projet. <code>Project Settings > Color Management > Color science</code> : <code>DaVinci YRGB</code> (défaut), <code>DaVinci YRGB Color Managed</code> (RCM), <code>DaVinci ACEScc</code>, <code>DaVinci ACEScct</code>. OCIO existe seulement en effets (Resolve FX, nœuds Fusion).</td></tr>
+      <tr id="textures"><td><b>Textures</b></td>
+        <td><code>USD UV Texture > Source Color Space</code> : <code>Auto</code> (défaut), <code>sRGB</code>, <code>Raw</code>. <code>MtlX Image</code> : Karma ignore <code>File Color Space</code> ; pour une map de données, choisis une signature <code>float</code> ou <code>vector3</code>.</td>
+        <td><code>TextureSampler > General > Image > Color Space</code> : <code>Auto</code> (sRGB pour les formats entiers, linéaire pour exr et hdr). <code>Raw</code> pour les données.</td>
+        <td><code>Read > Input Transform</code> : <code>default</code> dépend du type de fichier (voir les pièges) ; case <code>Raw Data</code> pour les données.</td>
+        <td>Clic droit sur le clip dans le Media Pool > <code>Input Color Space</code>.</td></tr>
+      <tr id="plates"><td><b>Plaques de tournage</b></td>
+        <td>COP <code>File > Incoming Colorspace</code> : <code>OpenColorIO</code> (défaut) ou <code>Raw</code>.</td>
+        <td class="na">sans objet</td>
+        <td><code>Read > Input Transform</code> : l'espace de la caméra (les configs Studio ont les espaces caméra).</td>
+        <td>En RCM : espace détecté (RAW, métadonnées) ou <code>Input Color Space</code> par clip. En ACES : <code>ACES Input Device Transform</code>.</td></tr>
+      <tr id="travail"><td><b>Espace de travail</b></td>
+        <td>Rôle <code>scene_linear</code> : <code>Linear Rec.709 (sRGB)</code> avec houdini-config. Pour rendre en ACEScg : <code>Render Working Space</code> dans l'éditeur OCIO (redémarrage).</td>
+        <td><code>OCIO Rendering Space</code> = <code>ACEScg</code> par défaut.</td>
+        <td><code>Project Settings > Color > working space</code> = <code>scene_linear</code> (ACEScg avec les configs <code>fn-nuke</code>).</td>
+        <td><code>Timeline Color Space</code> en RCM ; timeline log fixe en ACES. Ne la change pas après avoir commencé l'étalonnage.</td></tr>
+      <tr id="exr"><td><b>Écriture EXR</b></td>
+        <td>EXR half, linéaire, sans vue ; espace noté dans <code>oiio:ColorSpace</code> (<code>lin_rec709</code> ; <code>lin_ap1</code> avec cg-config). <code>Render Var > Output Color Space</code> vide = règles de fichiers.</td>
+        <td>ROP > <code>Output</code> : EXR half par défaut ; <code>HDR Files > Color/LUT/Controls</code> off, donc pas de vue dans l'EXR.</td>
+        <td><code>Write > output transform</code> = <code>default</code>, qui suit <code>float files</code> = <code>scene_linear</code> : pas de conversion.</td>
+        <td class="na">sans objet</td></tr>
+      <tr id="viewer"><td><b>Viewer</b></td>
+        <td>Barre <code>Color Correction</code> (clic droit sur l'icône Display options du viewport) : <code>sRGB - Display</code> et <code>Un-tone-mapped</code> par défaut. Choisis la vue du projet.</td>
+        <td>RenderView, onglet <code>Display</code> : <code>Display</code>, <code>View</code>.</td>
+        <td>Viewer > <code>view transform</code> : <code>ACES 2.0 - SDR 100 nits (Rec.709) (sRGB - Display)</code> avec <code>fn-nuke_cg</code> v3.0.0.</td>
+        <td class="na">voir Livraison</td></tr>
+      <tr id="preview"><td><b>Preview avec la vue</b></td>
+        <td>ROP <code>Image</code> (COP) > <code>Colorspace Conversion</code> = <code>Bake to OpenColorIO Display/View</code>.</td>
+        <td><code>LDR Files > Color/LUT/Controls</code> on par défaut : les PNG et JPG reçoivent la vue. RenderView : <code>Apply to file output</code>.</td>
+        <td><code>Write > transform type</code> = <code>display</code>, puis <code>display</code> et <code>view</code> (onglet <code>OCIO</code>).</td>
+        <td class="na">voir Livraison</td></tr>
+      <tr id="livraison"><td><b>Livraison</b></td>
+        <td class="na">vers la compo</td>
+        <td class="na">vers la compo</td>
+        <td><code>Write</code> en <code>display</code> avec le display et la vue de livraison, ou EXR vers l'étalonnage.</td>
+        <td><code>Output Color Space</code> (RCM) ou <code>ACES Output Device Transform</code>. <code>Render Settings > Advanced</code> : <code>Color Space Tag</code> et <code>Gamma Tag</code> = <code>Same as Project</code>.</td></tr>
+      <tr id="hdr"><td><b>HDR</b></td>
+        <td class="na">rien de documenté pour le viewport</td>
+        <td class="na">rien de documenté pour le RenderView</td>
+        <td>Moniteur HDR par le <code>Monitor Out</code> (carte AJA, Blackmagic ou Bluefish) : EOTF PQ ou HLG, luminances de mastering. Viewer HDR seulement sous macOS (préférence bêta).</td>
+        <td>Sous Windows : HDR de Windows + <code>Preferences > System > General > Use 10-bit precision in viewers if available</code> ; case de projet <code>Display HDR On Viewers If Available</code>. Sorties <code>ST.2084 … nit</code> (selon l'écran de mastering) ou <code>Rec. 2100 HLG</code>. Viewers 10 bits sous Windows, Dolby Vision et HDR10+ : version Studio.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>D'un logiciel à l'autre</h2>
+  <ol class="flux">
+    <li>Karma ou Redshift écrivent un EXR linéaire, sans vue. Note dans quel espace : Linear Rec.709 pour Karma avec houdini-config, ACEScg pour Redshift par défaut.</li>
+    <li>Nuke lit l'EXR dans cet espace (<code>Read > Input Transform</code>), compose, puis écrit un EXR, ou une preview avec la vue.</li>
+    <li>Resolve reçoit l'EXR avec le bon <code>Input Color Space</code>, étalonne, puis sort les livrables SDR et HDR par l'<code>Output Color Space</code>.</li>
+    <li>Toute l'équipe regarde à travers la même vue, du lighting à l'étalonnage.</li>
+  </ol>
+
+  <h2>Pièges</h2>
+  <div class="pieges">
+    <div><h3>Houdini</h3><ul>
+      <li>Le viewer s'ouvre en <code>Un-tone-mapped</code> : pas de vue ACES par défaut.</li>
+      <li>Avec les réglages par défaut, Redshift rend en ACEScg alors que Houdini et Karma travaillent en Linear Rec.709.</li>
+      <li>Les règles de fichiers de houdini-config rangent les EXR en Linear Rec.709, sauf si le nom contient <code>ACEScg</code> : un EXR en ACEScg mal nommé doit être réglé à la main.</li></ul></div>
+    <div><h3>Nuke</h3><ul>
+      <li>En 17.x, avec les configs ACES <code>fn-nuke</code>, les fichiers 8 bits passent par le rôle <code>matte_paint</code> = <code>ACEScct</code> : un PNG est mal lu. Foundry le liste comme bug connu (613757) pour les configs 2.x.x ; le même défaut se mesure en v3.0.0, et aussi à l'écriture.</li>
+      <li>Écrire une preview en <code>display</code> puis la relire à travers la vue applique la vue deux fois.</li>
+      <li>Dans Nuke 16, les configs <code>fn-nuke</code> v1.0.0 ont les rôles <code>matte_paint</code> et <code>texture_paint</code> inversés par rapport aux <code>fn-nuke</code> de Nuke 17.</li></ul></div>
+    <div><h3>Resolve</h3><ul>
+      <li><code>DaVinci YRGB</code>, le mode par défaut, ne gère pas les espaces : choisis RCM ou ACES.</li>
+      <li>En RCM, l'<code>Input Color Space</code> par défaut est <code>Rec. 709 Gamma 2.4</code> : un EXR en ACEScg doit recevoir son <code>Input Color Space</code> à la main.</li>
+      <li>Plusieurs fonctions HDR sont réservées à la version Studio ; le manuel et la liste des fonctions ne disent pas tout à fait la même chose.</li></ul></div>
+  </div>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Comment ces réglages ont été vérifiés</h3>
+      <p>Houdini 22 et Redshift : valeurs lues dans une scène neuve avec hython, et dans l'aide locale. Nuke 17.1 : knobs lus en mode terminal non commercial, qui ignore les préférences : les défauts d'un nouveau script en interface peuvent différer. Resolve n'était pas installé : tout vient du manuel 21.1 et de la liste des fonctions. Deux points restent à confirmer par un test : la détection <code>Auto</code> des textures de Karma, et la vue par défaut du RenderView de Redshift.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>Houdini 22 : aide locale (OCIO, Karma, nœuds) et <code>packages/ocio.json</code></li>
+        <li>Maxon, documentation Redshift (Color Management, Texture Sampler, Render View)</li>
+        <li>Foundry, Nuke 17.1 (OCIO Color Management, Preferences, Working with HDR Images) et notes de version 17.0v3 : <a href="https://learn.foundry.com/nuke/17.0/content/release_notes/17.0/nuke_17.0v3_releasenotes.html">learn.foundry.com</a></li>
+        <li>Blackmagic Design, DaVinci Resolve 21.1 Reference Manual (ch. 9, 10, 93 et 161) et <i>DaVinci Resolve Studio 21 Features</i></li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(() => {
+  const tbl = document.getElementById('tbl'), seg = document.getElementById('show');
+  seg.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    if (b.dataset.s) tbl.dataset.show = b.dataset.s; else delete tbl.dataset.show;
+  });
+  if (window.matchMedia('(max-width: 620px)').matches) seg.querySelector('[data-s="h"]').click();
+})();
+</script>
+</body>
+</html>

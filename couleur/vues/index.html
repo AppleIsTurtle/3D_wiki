@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Les vues (view transforms) : pourquoi on ne regarde jamais une image de scène telle quelle, et ce que changent Standard, Filmic, AgX, ACES 1.0, ACES 2.0 et Khronos. Wiki 3D, section Couleur.">
+<title>Vues · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.cmp{position:relative}
+.cmp canvas{width:100%;display:block;touch-action:none;cursor:ew-resize}
+.lbl{position:absolute;top:8px;font:700 .75rem/1 var(--mono);background:#000a;color:#fff;padding:5px 7px;border-radius:5px;pointer-events:none}
+.lbl.a{left:8px}.lbl.b{right:8px}
+#ramps{width:100%;display:block;margin-top:10px;image-rendering:auto}
+.ramp-legend{position:relative;height:1.4em;font:600 .72rem/1.4 var(--mono);color:var(--neutral-ink)}
+.ramp-legend span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.ramp-legend span:first-child{transform:none}.ramp-legend span:last-child{transform:translateX(-100%)}
+</style>
+</head>
+<body data-page="vues">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 3</span>
+  <h1>Vues</h1>
+  <p class="une-phrase">La <dfn data-g="vue">vue</dfn> transforme l'image de la scène, qui n'a pas de plafond, en <strong>une image que l'écran sait afficher</strong>.</p>
+  <div class="pourquoi"><p>Une scène réelle peut couvrir dix ordres de grandeur de luminance, un écran SDR environ trois. La scène contient aussi des couleurs que l'écran ne sait pas montrer. Et on veut un rendu agréable, comme celui d'un film.</p></div>
+
+  <h2>Ce que fait une vue</h2>
+  <p>Une courbe de tons (<dfn data-g="tone-mapping">tone mapping</dfn>) tasse les hautes lumières au lieu de les couper. Les couleurs très lumineuses glissent vers le blanc, comme sur une pellicule. Certaines vues, comme ACES 2.0, ramènent aussi les couleurs hors de l'écran dans son gamut au lieu de les couper. « Standard » (<code>Un-tone-mapped</code> dans OCIO) n'est pas neutre pour autant : c'est une vue sans courbe de tons, qui encode seulement pour l'écran. Tout ce qui dépasse 1 est coupé.</p>
+
+  <figure class="demo" id="demo">
+    <div class="demo-frame">
+      <div class="cmp"><canvas id="cv" width="960" height="540" aria-label="Nature morte HDR vue à travers deux vues côte à côte, séparées par un volet déplaçable."></canvas><span class="lbl a" id="la">A</span><span class="lbl b" id="lb">B</span></div>
+      <canvas id="ramps" width="960" height="224" aria-label="Rampes d'exposition de −6 à +10 EV : gris puis six teintes saturées, vue A en haut, vue B en bas."></canvas>
+      <div class="ramp-legend" aria-hidden="true"><span style="left:0">−6 EV</span><span style="left:37.5%">0 : gris 18 % (à exposition 0)</span><span style="left:62.5%">+4</span><span style="left:100%">+10 EV</span></div>
+    </div>
+    <div class="demo-controls">
+      <label>Vue A <select id="va"></select></label>
+      <label>Vue B <select id="vb"></select></label>
+      <label>Exposition <input type="range" id="ev" min="-4" max="4" step="0.5" value="0"> <span id="evv">0 EV</span></label>
+    </div>
+    <div class="demo-readout" id="ro" aria-live="polite">Glisse sur l'image pour déplacer le volet ; clique pour lire un pixel.</div>
+    <p class="screen-note" data-screen-note="" data-note="Toutes ces vues visent un écran sRGB. Sur un écran P3, les couleurs ne restent celles d'un écran sRGB que si ton navigateur et ton système gèrent la couleur."></p>
+  </figure>
+
+  <h2>Les vues que tu croiseras</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Vue</th><th>Origine</th><th>Où</th></tr></thead>
+    <tbody>
+      <tr><td>Standard, <code>Un-tone-mapped</code></td><td>aucune courbe de tons</td><td>Blender (Standard), configs ACES d'OCIO et Redshift (<code>Un-tone-mapped</code>) ; vue par défaut du viewer de Houdini 22</td></tr>
+      <tr><td>Filmic</td><td>Troy Sobotka, 2017</td><td>Blender depuis la 2.79 ; vue par défaut jusqu'à la 4.0</td></tr>
+      <tr><td>AgX</td><td>Troy Sobotka, version d'Eary Chow</td><td>Blender depuis la 4.0 (2023)</td></tr>
+      <tr><td><code>ACES 1.0 - SDR Video</code></td><td>Académie (ACES 1.x)</td><td>configs ACES 1.3, houdini-config de Houdini 22 ; Redshift la nomme <code>ACES 1.0 SDR-video</code></td></tr>
+      <tr><td><code>ACES 2.0 - SDR 100 nits (Rec.709)</code></td><td>Académie (ACES 2.0, 2025)</td><td>Houdini 22, Nuke 17 (Resolve 21 propose aussi ACES 2.0, dans ses propres menus)</td></tr>
+      <tr><td>Khronos PBR Neutral</td><td>Khronos Group, 2024</td><td>Blender, moteurs 3D du web</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Vue, exposition, étalonnage</h2>
+  <p>Ce sont trois réglages différents. L'exposition multiplie la lumière de la scène. La vue est le rendu choisi pour tout le projet : le lighting comme la compo regardent à travers elle. L'étalonnage ajuste l'image de la scène, avant la vue, souvent par un <dfn data-g="look">look</dfn> ou une <dfn data-g="cdl">CDL</dfn>. Une vue n'est pas une <dfn data-g="lut">LUT</dfn> d'étalonnage, même si on peut la stocker sous forme de LUT.</p>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>On ne regarde jamais une image de scène telle quelle : on la regarde à travers une vue.</li>
+      <li>Sans vue, les hautes lumières sont coupées et les couleurs saturées changent de teinte.</li>
+      <li>Toutes les vues n'ont pas le même rendu : choisis-en une pour le projet et garde-la partout.</li>
+      <li>Change l'exposition pour éclairer, pas la vue.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Les teintes qui dérivent</h3>
+      <p>Quand on applique une courbe à chaque canal R, G et B séparément, les couleurs très lumineuses dérivent vers six pôles : rouge, vert, bleu, cyan, magenta et jaune. Sur les forums ACES, on les appelle les « Notorious Six », un terme attribué à Troy Sobotka. Les rampes de la démo le montrent : en Standard, le bleu vire au cyan ; en ACES 1.0, le rouge vire à l'orange ; ACES 2.0 garde mieux la teinte.</p>
+      <h3>ACES 2.0</h3>
+      <p>Son rendu vise un contraste des tons moyens un peu plus bas, des hautes lumières plus douces, moins de dérives de teinte avec l'exposition, et une vue presque entièrement inversible. Pour un gris de scène à 1,0, ACES 2.0 donne 0,707 en sRGB encodé, contre 0,81 pour ACES 1.0 : il est plus sombre dans les hautes lumières.</p>
+      <h3>Précision de la démo</h3>
+      <p>Les vues sont des LUT 3D bakées depuis les vraies configs : OCIO pour ACES (<code>cg-config-v2.2.0</code> et <code>v3.0.0</code>), celle de Blender 4.4 pour Filmic, AgX et Khronos. L'écart moyen avec OCIO est d'environ 0,2 niveau sur 255 (mesuré sur les vues ACES).</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>ACES, <i>About the rendering</i> et <i>Output Transforms</i> : <a href="https://docs.acescentral.com/background/about-rendering/">docs.acescentral.com</a></li>
+        <li>Blender 4.0, notes de version, gestion des couleurs (AgX remplace Filmic) : <a href="https://developer.blender.org/docs/release_notes/4.0/color_management/">developer.blender.org</a></li>
+        <li>Khronos, <i>PBR Neutral tone mapper</i> (16 mai 2024) : <a href="https://www.khronos.org/news/press/khronos-pbr-neutral-tone-mapper-released-for-true-to-life-color-rendering-of-3d-products">khronos.org</a></li>
+        <li>Fil ACESCentral « About issues and terminology » (Notorious Six) : <a href="https://community.acescentral.com/t/about-issues-and-terminology/3501">community.acescentral.com</a></li>
+        <li>Microsoft Learn, plage des scènes réelles et des écrans SDR : <a href="https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range">learn.microsoft.com</a></li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/colorlib.js?v=20260930"></script>
+<script src="../assets/gl.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(async () => {
+  'use strict';
+  const C = ColorLib, F = Couleur.fmt;
+  const VIEWS = [['standard', 'Standard'], ['filmic', 'Filmic'], ['agx', 'AgX'], ['agx_punchy', 'AgX + look Punchy'], ['khronos', 'Khronos PBR Neutral'], ['aces1', 'ACES 1.0 SDR Video'], ['aces2', 'ACES 2.0 SDR 100 nits']];
+  const va = document.getElementById('va'), vb = document.getElementById('vb');
+  VIEWS.forEach(([k, n]) => { va.add(new Option(n, k)); vb.add(new Option(n, k)); });
+  va.value = 'standard'; vb.value = 'aces2';
+  const luts = {}; for (const [k] of VIEWS) if (k !== 'standard') luts[k] = await Couleur.loadLUT(k);
+  const img = await Couleur.loadRGBE('img/chaine/correct.png');
+  const cv = document.getElementById('cv'), rc = document.getElementById('ramps');
+  let split = 0.5, ev = 0;
+  // Rampes : 7 lignes (gris, R, G, B, C, M, Y) × EV −6…+10, calculées une fois en linéaire Rec.709
+  const HUES = [[1, 1, 1], [1, 0.03, 0.03], [0.03, 1, 0.03], [0.03, 0.08, 1], [0.03, 1, 1], [1, 0.03, 1], [1, 1, 0.03]];
+  const RW = 960, RH = 112, ramp = { width: RW, height: RH, data: new Float32Array(RW * RH * 3) };
+  for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++) {
+    const h = HUES[Math.floor(y / (RH / 7))], Y = C.luminance(h), L = 0.18 * Math.pow(2, -6 + 16 * x / (RW - 1)) / Y, o = (y * RW + x) * 3;
+    ramp.data[o] = h[0] * L; ramp.data[o + 1] = h[1] * L; ramp.data[o + 2] = h[2] * L;
+  }
+  const FS = `uniform sampler2D lutA; uniform sampler2D lutB; uniform int stdA; uniform int stdB; uniform float expo; uniform float split; uniform int mode;
+vec3 viewA(vec3 c){ return stdA == 1 ? oetf_srgb(clamp(c, 0.0, 1.0)) : lut3d(lutA, c); }
+vec3 viewB(vec3 c){ return stdB == 1 ? oetf_srgb(clamp(c, 0.0, 1.0)) : lut3d(lutB, c); }
+void main(){
+  if (mode == 0) { vec3 c = hdrAt(uv) * expo; bool b = uv.x > split; vec3 r = b ? viewB(c) : viewA(c);
+    if (abs(uv.x - split) < 0.0015) r = vec3(1.0); o = vec4(r, 1.0); }
+  else { bool top = uv.y > 0.5; vec2 t = vec2(uv.x, fract(uv.y * 2.0)); vec3 c = hdrAt(t) * expo; o = vec4(top ? viewA(c) : viewB(c), 1.0); }
+}`;
+  const useGL = GL.available();
+  let rI = null, rR = null;
+  if (useGL) {
+    rI = GL.create(cv, FS); rI.setHDR(img).seti('mode', 0);
+    rR = GL.create(rc, FS); rR.setHDR(ramp).seti('mode', 1);
+  }
+  const cpuView = (k, c) => k === 'standard' ? c.map((v) => C.srgb.encode(Math.min(Math.max(v, 0), 1))) : C.lutApply(c, luts[k].px, luts[k].meta);
+  function bind(r) {
+    const a = va.value, b = vb.value;
+    r.seti('stdA', a === 'standard' ? 1 : 0).seti('stdB', b === 'standard' ? 1 : 0);
+    r.setLUT(luts[a === 'standard' ? 'aces2' : a], 'lutA').setLUT(luts[b === 'standard' ? 'aces2' : b], 'lutB');
+  }
+  function draw() {
+    const expo = Math.pow(2, ev);
+    document.getElementById('la').textContent = 'A · ' + va.selectedOptions[0].text; document.getElementById('lb').textContent = 'B · ' + vb.selectedOptions[0].text;
+    if (useGL) { bind(rI); rI.set('expo', expo).set('split', split).draw(); bind(rR); rR.set('expo', expo).draw(); }
+    else {
+      GL.render2D(cv, img, (c, x) => cpuView(x / img.width > split ? vb.value : va.value, c.map((v) => v * expo)));
+      const half = { width: RW, height: RH * 2, data: new Float32Array(RW * RH * 6) }; half.data.set(ramp.data); half.data.set(ramp.data, RW * RH * 3);
+      GL.render2D(rc, half, (c, x, y) => cpuView(y < RH ? va.value : vb.value, c.map((v) => v * expo)), 960);
+    }
+  }
+  [va, vb].forEach((s) => s.addEventListener('change', draw));
+  document.getElementById('ev').addEventListener('input', (e) => { ev = +e.target.value; document.getElementById('evv').textContent = (ev > 0 ? '+' : '') + ev + ' EV'; draw(); });
+  let drag = false;
+  const setSplit = (e) => { const r = cv.getBoundingClientRect(); split = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1); draw(); };
+  cv.addEventListener('pointerdown', (e) => { drag = true; cv.setPointerCapture(e.pointerId); setSplit(e); probe(e); });
+  cv.addEventListener('pointermove', (e) => { if (drag) setSplit(e); });
+  cv.addEventListener('pointerup', () => { drag = false; });
+  cv.tabIndex = 0;
+  cv.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { split = Math.min(Math.max(split + (e.key === 'ArrowLeft' ? -0.05 : 0.05), 0), 1); draw(); e.preventDefault(); } });
+  function probe(e) {
+    const p = GL.pickPixel(cv, img, e); if (!p) return;
+    const s = p.rgb.map((v) => v * Math.pow(2, ev));
+    ro.textContent = `Scène ${F.rgb(s)} (${F.stops(C.stops(C.luminance(s)))}) → A ${F.code8(cpuView(va.value, s))} · B ${F.code8(cpuView(vb.value, s))}`;
+  }
+  const ro = document.getElementById('ro');
+  draw();
+})();
+</script>
+</body>
+</html>

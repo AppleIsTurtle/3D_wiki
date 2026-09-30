@@ -1,0 +1,57 @@
+{
+ "N": 49,
+ "cols": 7,
+ "rows": 7,
+ "evmin": -12.0,
+ "evmax": 10.0,
+ "source": "Linear Rec.709 (sRGB)",
+ "note": "Atlas 8 bits, sortie encodée pour un display sRGB. Bakés par cours-lighting/blender/lut_bake.py (Blender) et lut_bake_aces.py (hython Houdini 22, PyOpenColorIO 2.5).",
+ "views": {
+  "filmic": {
+   "file": "filmic.png",
+   "label": "Filmic",
+   "origine": "OCIO de Blender 4.4.3",
+   "view": "Filmic",
+   "look": "None",
+   "display": "sRGB"
+  },
+  "agx": {
+   "file": "agx.png",
+   "label": "AgX",
+   "origine": "OCIO de Blender 4.4.3",
+   "view": "AgX",
+   "look": "None",
+   "display": "sRGB"
+  },
+  "agx_punchy": {
+   "file": "agx_punchy.png",
+   "label": "AgX Punchy",
+   "origine": "OCIO de Blender 4.4.3",
+   "view": "AgX",
+   "look": "AgX - Punchy",
+   "display": "sRGB"
+  },
+  "khronos": {
+   "file": "khronos.png",
+   "label": "Khronos PBR Neutral",
+   "origine": "OCIO de Blender 4.4.3",
+   "view": "Khronos PBR Neutral",
+   "look": "None",
+   "display": "sRGB"
+  },
+  "aces1": {
+   "file": "aces1.png",
+   "label": "ACES 1.0 - SDR Video",
+   "origine": "cg-config-v2.2.0_aces-v1.3_ocio-v2.4",
+   "view": "ACES 1.0 - SDR Video",
+   "display": "sRGB - Display"
+  },
+  "aces2": {
+   "file": "aces2.png",
+   "label": "ACES 2.0 - SDR 100 nits (Rec.709)",
+   "origine": "cg-config-v3.0.0_aces-v2.0_ocio-v2.5",
+   "view": "ACES 2.0 - SDR 100 nits (Rec.709)",
+   "display": "sRGB - Display"
+  }
+ }
+}

@@ -1,0 +1,115 @@
+/* Section « Couleur » du Wiki 3D — design partagé.
+   Tokens repris du sommaire (3D_wiki/index.html). Le cadre des démos est un gris neutre identique dans les deux thèmes. */
+:root{
+  color-scheme:light;
+  --bg:#EDEFF1; --surface:#F8F9FA; --ink:#14171A; --ink-2:#4A5259; --ink-3:#6C757C;
+  --line:#D3D8DC; --code:#E1E5E8;
+  --c-color:#6D3FC0;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  /* gris neutre R=G=B : 118 = 0,18 en linéaire encodé sRGB (gris 18 %) */
+  --neutral:#767676; --neutral-ink:#FFFFFF;
+  --warn:#8A5A00;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+    --line:#2A3136; --code:#1D2327;
+    --c-color:#B39DFF; --warn:#FFB53D;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1214; --surface:#171B1E; --ink:#E4E7E9; --ink-2:#A5ACB1; --ink-3:#7E878D;
+  --line:#2A3136; --code:#1D2327;
+  --c-color:#B39DFF; --warn:#FFB53D;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
+.wrap{max-width:880px;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:20px 88px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.35rem,3vw,1.7rem);font-weight:700;margin-top:40px;margin-bottom:10px}
+h3{font-size:1.15rem;font-weight:700;margin-top:22px;margin-bottom:6px}
+p{margin:0 0 12px}
+a{color:var(--c-color);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--c-color);outline-offset:3px}
+code{font:.86em/1.4 var(--mono);background:var(--code);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+
+/* Fil d'Ariane et navigation de section */
+.crumbs{font:600 .76rem/1.4 var(--mono);letter-spacing:.06em;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:12px}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--c-color);text-decoration:underline}
+.crumbs .sep{color:var(--ink-3)}
+.secnav{border-block:1px solid var(--line);padding-block:8px;margin-bottom:28px}
+.secnav ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 6px;counter-reset:p}
+.secnav li{font:600 .8rem/1 var(--mono)}
+.secnav a,.secnav span{display:inline-block;padding:6px 8px;border-radius:6px;color:var(--ink-2);text-decoration:none}
+.secnav a:hover{background:var(--code);color:var(--ink)}
+.secnav [aria-current="page"]{background:var(--c-color);color:var(--surface)}
+.secnav .soon{color:var(--ink-3);opacity:.7}
+.secnav .soon::after{content:" · à venir";font-weight:400}
+.soon-link{color:var(--ink-3);text-decoration:none;cursor:default}
+.soon-link::after{content:" (à venir)";font-size:.85em}
+
+/* Gabarit */
+.eyebrow{font:600 .74rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c-color);margin-bottom:10px;display:block}
+.une-phrase{font-size:1.2rem;line-height:1.5;color:var(--ink);max-width:62ch;margin:14px 0 22px}
+.une-phrase strong{color:var(--c-color)}
+.pourquoi{border-left:3px solid var(--c-color);padding:2px 0 2px 16px;color:var(--ink-2);max-width:64ch;margin-bottom:24px}
+.pourquoi::before{content:"Pourquoi ça existe";display:block;font:700 .74rem/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.retenir{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-top:32px}
+.retenir h2{margin:0 0 8px;font-size:1.1rem}
+.retenir ul{margin:0;padding-left:20px}
+.retenir li{margin-block:4px}
+details.plus{margin-top:22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+details.plus>summary{cursor:pointer;padding:12px 18px;font:700 1rem/1.3 var(--display);list-style-position:inside}
+details.plus>div{padding:0 20px 16px;color:var(--ink-2)}
+details.plus h3{color:var(--ink)}
+.sources{font-size:.88rem;padding-left:20px}
+.sources li{margin-block:3px}
+
+/* Démos : cadre neutre + réglages */
+.demo{margin:26px 0 8px}
+.demo-frame{background:var(--neutral);color:var(--neutral-ink);padding:12px;border-radius:12px}
+.demo-frame canvas,.demo-frame img,.demo-frame svg{display:block;max-width:100%;height:auto;border-radius:4px}
+.demo-controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 2px 4px;font-size:.92rem}
+.demo-controls label{display:inline-flex;gap:8px;align-items:center}
+.demo-readout{font:.82rem/1.5 var(--mono);color:var(--ink-2);padding:6px 2px}
+.screen-note{font-size:.84rem;color:var(--ink-2);padding:4px 2px 0;max-width:70ch}
+.screen-note b{color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:600 .8rem/1 var(--mono);padding:8px 10px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--c-color);color:var(--surface)}
+input[type=range]{accent-color:var(--c-color);width:min(220px,60vw)}
+select,button.btn{font:600 .85rem/1 var(--body);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+
+/* Badge écran */
+.screen-badge{display:inline-flex;gap:6px;flex-wrap:wrap;font:600 .74rem/1 var(--mono)}
+.screen-badge span{padding:5px 8px;border-radius:5px;background:var(--code);color:var(--ink-2)}
+
+/* Tableaux */
+.tbl-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line)}
+th{font:700 .78rem/1.3 var(--mono);letter-spacing:.04em;color:var(--ink-2);background:var(--code)}
+tr:last-child td{border-bottom:0}
+
+/* Glossaire au survol */
+dfn[data-g]{font-style:normal;border-bottom:1px dotted var(--c-color);cursor:help}
+.g-pop{position:absolute;z-index:20;max-width:min(340px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.9rem;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.g-pop b{font-family:var(--display);display:block;margin-bottom:2px}
+.g-pop a{display:inline-block;margin-top:6px;font-size:.82rem}
+.g-pop[hidden]{display:none}
+
+@media (max-width:620px){
+  body{font-size:16px}
+  .demo-frame{padding:8px}
+  th,td{padding:7px 9px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}

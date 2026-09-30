@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="La chaîne des couleurs, de la source à l'œil : pourquoi chaque étape existe, ce qui casse quand on l'oublie ou qu'on la double. Wiki 3D, section Couleur.">
+<title>La chaîne des couleurs · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/couleur.css?v=20260930">
+<style>
+.carte{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+.niveau{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 14px}
+.niveau>header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font:600 .74rem/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+.niveau>header b{color:var(--c-color)}
+.etapes{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:none}
+.etapes li{display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:8px;align-items:baseline}
+.etapes .n{font:700 .9rem/1 var(--mono);color:var(--c-color);text-align:right}
+.etapes strong{font-family:var(--display)}
+.etapes span.p{color:var(--ink-2)}
+.etape-ctl{display:grid;gap:8px;padding-top:12px}
+.etape-ctl>div{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:8px;align-items:center}
+.etape-ctl .lab{font:700 .8rem/1.2 var(--mono);color:var(--ink-2)}
+.etape-ctl .seg{justify-self:start}
+.symptome{margin:6px 2px 0;padding:10px 14px;border-left:3px solid var(--warn);background:var(--surface);border-radius:0 8px 8px 0;font-size:.95rem}
+.symptome.ok{border-left-color:var(--c-color)}
+#cv{cursor:crosshair;width:100%}
+@media (max-width:620px){.etape-ctl>div{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-page="">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 1</span>
+  <h1>La chaîne des couleurs</h1>
+  <p class="une-phrase">Gérer la couleur, c'est savoir à chaque étape <strong>ce que représentent les nombres</strong> d'une image, pour que la couleur voulue arrive jusqu'à l'œil.</p>
+  <div class="pourquoi"><p>Une image n'est qu'un tableau de nombres. Entre le fichier et ton œil, ils traversent des étapes réglées à des endroits différents, par des personnes différentes. Une étape oubliée ou faite deux fois suffit à fausser l'image.</p></div>
+  <p><span class="screen-badge"></span></p>
+
+  <h2>La carte</h2>
+  <ol class="carte" aria-label="Les étapes, regroupées par niveau">
+    <li class="niveau"><header><b>Fichiers</b><span>l'artiste tague ses sources</span></header>
+      <ol class="etapes"><li><span class="n">1</span><span><strong>Source</strong> · <span class="p">texture, HDRI, plaque, rendu : chacune a son encodage.</span> <a data-page="espaces">Espaces</a></span></li></ol></li>
+    <li class="niveau"><header><b>Logiciel : la config OCIO</b><span>réglée une fois pour tout le projet</span></header>
+      <ol class="etapes">
+        <li><span class="n">2</span><span><strong>Entrée</strong> · <span class="p">traduit chaque source vers l'espace de travail.</span> <a data-page="ocio">OCIO</a></span></li>
+        <li><span class="n">3</span><span><strong>Espace de travail</strong> · <span class="p"><dfn data-g="lineaire">linéaire</dfn> : la lumière s'y additionne, rendu et compo s'y calculent.</span> <a data-page="aces">ACES</a></span></li>
+        <li><span class="n">4</span><span><strong><dfn data-g="vue">Vue</dfn></strong> · <span class="p">ramène les valeurs de la scène, qui dépassent souvent 1, dans ce qu'un écran sait montrer.</span> <a data-page="vues">Vues</a></span></li>
+        <li><span class="n">5</span><span><strong>Encodage écran</strong> · <span class="p">met les valeurs dans la forme que l'écran attend.</span> <a data-page="espaces">Espaces</a></span></li>
+      </ol></li>
+    <li class="niveau"><header><b>Système</b><span>toi ou l'IT</span></header>
+      <ol class="etapes"><li><span class="n">6</span><span><strong>Windows ou macOS</strong> · <span class="p">sans réglage, Windows suppose que tout est en sRGB.</span> <a data-page="ecran">Écran</a></span></li></ol></li>
+    <li class="niveau"><header><b>Matériel et pièce</b><span>toi, avec une sonde</span></header>
+      <ol class="etapes">
+        <li><span class="n">7</span><span><strong>Écran</strong> · <span class="p">transforme les valeurs en lumière, avec son gamut et sa luminosité.</span> <a data-page="ecran">Écran</a></span></li>
+        <li><span class="n">8</span><span><strong>Pièce et œil</strong> · <span class="p">lumière ambiante et fond changent ce que tu perçois.</span></span></li>
+      </ol></li>
+    <li class="niveau"><header><b>Livraison</b><span>l'étalonneur, la postproduction</span></header>
+      <ol class="etapes"><li><span class="n">9</span><span><strong>Sortie</strong> · <span class="p">web, TV, cinéma et HDR ont chacun leur norme.</span> <a data-page="hdr">HDR</a></span></li></ol></li>
+  </ol>
+
+  <h2>Couper ou doubler une étape</h2>
+  <figure class="demo" id="demo">
+    <div class="demo-frame"><canvas id="cv" width="960" height="540" aria-label="Nature morte rendue en HDR : charte de couleurs, cartes grise et blanche, sphère brillante, ampoule et néon. L'image change selon les étapes réglées ci-dessous."></canvas></div>
+    <div class="etape-ctl" role="group" aria-label="État de chaque étape">
+      <div><span class="lab">Entrée</span><div class="seg" data-step="entree">
+        <button type="button" data-s="ok" aria-pressed="true">OK</button><button type="button" data-s="oubli" aria-pressed="false">Oubliée</button><button type="button" data-s="double" aria-pressed="false">Doublée</button><button type="button" data-s="rough" aria-pressed="false">Roughness en sRGB</button><button type="button" data-s="acescg" aria-pressed="false">ACEScg lu en 709</button></div></div>
+      <div><span class="lab">Vue</span><div class="seg" data-step="vue">
+        <button type="button" data-s="ok" aria-pressed="true">ACES 2.0</button><button type="button" data-s="oubli" aria-pressed="false">Oubliée</button><button type="button" data-s="double" aria-pressed="false">Doublée</button></div></div>
+      <div><span class="lab">Encodage</span><div class="seg" data-step="enc">
+        <button type="button" data-s="ok" aria-pressed="true">sRGB</button><button type="button" data-s="oubli" aria-pressed="false">Oublié</button><button type="button" data-s="double" aria-pressed="false">Doublé</button></div></div>
+      <div><span class="lab">Écran</span><div class="seg" data-step="ecran">
+        <button type="button" data-s="ok" aria-pressed="true">sRGB</button><button type="button" data-s="wide" aria-pressed="false">Large gamut non géré</button><button type="button" data-s="hdrwin" aria-pressed="false">Mode HDR Windows</button></div></div>
+    </div>
+    <p class="symptome ok" id="symptome" aria-live="polite">Tout est en place : c'est la référence.</p>
+    <div class="demo-readout" id="ro" aria-live="polite">Clique ou touche l'image pour suivre un pixel à travers la chaîne.</div>
+    <p class="screen-note" data-screen-note="" data-note="Les états « Écran » sont simulés sur ton propre écran : la dalle large gamut est une dalle P3, ramenée au bord du sRGB."></p>
+  </figure>
+
+  <h2>Symptômes et causes</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Ce que tu vois</th><th>Étape en cause</th><th>Correction</th></tr></thead>
+    <tbody>
+      <tr><td>Textures délavées, contraste plat</td><td>Texture sRGB lue en Raw</td><td>Taguer les couleurs en sRGB (<a data-page="logiciels" data-anchor="textures">où</a>)</td></tr>
+      <tr><td>Textures trop sombres et saturées</td><td>Texture déjà linéaire taguée sRGB</td><td>Taguer selon l'encodage réel</td></tr>
+      <tr><td>Reflets ou relief faux</td><td>Roughness ou normal lue comme une couleur</td><td>Données en <dfn data-g="data">Raw</dfn></td></tr>
+      <tr><td>Couleurs ternes, désaturées en compo</td><td>EXR en ACEScg lu comme Linear Rec.709</td><td>Lire l'EXR dans son espace (<a data-page="logiciels" data-anchor="exr">où</a>)</td></tr>
+      <tr><td>PNG 8 bits trop clairs dans Nuke 17</td><td>Configs <code>fn-nuke</code> v2.x et v3.x : Nuke lit les fichiers 8 bits via le rôle <code>matte_paint</code>, qui vaut <code>ACEScct</code> (known issue 613757)</td><td>Régler les défauts 8 bits (Preferences ou knob defaults), ou l'espace du Read à la main</td></tr>
+      <tr><td>Hautes lumières en aplats, teintes qui virent</td><td>Pas de vue</td><td>Regarder à travers la vue du projet</td></tr>
+      <tr><td>Image sombre et terne : noirs bouchés, blancs gris</td><td>Vue doublée : preview relue à travers la vue</td><td>Repartir de l'EXR</td></tr>
+      <tr><td>Image très sombre, ou laiteuse</td><td>Encodage oublié, ou doublé</td><td>Un seul encodage, celui du display</td></tr>
+      <tr><td>Couleurs trop saturées sur un seul écran</td><td>Écran large gamut sans gestion</td><td>Mode sRGB de l'écran (<a data-page="ecran">écran</a>)</td></tr>
+      <tr><td>Ombres relevées en travaillant en SDR</td><td>Mode HDR de Windows activé</td><td>Couper le HDR pour juger du SDR</td></tr>
+    </tbody>
+  </table></div>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>Un nombre ne veut rien dire sans son <dfn data-g="espace">espace</dfn> : chaque source doit être taguée.</li>
+      <li>On calcule en linéaire, on regarde à travers une vue, on encode une seule fois pour l'écran.</li>
+      <li>Chaque étape se fait une fois : ni oubliée, ni doublée.</li>
+      <li>Ton écran, ton système et ta pièce font partie de la chaîne.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Ce que calcule la démo</h3>
+      <p>La scène est rendue dans Cycles en Linear Rec.709, calée pour que la carte grise vaille 0,18. Les erreurs de texture sont de vrais rendus : seul le tag change (pour « Doublée », la charte est en plus stockée déjà linéarisée). « ACEScg lu en 709 » est calculé : une matrice Rec.709 → ACEScg est appliquée au rendu correct. La vue est la vue OCIO <code>ACES 2.0 - SDR 100 nits (Rec.709)</code> (config <code>cg-config-v3.0.0</code>, livrée avec Houdini 22) sur le display <code>sRGB - Display</code>, appliquée par une LUT 3D bakée depuis OCIO.</p>
+      <p>Dans OCIO, la vue et l'encodage du display s'appliquent d'un bloc. Pour les montrer comme deux étapes, la démo décode la sortie avec la courbe sRGB, ce qui donne une valeur « display linéaire » (proportionnelle à la lumière émise), puis ré-encode selon l'état de l'étape Encodage. <dfn data-g="transfert">EOTF</dfn> : du signal vers la lumière émise par l'écran ; l'encodage pour l'écran en est l'inverse. L'OETF, elle, va de la lumière de la scène (caméra) vers le signal.</p>
+      <p>« Vue doublée » : la sortie encodée est relue comme une texture sRGB, puis repasse dans la vue. « Mode HDR de Windows » : l'image est décodée avec la courbe sRGB par morceaux au lieu d'un gamma 2,2. C'est un constat répandu, mais Microsoft ne le documente pas.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>OpenColorIO, guide de rédaction des configs (displays, views, view transforms) : <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/authoring.html">opencolorio.readthedocs.io</a></li>
+        <li>Microsoft Learn, <i>ICC profile behavior with Advanced Color</i> (Windows suppose le sRGB) : <a href="https://learn.microsoft.com/en-us/windows/win32/wcs/advanced-color-icc-profiles">learn.microsoft.com</a></li>
+        <li>Foundry, notes de version Nuke 17.0v3, known issue 613757 : <a href="https://learn.foundry.com/nuke/17.0/content/release_notes/17.0/nuke_17.0v3_releasenotes.html">learn.foundry.com</a></li>
+        <li>Mode HDR et courbe sRGB par morceaux (constat communautaire, non documenté par Microsoft) : <a href="https://github.com/dylanraga/win11hdr-srgb-to-gamma2.2-icm">dylanraga/win11hdr-srgb-to-gamma2.2-icm</a></li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="assets/glossaire-data.js?v=20260930"></script>
+<script src="assets/colorlib.js?v=20260930"></script>
+<script src="assets/gl.js?v=20260930"></script>
+<script src="assets/couleur.js?v=20260930"></script>
+<script>
+(async () => {
+  'use strict';
+  const C = ColorLib, F = Couleur.fmt;
+  const cv = document.getElementById('cv'), ro = document.getElementById('ro'), sy = document.getElementById('symptome');
+  const IMG = { ok: 'img/chaine/correct.png', oubli: 'img/chaine/albedo_raw.png', double: 'img/chaine/albedo_double.png', rough: 'img/chaine/rough_srgb.png', acescg: 'img/chaine/correct.png' };
+  const state = { entree: 'ok', vue: 'ok', enc: 'ok', ecran: 'ok' };
+  const TXT = {
+    entree: { oubli: 'Entrée oubliée : la charte sRGB est lue en Raw. Ses couleurs sont trop claires et délavées ; les cartes grise et blanche, non texturées, ne bougent pas.',
+      double: 'Entrée doublée : une texture déjà linéaire est taguée sRGB, donc décodée deux fois. La charte devient trop sombre et trop saturée.',
+      rough: 'Roughness lue en sRGB : les valeurs de données sont « décodées » comme une couleur, la sphère devient plus lisse, ses reflets plus nets qu\'ils ne devraient.',
+      acescg: 'Un EXR écrit en ACEScg est lu comme du Linear Rec.709 : les couleurs paraissent ternes, moins saturées, et les teintes glissent.' },
+    vue: { oubli: 'Vue oubliée (Un-tone-mapped) : tout ce qui dépasse 1 est coupé. L\'ampoule et le néon deviennent des aplats, le néon bleu vire au cyan clair.',
+      double: 'Vue doublée : une image déjà prête pour l\'écran repasse dans la vue. Noirs bouchés, blancs ternes qui plafonnent à un gris clair, image trop sombre.' },
+    enc: { oubli: 'Encodage oublié : des valeurs linéaires partent telles quelles vers l\'écran. L\'image est bien trop sombre et contrastée.',
+      double: 'Encodage doublé : l\'image est laiteuse, les ombres deviennent grises.' },
+    ecran: { wide: 'Écran large gamut sans gestion : les valeurs sRGB sont affichées avec les primaires plus saturées de la dalle. Peaux trop rouges, ciels trop bleus.',
+      hdrwin: 'Mode HDR de Windows : le SDR est décodé avec la courbe sRGB par morceaux au lieu d\'un gamma 2,2. Les ombres remontent, l\'image paraît délavée.' },
+  };
+  const images = {};
+  const lut = await Couleur.loadLUT('aces2');
+  const M_709_TO_CG = C.matrix('lin_rec709', 'acescg'), M_P3_TO_709 = C.matrix('lin_p3d65', 'lin_rec709');
+  async function img(k) { return images[k] || (images[k] = await Couleur.loadRGBE(IMG[k])); }
+
+  // --- Chaîne sur le CPU (sonde + repli). Mêmes étapes que le shader. ---
+  const view = (s) => C.lutApply(s, lut.px, lut.meta);                // encodé sRGB display
+  const eotf = (v) => v.map((x) => C.srgb.decode(Math.min(Math.max(x, 0), 1)));
+  const oetf = (v) => v.map((x) => C.srgb.encode(Math.min(Math.max(x, 0), 1)));
+  function chain(s0) {
+    const s = state.entree === 'acescg' ? C.apply(M_709_TO_CG, s0) : s0;
+    let dl;
+    if (state.vue === 'ok') dl = eotf(view(s));
+    else if (state.vue === 'oubli') dl = s.map((x) => Math.min(Math.max(x, 0), 1));
+    else dl = eotf(view(eotf(view(s))));
+    let code = state.enc === 'ok' ? oetf(dl) : state.enc === 'oubli' ? dl.map((x) => Math.min(Math.max(x, 0), 1)) : oetf(oetf(dl));
+    let out = code;
+    if (state.ecran === 'wide') out = oetf(C.apply(M_P3_TO_709, eotf(code)));
+    else if (state.ecran === 'hdrwin') out = eotf(code).map((x) => Math.pow(x, 1 / 2.2));
+    return { s, dl, code, out };
+  }
+
+  // --- Rendu GPU ---
+  const MODES = { vue: { ok: 0, oubli: 1, double: 2 }, enc: { ok: 0, oubli: 1, double: 2 }, ecran: { ok: 0, wide: 1, hdrwin: 2 } };
+  let r = null;
+  if (GL.available()) {
+    try {
+      r = GL.create(cv, `uniform sampler2D lutA; uniform int mVue; uniform int mEnc; uniform int mEcran; uniform int asCG;
+uniform mat3 m709cg; uniform mat3 mp3709;
+vec3 cl(vec3 c){ return clamp(c, 0.0, 1.0); }
+void main(){
+  vec3 s = hdrAt(uv);
+  if (asCG == 1) s = m709cg * s;
+  vec3 dl = mVue == 0 ? eotf_srgb(cl(lut3d(lutA, s))) : mVue == 1 ? cl(s) : eotf_srgb(cl(lut3d(lutA, eotf_srgb(cl(lut3d(lutA, s))))));
+  vec3 code = mEnc == 0 ? oetf_srgb(cl(dl)) : mEnc == 1 ? cl(dl) : oetf_srgb(cl(oetf_srgb(cl(dl))));
+  vec3 outc = code;
+  if (mEcran == 1) outc = oetf_srgb(cl(mp3709 * eotf_srgb(cl(code))));
+  else if (mEcran == 2) outc = pow(eotf_srgb(cl(code)), vec3(1.0 / 2.2));
+  o = vec4(cl(outc), 1.0);
+}`);
+      r.setLUT(lut, 'lutA');
+      const gl = r.gl, t = (M) => [M[0][0], M[1][0], M[2][0], M[0][1], M[1][1], M[2][1], M[0][2], M[1][2], M[2][2]];
+      gl.uniformMatrix3fv(gl.getUniformLocation(r.prog, 'm709cg'), false, t(M_709_TO_CG));
+      gl.uniformMatrix3fv(gl.getUniformLocation(r.prog, 'mp3709'), false, t(M_P3_TO_709));
+    } catch (e) { console.error(e); r = null; }
+  }
+  let current = null;
+  async function draw() {
+    current = await img(state.entree);
+    if (r) {
+      r.setHDR(current).seti('asCG', state.entree === 'acescg' ? 1 : 0)
+        .seti('mVue', MODES.vue[state.vue]).seti('mEnc', MODES.enc[state.enc]).seti('mEcran', MODES.ecran[state.ecran]).draw();
+    } else GL.render2D(cv, current, (s) => chain(s).out);
+    const msgs = ['entree', 'vue', 'enc', 'ecran'].filter((k) => state[k] !== 'ok').map((k) => TXT[k][state[k]]);
+    sy.textContent = msgs.length ? msgs.join(' ') : 'Tout est en place : c\'est la référence.';
+    sy.classList.toggle('ok', !msgs.length);
+    if (lastPick) probe(lastPick);
+  }
+  let lastPick = null;
+  function probe(ev) {
+    const p = GL.pickPixel(cv, current, ev); if (!p) return;
+    lastPick = { clientX: ev.clientX, clientY: ev.clientY };
+    const c = chain(p.rgb), Y = C.luminance(c.s);
+    const nits = C.luminance(eotf(c.out)) * 100;
+    ro.textContent = `Scène ${F.rgb(c.s)} (${F.stops(C.stops(Y))}) → après la vue ${F.rgb(c.dl)} → codé ${F.code8(c.code)} → environ ${F.num(nits, 1)} nits sur un écran réglé à 100 nits`;
+  }
+  cv.addEventListener('click', probe);
+  document.querySelectorAll('.seg[data-step]').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    state[g.dataset.step] = b.dataset.s;
+    g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    draw();
+  }));
+  await draw();
+})();
+</script>
+</body>
+</html>

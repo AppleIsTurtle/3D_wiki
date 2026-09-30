@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Glossaire de la gestion des couleurs et décodeur de noms : tape un nom vu dans Houdini, Nuke, Redshift ou Resolve, et découvre ce qu'il veut dire. Wiki 3D, section Couleur.">
+<title>Glossaire et décodeur de noms · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.search{display:flex;gap:8px;flex-wrap:wrap}
+.search input{flex:1 1 260px;font:1.05rem/1.2 var(--mono);padding:12px 14px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.search input:focus{border-color:var(--c-color);outline:none}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.sugg button{font:600 .8rem/1 var(--mono);padding:7px 9px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.sugg button:hover{border-color:var(--c-color);color:var(--ink)}
+.fiche{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c-color);border-radius:12px;padding:14px 18px;margin-top:8px}
+.fiche h3{margin:0 0 4px;font-size:1.3rem;overflow-wrap:anywhere}
+.fiche .type{font:600 .72rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--c-color)}
+.fiche dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:10px 0 0}
+.fiche dt{font:600 .8rem/1.6 var(--mono);color:var(--ink-2)}
+.fiche dd{margin:0}
+.fiche .tags{display:flex;flex-wrap:wrap;gap:5px}
+.fiche .tags code{font-size:.78rem}
+.az{columns:2 320px;column-gap:28px;margin-top:10px}
+.az dt{font-family:var(--display);font-weight:700;font-size:1.05rem;margin-top:12px;break-after:avoid}
+.az dt:target{color:var(--c-color)}
+.az dd{margin:2px 0 0;color:var(--ink-2);break-inside:avoid;font-size:.95rem}
+.az dd small{display:block;color:var(--ink-2);font-size:.8rem;margin-top:2px}
+@media (max-width:620px){.fiche dl{grid-template-columns:1fr}.fiche dt{margin-top:6px}}
+</style>
+</head>
+<body data-page="glossaire">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 9</span>
+  <h1>Glossaire et décodeur de noms</h1>
+  <p class="une-phrase">Le même espace porte <strong>des noms différents</strong> selon le logiciel et la version de la config : le décodeur les ramène à ce qu'ils veulent dire.</p>
+  <div class="pourquoi"><p>Tape un nom tel que tu le vois dans un menu de Houdini, Nuke, Redshift ou Resolve. La fiche donne ses trois ingrédients (primaires, point blanc, courbe), où on le croise et ses autres noms.</p></div>
+
+  <h2>Décodeur</h2>
+  <figure class="demo" id="demo">
+    <div class="search" role="search">
+      <label for="q" class="eyebrow" style="margin:0;align-self:center">Nom</label>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="ex. Utility - sRGB - Texture, lin_ap1, Output - sRGB…" aria-describedby="aide">
+    </div>
+    <p id="aide" class="screen-note">Casse, tirets, espaces et parenthèses ne comptent pas. Exemples :</p>
+    <div class="sugg" id="ex"></div>
+    <div id="res" aria-live="polite"></div>
+  </figure>
+
+  <h2>Glossaire</h2>
+  <div class="demo-controls"><label>Page <select id="filtre"><option value="">toutes</option></select></label></div>
+  <dl class="az" id="az"></dl>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>D'où viennent les noms</h3>
+      <p>Les noms du décodeur sont extraits avec PyOpenColorIO 2.5 des configs réellement livrées : Houdini 22 (houdini-config, cg-config, reference-config), Nuke 17.1 et Nuke 16 (configs ACES et nuke-default), Redshift 2026, et les huit configs intégrées à OCIO 2.5. Les noms de Resolve viennent de son manuel (version 21.1). Un alias est un autre nom déclaré par les auteurs de la config : OCIO le résout vers le même espace. Les « Autres noms » d'une fiche ajoutent des noms d'autres configs rattachés au même espace (à la main pour Redshift et pour des renommages comme <code>CIE-XYZ-D65</code>) : une autre config ne les reconnaît pas forcément.</p>
+      <p>Les trois ingrédients d'une fiche viennent d'une table vérifiée à la main. Quand ils manquent, la fiche l'indique au lieu de deviner. C'est le cas de la plupart des anciens noms de la config ACES 1.2 (variantes de caméras, courbes, sorties), de certaines courbes log de nuke-default et des noms de Resolve.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>OpenColorIO-Config-ACES (configs CG, Studio, Reference) : <a href="https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES">github.com/AcademySoftwareFoundation</a></li>
+        <li>OpenColorIO, guide de rédaction des configs (rôles, alias) : <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/authoring.html">opencolorio.readthedocs.io</a></li>
+        <li>Blackmagic Design, DaVinci Resolve 21.1 Reference Manual, chapitre 9 (gestion des couleurs)</li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/noms-data.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(() => {
+  'use strict';
+  const N = window.NOMS, byId = Object.fromEntries(N.entries.map((e) => [e.id, e]));
+  const norm = (s) => s.toLowerCase().replace(/^ocio:/, '').replace(/[^a-z0-9]/g, '');
+  const TYPE = { espace: 'Espace', display: 'Display (écran cible)', vue: 'Vue', role: 'Rôle OCIO', 'réglage': 'Réglage de Resolve' };
+  const PAGE = Object.fromEntries(Couleur.PAGES.map((p) => [p.slug, p.titre]));
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const q = document.getElementById('q'), res = document.getElementById('res');
+  const searchable = N.entries.map((e) => ({ e, keys: [e.nom, ...(e.alias || [])].map(norm) }));
+
+  function fiche(e) {
+    const rows = [];
+    if (e.prim) rows.push(['Primaires', esc(e.prim)], ['Point blanc', esc(e.blanc)], ['Courbe', esc(e.courbe)], ['Nature', esc(e.ref)]);
+    else if (e.type === 'espace' && !e.id.startsWith('resolve:')) rows.push(['Ingrédients', 'non décomposé (pas dans la table vérifiée)']);
+    if (e.usage) rows.push(['Usage', esc(e.usage)]);
+    if (e.note) rows.push(['Note', esc(e.note)]);
+    if (e.valeurs) rows.push(['Vaut', Object.entries(e.valeurs).map(([k, v]) => `${esc(k)} → <code>${esc(v)}</code>`).join('<br>')]);
+    if (e.alias && e.alias.length) rows.push(['Autres noms', '<span class="tags">' + e.alias.map((a) => `<code>${esc(a)}</code>`).join(' ') + '</span>']);
+    if (e.ou && e.ou.length && !e.valeurs) rows.push(['Où on le croise', esc(e.ou.join(' · '))]);
+    const page = e.page && Couleur.isOn(e.page) ? `<p style="margin:10px 0 0"><a href="${Couleur.pageURL(e.page)}">Voir la page ${esc(PAGE[e.page])} →</a></p>` : '';
+    return `<article class="fiche"><span class="type">${TYPE[e.type] || e.type}</span><h3>${esc(e.nom)}</h3><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>${page}</article>`;
+  }
+  function search() {
+    const k = norm(q.value);
+    if (!k) { res.innerHTML = ''; return; }
+    const exact = (N.index[k] || []).map((id) => byId[id]).filter(Boolean);
+    if (exact.length) { res.innerHTML = (exact.length > 1 ? `<p class="screen-note">Ce nom (à la casse et à la ponctuation près) apparaît dans plusieurs fiches ; compare-les :</p>` : '') + exact.map(fiche).join(''); return; }
+    const hits = searchable.filter((s) => s.keys.some((x) => x.includes(k))).slice(0, 12);
+    res.innerHTML = hits.length
+      ? `<p class="screen-note">Pas de nom exact. Proches :</p><div class="sugg">${hits.map((h) => `<button type="button" data-n="${esc(h.e.nom)}">${esc(h.e.nom)}</button>`).join('')}</div>`
+      : `<p class="screen-note">Aucun nom connu. Vérifie l'orthographe, ou cherche un morceau du nom (ex. « logc », « p3 »).</p>`;
+  }
+  q.addEventListener('input', search);
+  document.addEventListener('click', (e) => { const b = e.target.closest('.sugg button'); if (b) { q.value = b.dataset.n; search(); q.focus(); } });
+  ['Utility - sRGB - Texture', 'lin_ap1', 'Output - sRGB', 'scene_linear', 'ACES 2.0 - SDR 100 nits (P3 D65)', 'Un-tone-mapped', 'scene-linear Rec.709-sRGB', 'Rec. 709 Gamma 2.4']
+    .forEach((n) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.n = n; b.textContent = n; document.getElementById('ex').append(b); });
+  const pre = new URLSearchParams(location.search).get('nom'); if (pre) { q.value = pre; search(); }
+
+  // Glossaire A–Z
+  const az = document.getElementById('az'), filtre = document.getElementById('filtre');
+  const G = [...window.GLOSSAIRE].sort((a, b) => a.terme.localeCompare(b.terme, 'fr', { sensitivity: 'base' }));
+  [...new Set(G.map((g) => g.page))].forEach((p) => { const o = document.createElement('option'); o.value = p; o.textContent = PAGE[p] || p; filtre.append(o); });
+  function renderAZ() {
+    const f = filtre.value;
+    az.innerHTML = G.filter((g) => !f || g.page === f).map((g) => {
+      const voir = (g.voir || []).map((v) => { const t = window.GLOSSAIRE.find((x) => x.id === v); return t ? `<a href="#${v}">${esc(t.terme)}</a>` : ''; }).filter(Boolean).join(', ');
+      const pg = Couleur.isOn(g.page) && g.page !== 'glossaire' ? ` · <a href="${Couleur.pageURL(g.page)}">page ${esc(PAGE[g.page])}</a>` : '';
+      return `<dt id="${g.id}">${esc(g.terme)}</dt><dd>${esc(g.def)}${(g.alias || []).length ? `<small>Aussi : ${g.alias.map(esc).join(', ')}</small>` : ''}${voir || pg ? `<small>${voir ? 'Voir : ' + voir : ''}${pg}</small>` : ''}</dd>`;
+    }).join('');
+  }
+  filtre.addEventListener('change', renderAZ); renderAZ();
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+</body>
+</html>

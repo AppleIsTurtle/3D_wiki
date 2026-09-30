@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="OCIO (OpenColorIO) : la bibliothèque et le fichier de config qui font que Houdini, Nuke et Redshift lisent et affichent les couleurs de la même façon. Wiki 3D, section Couleur.">
+<title>OCIO · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.encart{border:1px solid var(--c-color);border-radius:12px;padding:12px 16px;background:var(--surface);margin:18px 0}
+.encart b{font-family:var(--display)}
+.cfg{background:#15171A;color:#E4E7E9;border-radius:6px;padding:10px 0;font:.8rem/1.55 var(--mono);overflow-x:auto;margin:0}
+.cfg button{all:unset;display:block;padding:0 12px;white-space:pre;cursor:pointer;min-width:max-content}
+.cfg button:hover,.cfg button:focus-visible{background:#6D3FC055;outline:none}
+.cfg button[aria-pressed="true"]{background:#6D3FC0}
+.cfg .c{color:#8FA0AE}
+.cfg .k{color:#FFB86B}
+.note{background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 14px;margin-top:10px;min-height:3.2em;font-size:.95rem}
+.fr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.fr input{flex:1 1 220px;font:.95rem/1.2 var(--mono);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+</style>
+</head>
+<body data-page="ocio">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 4</span>
+  <h1>OCIO</h1>
+  <p class="une-phrase"><dfn data-g="ocio">OCIO</dfn> (OpenColorIO) est une bibliothèque libre qui convertit les couleurs pour les logiciels, <strong>d'après un fichier de config partagé</strong>.</p>
+  <div class="pourquoi"><p>Sans config commune, chaque logiciel lit et affiche les nombres à sa façon : les mêmes fichiers donnent des images différentes. Avec la même <dfn data-g="config">config</dfn>, Houdini, Nuke et Redshift s'accordent sur ce que valent les nombres.</p></div>
+
+  <div class="encart"><b>OCIO n'est pas ACES.</b> OCIO est le moteur, la config est le dictionnaire. <a data-page="aces">ACES</a> est une norme ; ses espaces et ses vues existent sous forme de configs OCIO, mais Resolve, par exemple, applique ACES sans OCIO. Une config peut ne contenir aucun ACES : c'est le cas de <code>nuke-default</code>.</div>
+
+  <h2>Ce que contient une config</h2>
+  <ul>
+    <li><b>Des espaces</b>, avec leurs alias (autres noms).</li>
+    <li><b>Des <dfn data-g="role">rôles</dfn></b> : des noms génériques que les logiciels utilisent, reliés à un espace réel.</li>
+    <li><b>Des <dfn data-g="display">displays</dfn> et leurs vues</b> : l'écran cible et le rendu à travers lequel on le regarde.</li>
+    <li><b>Des looks</b>, et <b>des règles de fichiers</b> qui devinent l'espace d'une image d'après son nom.</li>
+  </ul>
+
+  <figure class="demo" id="demo">
+    <div class="demo-frame">
+      <pre class="cfg" id="cfg" aria-label="Extrait de la config OCIO livrée avec Houdini 22 : clique une ligne pour son explication"></pre>
+      <div class="note" id="note" aria-live="polite">Clique une ligne de la config pour savoir ce qu'elle fait.</div>
+      <div class="fr"><label for="fn" style="font:600 .8rem/1 var(--mono)">Nom de fichier</label><input id="fn" value="Albedo.PNG" spellcheck="false" autocomplete="off"></div>
+      <div class="note" id="fres" aria-live="polite"></div>
+    </div>
+    <p class="screen-note">Extrait raccourci de <code>houdini-config-v3.0.0_aces-v2.0_ocio-v2.5.ocio</code>, la config par défaut de Houdini 22 (licence BSD-3-Clause, projet OpenColorIO). Le testeur applique les vraies règles de fichiers de cette config.</p>
+  </figure>
+
+  <h2>Qui choisit la config</h2>
+  <p>La variable d'environnement <code>$OCIO</code> donne le chemin de la config, ou une config intégrée à la bibliothèque (<code>ocio://default</code>). Si la variable n'est pas déjà définie, Houdini 22 la règle lui-même sur <code>houdini-config</code>. Redshift reprend celle de Houdini, mais rend par défaut en <code>ACEScg</code>, pas dans le <code>scene_linear</code> de <code>houdini-config</code>. Nuke se règle dans les Project Settings. Resolve a sa propre gestion des couleurs et n'utilise OCIO que dans quelques effets. Le détail est dans la page <a data-page="logiciels" data-anchor="config">Logiciels</a>.</p>
+  <p>Attention : dans <code>houdini-config</code>, le rôle <code>scene_linear</code> vaut <code>Linear Rec.709 (sRGB)</code>, alors que dans les configs ACES courantes il vaut <code>ACEScg</code>. Deux configs « ACES » ne travaillent donc pas forcément dans le même espace.</p>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>OCIO applique les conversions ; la config décrit les espaces, les rôles, les displays et les vues.</li>
+      <li>Toute l'équipe doit utiliser la même config : <code>$OCIO</code> la fixe, ou le réglage du logiciel (Project Settings de Nuke).</li>
+      <li>Les rôles disent à un logiciel où travailler par défaut, mais chacun les interprète à sa façon : Redshift rend en ACEScg quel que soit <code>scene_linear</code>.</li>
+      <li>Les règles de fichiers devinent l'espace d'après le nom : vérifie toujours ce qu'elles ont choisi.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Pour les futurs TD</h3>
+      <pre class="cfg" style="padding:10px 12px">import PyOpenColorIO as OCIO
+cfg = OCIO.GetCurrentConfig()          # la config de $OCIO
+print(cfg.getRoleColorSpace("scene_linear"))
+cpu = cfg.getProcessor("sRGB Encoded Rec.709 (sRGB)", "ACEScg").getDefaultCPUProcessor()
+print(cpu.applyRGB([0.5, 0.5, 0.5]))  # gris sRGB 0,5 → ≈ 0,214 en ACEScg</pre>
+      <h3>OCIO v1 et v2</h3>
+      <p>En v1, une vue pointait vers un seul espace qui faisait tout. La v2 (2021) sépare la vue en « view transform + espace du display », et ajoute les alias, les règles de fichiers et les shared views ; les configs intégrées arrivent avec la 2.2 (2022). Les anciens noms (<code>Utility - sRGB - Texture</code>…) restent souvent valables comme alias : le <a data-page="glossaire">décodeur</a> les traduit.</p>
+      <h3>Histoire</h3>
+      <p>OCIO a été créé chez Sony Pictures Imageworks et publié en open source en 2010. Il fait partie de l'Academy Software Foundation depuis 2019. Jeremy Selan a reçu pour son développement un Technical Achievement Award de l'Académie en 2014.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>OpenColorIO, guide de rédaction des configs (rôles, file rules, displays, views) : <a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/authoring.html">opencolorio.readthedocs.io</a></li>
+        <li>OpenColorIO, <i>Using OCIO</i> ($OCIO) et notes de version 2.2 (configs intégrées) : <a href="https://opencolorio.readthedocs.io/en/latest/guides/using_ocio/using_ocio.html">opencolorio.readthedocs.io</a></li>
+        <li>Houdini 22 : <code>packages/ocio.json</code> et l'aide OCIO locale</li>
+        <li>Communiqué Sony Pictures Imageworks, 28 juillet 2010 : <a href="https://www.prnewswire.com/news-releases/sony-pictures-imageworks-announces-opencolorio-99475684.html">prnewswire.com</a></li>
+        <li>Règles de fichiers vérifiées avec PyOpenColorIO 2.5 (<code>getColorSpaceFromFilepath</code>).</li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(() => {
+  'use strict';
+  // [texte de la ligne, explication] — extrait réel, raccourci (… = lignes omises)
+  const L = [
+    ['ocio_profile_version: 2.5', 'La version du format. Une config 2.5 demande une bibliothèque OCIO 2.5 ou plus récente.'],
+    ['name: cg-config-v3.0.0_aces-v2.0_ocio-v2.5', 'Le nom interne. La houdini-config porte le même nom que la cg-config, mais elle en diffère (rôle scene_linear, règles de fichiers, vue ACES 1.0 en plus).'],
+    ['roles:', 'Les rôles : des noms génériques que les logiciels utilisent. Chacun pointe vers un espace réel.'],
+    ['  scene_linear: Linear Rec.709 (sRGB)', 'L\'espace de travail linéaire du rendu et de la compo. Ici Linear Rec.709, pas ACEScg comme dans la cg-config.'],
+    ['  color_picking: sRGB Encoded Rec.709 (sRGB)', 'L\'espace des sélecteurs de couleur : la couleur que tu choisis est comprise comme une valeur sRGB.'],
+    ['  data: Raw', 'Les données (normales, roughness, masques) : aucune conversion.'],
+    ['  compositing_log: ACEScct', 'Un espace log pour les opérations de compo qui s\'y prêtent mieux.'],
+    ['file_rules:', 'Les règles de fichiers : dans l\'ordre, la première qui correspond au nom du fichier donne son espace par défaut.'],
+    ['  - {name: srgb_tx, colorspace: sRGB Encoded Rec.709 (sRGB), pattern: "*srgb_tx*"}', 'Un motif dans le chemin : tout fichier dont le chemin (dossiers compris) contient « srgb_tx » est lu en sRGB. Attention, le motif respecte la casse.'],
+    ['  - {name: ACEScg, colorspace: ACEScg, pattern: "*ACEScg*"}', '« ACEScg » dans le nom : lu en ACEScg. « acescg » en minuscules ne correspond pas.'],
+    ['  …', 'Lignes omises dans cet extrait : les motifs srgb_texture, lin_rec709 et lin_srgb, les textures dans les archives USDZ, et les extensions jpg, jpeg, tga, tif et tiff.'],
+    ['  - {name: png, colorspace: sRGB Encoded Rec.709 (sRGB), pattern: "*", extension: png}', 'Par extension : un PNG est lu en sRGB. L\'extension, elle, ne tient pas compte de la casse.'],
+    ['  - {name: exr, colorspace: Linear Rec.709 (sRGB), pattern: "*", extension: exr}', 'Un EXR est lu en Linear Rec.709. Un EXR rendu en ACEScg serait donc mal lu sans réglage explicite.'],
+    ['  - {name: Default, colorspace: ACES2065-1}', 'La règle obligatoire : tout ce qui n\'a pas trouvé de règle avant (.hdr, .tx, .mov…) est supposé en ACES2065-1.'],
+    ['displays:', 'Les écrans cibles, chacun avec ses vues.'],
+    ['  sRGB - Display:', 'Le display d\'un écran de bureau : primaires Rec.709, blanc D65, courbe sRGB.'],
+    ['    - {name: Raw, colorspace: Raw}', 'La vue Raw : aucune conversion, les nombres partent tels quels à l\'écran.'],
+    ['    - [ACES 2.0 - SDR 100 nits (Rec.709), Un-tone-mapped, ACES 1.0 - SDR Video]', 'Les vues proposées pour ce display (des « shared views » : définies une fois, réutilisées par plusieurs displays).'],
+    ['active_views: [Un-tone-mapped, ACES 2.0 - HDR 1000 nits (P3 D65), …]', 'L\'ordre des vues. La première qui existe pour le display devient la vue par défaut : ici Un-tone-mapped, sans tone mapping. C\'est pour ça que le viewer de Houdini 22 s\'ouvre sans vue ACES.'],
+    ['looks:', 'Les looks : des transformations appliquées avant la vue.'],
+    ['  - name: ACES 1.3 Reference Gamut Compression', 'La compression de gamut de référence d\'ACES 1.3, pour les couleurs très saturées des caméras.'],
+    ['colorspaces:', 'Les espaces eux-mêmes.'],
+    ['  - name: ACEScg', 'Un espace : son nom…'],
+    ['    aliases: [ACES - ACEScg, lin_ap1, lin_ap1_scene]', '… ses autres noms, dont l\'ancien nom de la config ACES 1.2 : OCIO les accepte tous.'],
+    ['    encoding: scene-linear', 'Sa nature : scene-linear, display-linear, log, sdr-video, hdr-video, edr-video (OCIO 2.5) ou data.'],
+  ];
+  const pre = document.getElementById('cfg'), note = document.getElementById('note');
+  const hl = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/^(\s*-?\s*)([a-z_]+:)/, '$1<span class="k">$2</span>').replace(/(…)/g, '<span class="c">$1</span>');
+  L.forEach(([t, n]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.innerHTML = hl(t); b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => { pre.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); note.textContent = n; });
+    pre.append(b);
+  });
+  // Règles de fichiers réelles de houdini-config (ordre, motif sensible à la casse, extension insensible)
+  const RULES = [
+    ['srgb_tx', 'sRGB Encoded Rec.709 (sRGB)', '*srgb_tx*', '*'], ['srgb_texture', 'sRGB Encoded Rec.709 (sRGB)', '*srgb_texture*', '*'],
+    ['ACEScg', 'ACEScg', '*ACEScg*', '*'], ['lin_rec709', 'Linear Rec.709 (sRGB)', '*lin_rec709*', '*'], ['lin_srgb', 'Linear Rec.709 (sRGB)', '*lin_srgb*', '*'],
+    ['__usdz_jpg', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[jJ][pP][gG]\]$/], ['__usdz_jpeg', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[jJ][pP][eE][gG]\]$/],
+    ['__usdz_tga', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[tT][gG][aA]\]$/], ['__usdz_png', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[pP][nN][gG]\]$/],
+    ['__usdz_tif', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[tT][iI][fF]\]$/], ['__usdz_tiff', 'sRGB Encoded Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[tT][iI][fF][fF]\]$/],
+    ['__usdz_exr', 'Linear Rec.709 (sRGB)', null, null, /^.*[uU][sS][dD][zZ]\[.*[eE][xX][rR]\]$/],
+    ['jpg', 'sRGB Encoded Rec.709 (sRGB)', '*', 'jpg'], ['jpeg', 'sRGB Encoded Rec.709 (sRGB)', '*', 'jpeg'], ['tga', 'sRGB Encoded Rec.709 (sRGB)', '*', 'tga'],
+    ['png', 'sRGB Encoded Rec.709 (sRGB)', '*', 'png'], ['tif', 'sRGB Encoded Rec.709 (sRGB)', '*', 'tif'], ['tiff', 'sRGB Encoded Rec.709 (sRGB)', '*', 'tiff'],
+    ['exr', 'Linear Rec.709 (sRGB)', '*', 'exr'], ['Default', 'ACES2065-1'],
+  ];
+  const glob = (g, flags) => new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$', flags);
+  function match(path) {
+    const dot = path.lastIndexOf('.'), ext = dot >= 0 ? path.slice(dot + 1) : '', stem = dot >= 0 ? path.slice(0, dot) : path;
+    for (const [name, cs, pat, extG, rx] of RULES) {
+      if (name === 'Default') return [name, cs];
+      if (rx) { if (rx.test(path)) return [name, cs]; continue; }
+      if (dot >= 0 && glob(pat, '').test(stem) && glob(extG, 'i').test(ext)) return [name, cs];
+    }
+  }
+  const fn = document.getElementById('fn'), fres = document.getElementById('fres');
+  const run = () => { const [n, cs] = match(fn.value.trim()); fres.innerHTML = `Règle <code>${n}</code> → lu en <b>${cs}</b>${n === 'Default' ? ' (aucune autre règle ne correspond)' : ''}.`; };
+  fn.addEventListener('input', run); run();
+})();
+</script>
+</body>
+</html>

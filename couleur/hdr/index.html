@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="HDR : les trois sens du mot, nits et blanc de référence, PQ et HLG, métadonnées HDR10 et Dolby Vision, vues HDR d'ACES, et une démo de la marge HDR de ton écran. Wiki 3D, section Couleur.">
+<title>HDR · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.sens{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.sens div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.sens b{font-family:var(--display);display:block}
+#pq{width:100%;display:block;background:#15171A;border-radius:6px;touch-action:none}
+.stairs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px}
+.stairs figure{margin:0;text-align:center;font:600 .75rem/1.4 var(--mono);color:var(--neutral-ink)}
+.stairs canvas{width:100%;aspect-ratio:1;display:block;border-radius:4px;background:#000}
+.mode{font:600 .8rem/1.4 var(--mono);color:var(--neutral-ink);margin-top:8px}
+</style>
+</head>
+<body data-page="hdr">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 7</span>
+  <h1>HDR</h1>
+  <p class="une-phrase">Le <dfn data-g="hdr">HDR</dfn>, à l'écran, c'est afficher des blancs et des couleurs <strong>plus lumineux que le blanc de référence du SDR</strong>.</p>
+  <div class="pourquoi"><p>Un écran SDR oblige à compresser toutes les hautes lumières sous son blanc. Un écran HDR va plus haut : un reflet, une flamme ou un soleil peuvent briller plus fort que le blanc d'une feuille.</p></div>
+
+  <h2>Trois sens du même mot</h2>
+  <div class="sens">
+    <div><b>Une image HDR</b>Des valeurs de scène qui dépassent 1 : un EXR de rendu, un HDRI. Rien à voir avec l'écran.</div>
+    <div><b>Un écran HDR</b>Un écran capable de dépasser le blanc du SDR.</div>
+    <div><b>Un format HDR</b>Un signal de diffusion normalisé : PQ ou HLG, parfois avec des métadonnées (HDR10, Dolby Vision).</div>
+  </div>
+
+  <h2>Nits et blanc de référence</h2>
+  <p>La luminance se mesure en <dfn data-g="nits">nits</dfn> (cd/m²). En vidéo SDR, le blanc vaut 100 nits. En HDR, le blanc d'une feuille (« blanc de référence ») est placé à 203 nits. Au-dessus, c'est la marge HDR, jusqu'à la luminance maximale de l'écran.</p>
+
+  <h2>PQ et HLG</h2>
+  <p><dfn data-g="pq">PQ</dfn> (SMPTE ST 2084) est absolu : chaque code correspond à une luminance précise, de 0 à 10 000 nits. HLG est relatif : le rendu dépend de la luminance de l'écran. Rec.2100 réunit les deux, avec les primaires Rec.2020. Les formats de diffusion ajoutent des métadonnées : HDR10 en a de fixes pour tout le programme (dont MaxCLL et MaxFALL), HDR10+ et Dolby Vision en ont qui changent au fil des scènes.</p>
+
+  <figure class="demo" id="demo">
+    <div class="demo-frame">
+      <svg id="pq" viewBox="0 0 640 300" role="img" aria-label="Courbe PQ : codes 10 bits en abscisse, luminance en nits en ordonnée, échelle logarithmique, comparée à la courbe SDR à 100 nits."></svg>
+      <div class="stairs" id="stairs"></div>
+      <p class="mode" id="mode"></p>
+    </div>
+    <div class="demo-readout" id="ro" aria-live="polite">Survole la courbe pour lire un code et sa luminance.</div>
+    <p class="screen-note" data-screen-note="hdr"></p>
+  </figure>
+
+  <h2>ACES en HDR</h2>
+  <p>Les configs ACES 2.0 proposent des vues HDR sur les displays <code>Rec.2100-PQ - Display</code> et <code>ST2084-P3-D65 - Display</code> : <code>ACES 2.0 - HDR 1000 nits (P3 D65)</code> dans les configs CG, et de 108 à 4000 nits dans les configs Studio. Le même EXR donne ainsi une sortie SDR et une sortie HDR : seuls le display et la vue changent.</p>
+
+  <h2>Travailler en HDR</h2>
+  <p>Sous Windows, le mode HDR se règle dans les paramètres d'affichage, et un curseur fixe la luminosité du contenu SDR. Resolve affiche le HDR dans ses viewers si ce mode est activé et que la préférence <code>Use 10-bit precision in viewers if available</code> est cochée ; Nuke passe par une carte de sortie vers un moniteur HDR. Sans écran HDR, tu peux mesurer une image HDR avec les scopes, mais pas la juger à l'œil.</p>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>Image HDR, écran HDR et format HDR sont trois choses différentes.</li>
+      <li>En HDR, le blanc de référence est à 203 nits ; au-dessus, c'est la marge.</li>
+      <li>PQ est absolu (en nits), HLG est relatif à l'écran.</li>
+      <li>Une même scène donne une sortie SDR et une sortie HDR : on change le display et la vue, pas l'image.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>La courbe PQ</h3>
+      <p>Signal <code>E = ((c1 + c2·Y^m1) / (1 + c3·Y^m1))^m2</code>, avec <code>Y</code> = luminance / 10 000, m1 = 2610/16384, m2 = 2523/4096 × 128, c1 = 3424/4096, c2 = 2413/4096 × 32, c3 = 2392/4096 × 32. Le blanc de référence (203 nits) tombe à 58 % du signal PQ, le gris 18 % (26 nits) à 38 %.</p>
+      <h3>La démo</h3>
+      <p>Sur un écran HDR, avec un navigateur qui gère le mode « extended » de WebGPU (Chrome ou Edge 131 et plus), les paliers sont affichés pour de vrai, jusqu'à ce que ton écran plafonne. Aucune API web ne donne la marge exacte d'un écran : la démo ne peut que la montrer. Les valeurs écrites sont encodées avec la courbe sRGB étendue au-delà de 1, conformément à la spécification WebGPU. Ailleurs, la simulation affiche le blanc SDR 16 fois plus sombre pour laisser voir les rapports. Une capture d'écran ne montre jamais le HDR réel.</p>
+      <h3>Précisions</h3>
+      <p>HDR10 est un profil défini par la CEA (aujourd'hui CTA) en 2015 : PQ, 10 bits, primaires Rec.2020, métadonnées SMPTE ST 2086, MaxCLL et MaxFALL. HDR10+ utilise SMPTE ST 2094-40, Dolby Vision ST 2094-10. Le mode HDR de Windows affiche le blanc SDR à une valeur réglable (80 nits en théorie, souvent plus).</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>ITU-R BT.2100-3 (PQ, HLG, primaires) : <a href="https://www.itu.int/rec/R-REC-BT.2100">itu.int</a></li>
+        <li>ITU-R BT.2408 (blanc de référence HDR à 203 cd/m²) : <a href="https://www.itu.int/pub/R-REP-BT.2408">itu.int</a></li>
+        <li>HDR10+ System Whitepaper ; Dolby, <i>An Introduction to Dolby Vision</i></li>
+        <li>Microsoft Learn, <i>Use DirectX with Advanced Color</i> (blanc SDR en mode HDR) : <a href="https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range">learn.microsoft.com</a></li>
+        <li>W3C, WebGPU (<code>GPUCanvasToneMappingMode</code>) ; Chrome, <i>What's New in WebGPU (Chrome 129)</i> : <a href="https://developer.chrome.com/blog/new-in-webgpu-129">developer.chrome.com</a></li>
+        <li>Configs ACES dumpées localement (noms des vues HDR) ; Resolve 21.1 et Foundry Nuke 17.1 (affichage HDR).</li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/colorlib.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(async () => {
+  'use strict';
+  const C = ColorLib, F = Couleur.fmt;
+  /* ---------- Courbe PQ ---------- */
+  const svg = document.getElementById('pq'), NS = 'http://www.w3.org/2000/svg';
+  const W = 640, H = 300, m = { l: 52, r: 14, t: 14, b: 34 };
+  const x = (c) => m.l + c / 1023 * (W - m.l - m.r), lg = (n) => Math.log10(Math.max(n, 0.005));
+  const y = (n) => H - m.b - (lg(n) - lg(0.005)) / (lg(10000) - lg(0.005)) * (H - m.t - m.b);
+  const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.append(e); return e; };
+  [0.01, 0.1, 1, 10, 100, 1000, 10000].forEach((n) => { el('line', { x1: m.l, x2: W - m.r, y1: y(n), y2: y(n), stroke: '#FFFFFF', 'stroke-opacity': .12 }); el('text', { x: m.l - 6, y: y(n) + 4, 'text-anchor': 'end', fill: '#AAB', 'font-size': 11, 'font-family': 'JetBrains Mono, monospace' }, n >= 1 ? n.toLocaleString('fr-FR') : String(n).replace('.', ',')); });
+  [0, 256, 512, 768, 1023].forEach((c) => el('text', { x: x(c), y: H - 12, 'text-anchor': 'middle', fill: '#AAB', 'font-size': 11, 'font-family': 'JetBrains Mono, monospace' }, c));
+  el('text', { x: W - m.r, y: H - 2, 'text-anchor': 'end', fill: '#AAB', 'font-size': 10 }, 'code 10 bits (plage complète)');
+  let dP = '', dS = '';
+  for (let c = 0; c <= 1023; c += 3) { dP += (c ? 'L' : 'M') + x(c).toFixed(1) + ' ' + y(C.pq.decode(c / 1023)).toFixed(1); }
+  const sdr = C.bt1886(100, 0); for (let c = 8; c <= 1023; c += 3) { dS += (c > 8 ? 'L' : 'M') + x(c).toFixed(1) + ' ' + y(sdr.decode(c / 1023)).toFixed(1); }
+  el('path', { d: dS, fill: 'none', stroke: '#8FA0AE', 'stroke-width': 2, 'stroke-dasharray': '5 4' });
+  el('path', { d: dP, fill: 'none', stroke: '#B39DFF', 'stroke-width': 2.5 });
+  const half = C.pq.encode(100);
+  [[100, '100 nits (blanc SDR) en PQ'], [203, 'blanc de référence HDR : 203 nits']].forEach(([n, t], i) => { const c = C.pq.encode(n) * 1023; el('circle', { cx: x(c), cy: y(n), r: 4, fill: '#FFD24A' }); el('text', { x: x(c) + 8, y: y(n) + (i ? -8 : 14), fill: '#FFD24A', 'font-size': 11, 'font-family': 'JetBrains Mono, monospace' }, t); });
+  el('text', { x: x(1023) - 4, y: y(10000) + 14, 'text-anchor': 'end', fill: '#B39DFF', 'font-size': 11 }, 'PQ');
+  el('text', { x: x(1023) - 4, y: y(100) + 16, 'text-anchor': 'end', fill: '#8FA0AE', 'font-size': 11 }, 'SDR (gamma 2,4, 100 nits)');
+  const cur = el('line', { y1: m.t, y2: H - m.b, stroke: '#FFF', 'stroke-opacity': .5, visibility: 'hidden' });
+  const ro = document.getElementById('ro');
+  svg.addEventListener('pointermove', (e) => {
+    const r = svg.getBoundingClientRect(), c = Math.round(Math.min(Math.max(((e.clientX - r.left) / r.width * W - m.l) / (W - m.l - m.r), 0), 1) * 1023);
+    cur.setAttribute('x1', x(c)); cur.setAttribute('x2', x(c)); cur.setAttribute('visibility', 'visible');
+    ro.textContent = `Code ${c} (${F.num(c / 10.23, 0)} % du signal) → PQ ${F.num(C.pq.decode(c / 1023), 2)} nits · SDR ${F.num(sdr.decode(c / 1023), 2)} nits`;
+  });
+  ro.textContent = `Survole la courbe. Environ ${F.num(half * 100, 0)} % des codes PQ servent à la plage 0 à 100 nits.`;
+
+  /* ---------- Marge HDR : paliers 1× à 16× le blanc SDR ---------- */
+  const N = [1, 2, 4, 8, 16], stairs = document.getElementById('stairs'), cvs = [];
+  N.forEach((n) => { const f = document.createElement('figure'); const c = document.createElement('canvas'); c.width = c.height = 64; f.append(c, document.createTextNode(n + '× le blanc SDR')); stairs.append(f); cvs.push(c); });
+  const encExt = (L) => (L <= 0.0031308 ? 12.92 * L : 1.055 * Math.pow(L, 1 / 2.4) - 0.055); // sRGB étendue au-delà de 1
+  const force = new URLSearchParams(location.search).get('hdr');
+  const hdrScreen = force ? force === '1' : Couleur.screenInfo().hdr;
+  async function realHDR() {
+    if (!navigator.gpu) return false;
+    try {
+      const adapter = await navigator.gpu.requestAdapter(); if (!adapter) return false;
+      const device = await adapter.requestDevice();
+      const mod = device.createShaderModule({ code: `@group(0) @binding(0) var<uniform> v: vec4f;
+@vertex fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f { var p = array(vec2f(-1,-1), vec2f(3,-1), vec2f(-1,3)); return vec4f(p[i], 0, 1); }
+@fragment fn fs() -> @location(0) vec4f { return vec4f(v.xyz, 1); }` });
+      for (let i = 0; i < cvs.length; i++) {
+        const ctx = cvs[i].getContext('webgpu');
+        ctx.configure({ device, format: 'rgba16float', toneMapping: { mode: 'extended' }, alphaMode: 'opaque' });
+        const conf = ctx.getConfiguration ? ctx.getConfiguration() : null;
+        if (!conf || !conf.toneMapping || conf.toneMapping.mode !== 'extended') return false; // mode non géré
+        const buf = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        const e = encExt(N[i]); device.queue.writeBuffer(buf, 0, new Float32Array([e, e, e, 1]));
+        const pipe = device.createRenderPipeline({ layout: 'auto', vertex: { module: mod, entryPoint: 'vs' }, fragment: { module: mod, entryPoint: 'fs', targets: [{ format: 'rgba16float' }] } });
+        const bg = device.createBindGroup({ layout: pipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: buf } }] });
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 1] }] });
+        pass.setPipeline(pipe); pass.setBindGroup(0, bg); pass.draw(3); pass.end(); device.queue.submit([enc.finish()]);
+      }
+      return true;
+    } catch (err) { console.warn('[hdr] WebGPU indisponible :', err); return false; }
+  }
+  function simulate() {
+    cvs.forEach((c0, i) => { // un canvas déjà pris par WebGPU ne peut plus servir en 2D : on le remplace
+      const c = c0.cloneNode(); c0.replaceWith(c); cvs[i] = c; const g = c.getContext('2d'); const v = Math.round(encExt(N[i] / 16) * 255); g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, 0, c.width, c.height); });
+  }
+  const mode = document.getElementById('mode');
+  let ok = false;
+  if (hdrScreen) ok = await realHDR();
+  if (ok) mode.textContent = 'HDR réel : chaque palier émet deux fois plus de lumière que le précédent, jusqu\'à ce que ton écran plafonne. Le dernier palier encore plus clair que le précédent situe ta marge.';
+  else { simulate(); mode.textContent = 'Simulation à l\'échelle : le blanc SDR est affiché 16 fois plus sombre, pour laisser voir les rapports. Sur un écran HDR, ces paliers dépasseraient le blanc de la page.'; }
+})();
+</script>
+</body>
+</html>

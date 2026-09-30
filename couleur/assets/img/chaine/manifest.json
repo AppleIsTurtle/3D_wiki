@@ -1,0 +1,152 @@
+{
+ "scene": "chaine",
+ "res": [
+  960,
+  540
+ ],
+ "encoding": "rgbe_split",
+ "space": "Linear Rec.709 (sRGB)",
+ "patches": {
+  "names": [
+   "rouge",
+   "orange",
+   "jaune",
+   "vert",
+   "bleu",
+   "violet",
+   "peau_claire",
+   "peau_foncee",
+   "feuillage",
+   "ciel",
+   "blanc",
+   "gris_fonce"
+  ],
+  "srgb8": [
+   [
+    200,
+    60,
+    50
+   ],
+   [
+    230,
+    140,
+    40
+   ],
+   [
+    225,
+    200,
+    60
+   ],
+   [
+    80,
+    160,
+    70
+   ],
+   [
+    50,
+    120,
+    180
+   ],
+   [
+    120,
+    70,
+    160
+   ],
+   [
+    190,
+    150,
+    125
+   ],
+   [
+    110,
+    80,
+    65
+   ],
+   [
+    90,
+    110,
+    70
+   ],
+   [
+    100,
+    125,
+    160
+   ],
+   [
+    240,
+    240,
+    235
+   ],
+   [
+    60,
+    60,
+    60
+   ]
+  ]
+ },
+ "variants": {
+  "correct": {
+   "file": "img/chaine/correct.png",
+   "probes": {
+    "carte_grise": 0.1799,
+    "carte_blanche": 0.6588,
+    "ampoule": 63.7913,
+    "neon": 2.6989,
+    "sphere": 0.0202
+   }
+  },
+  "albedo_raw": {
+   "file": "img/chaine/albedo_raw.png",
+   "probes": {
+    "carte_grise": 0.1799,
+    "carte_blanche": 0.6589,
+    "ampoule": 63.7902,
+    "neon": 2.6988,
+    "sphere": 0.0202
+   }
+  },
+  "albedo_double": {
+   "file": "img/chaine/albedo_double.png",
+   "probes": {
+    "carte_grise": 0.1799,
+    "carte_blanche": 0.6588,
+    "ampoule": 63.7972,
+    "neon": 2.6989,
+    "sphere": 0.0202
+   }
+  },
+  "rough_srgb": {
+   "file": "img/chaine/rough_srgb.png",
+   "probes": {
+    "carte_grise": 0.1799,
+    "carte_blanche": 0.6588,
+    "ampoule": 63.794,
+    "neon": 2.6989,
+    "sphere": 0.016
+   }
+  }
+ },
+ "probes": {
+  "carte_grise": [
+   256.4,
+   388.0
+  ],
+  "carte_blanche": [
+   366.3,
+   393.1
+  ],
+  "ampoule": [
+   756.1,
+   144.0
+  ],
+  "neon": [
+   507.4,
+   39.1
+  ],
+  "sphere": [
+   663.7,
+   344.2
+  ]
+ },
+ "scale_applied": 0.25176390210391936
+}

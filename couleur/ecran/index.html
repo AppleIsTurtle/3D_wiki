@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="L'écran, le système et la pièce : la fin de la chaîne des couleurs. Gamut de la dalle, mode sRGB, Windows (ICC, ACM, mode HDR), calibration, et des tests pour ton propre écran. Wiki 3D, section Couleur.">
+<title>Écran · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tabs button{font:600 .82rem/1 var(--mono);padding:9px 12px;border-radius:8px;border:1px solid #0003;background:#FFFFFF22;color:var(--neutral-ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:#111;color:#fff}
+.panel[hidden]{display:none}
+.panel p{color:var(--neutral-ink);margin:10px 0 0;font-size:.95rem}
+.pair{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.pair figure{margin:0;text-align:center;font:600 .75rem/1.3 var(--mono);color:var(--neutral-ink)}
+.sq{width:130px;height:130px;border-radius:4px}
+.steps{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:0;border-radius:4px;overflow:hidden}
+.steps div{aspect-ratio:1;display:flex;align-items:flex-end;justify-content:center;font:600 .62rem/1.6 var(--mono);color:#888}
+.steps.w div{color:#777}
+.contrast{display:grid;grid-template-columns:1fr 1fr;height:180px;border-radius:4px;overflow:hidden;position:relative}
+.contrast>div{display:flex;align-items:center;justify-content:center}
+.contrast .g{width:70px;height:70px;background:rgb(128,128,128)}
+.bridge{position:absolute;top:calc(50% - 8px);left:25%;width:50%;height:16px;background:rgb(128,128,128);display:none}
+.contrast.rev .bridge{display:block}
+</style>
+</head>
+<body data-page="ecran">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 6</span>
+  <h1>Écran</h1>
+  <p class="une-phrase">L'écran est la dernière étape de la chaîne : il transforme des valeurs codées en lumière, <strong>avec ses propres limites</strong>.</p>
+  <div class="pourquoi"><p>Deux écrans qui reçoivent le même fichier n'émettent pas la même lumière. Or tu juges tes images à travers le tien, dans ta pièce.</p></div>
+
+  <h2>Quatre niveaux, du plus physique au plus humain</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Niveau</th><th>Ce qu'il change</th><th>Pour travailler en SDR</th></tr></thead>
+    <tbody>
+      <tr><td>La dalle</td><td>Son <dfn data-g="gamut">gamut</dfn> natif, sa luminosité maximale, son contraste</td><td>Connaître son gamut : sRGB ou plus large</td></tr>
+      <tr><td>Les réglages de l'écran</td><td>Une dalle large gamut qui reçoit du sRGB sans gestion l'affiche trop saturé</td><td>Mode sRGB de l'écran, s'il existe</td></tr>
+      <tr><td>Le système</td><td>Sans réglage, Windows suppose tout en sRGB et peu d'applications lisent le profil ICC ; en mode HDR, il réaffiche le SDR à un blanc réglable, qui peut paraître trop clair ou trop sombre</td><td>Mode HDR désactivé pour juger du SDR</td></tr>
+      <tr><td>La pièce et l'œil</td><td>La lumière ambiante et les couleurs autour de l'image changent ce que tu perçois</td><td>Lumière maîtrisée, fond neutre</td></tr>
+    </tbody>
+  </table></div>
+  <p>Les références : un écran de bureau sRGB est prévu pour un blanc à 80 cd/m², la vidéo HD pour 100 cd/m² dans une pièce tamisée à 10 lux, avec un point blanc <dfn data-g="d65">D65</dfn> dans les deux cas.</p>
+
+  <h2>Calibrer, profiler</h2>
+  <p>Calibrer, c'est régler l'écran vers une cible : luminosité, point blanc, courbe. Profiler, c'est mesurer le résultat avec une sonde et le décrire dans un profil ICC, que les applications gérées utilisent. Les deux vont ensemble. Une calibration matérielle s'écrit dans l'écran lui-même ; une calibration logicielle passe par l'ordinateur.</p>
+  <p>Windows 11 peut aussi gérer la couleur de toutes les applications (Auto Color Management), avec un matériel compatible et un profil d'écran adapté. Sur Mac, ColorSync gère la couleur pour la plupart des applications.</p>
+
+  <figure class="demo" id="demo">
+    <div class="demo-frame">
+      <div class="tabs" role="tablist" aria-label="Tests de l'écran">
+        <button type="button" role="tab" aria-selected="true" aria-controls="p1" id="t1">Gamut</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="p2" id="t2">Noirs et blancs</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="p3" id="t3">Contraste simultané</button>
+      </div>
+      <div class="panel" role="tabpanel" id="p1" aria-labelledby="t1">
+        <div class="pair">
+          <figure><div class="sq" style="background:rgb(255,0,0);background:color(display-p3 1 0 0)"></div>rouge P3</figure>
+          <figure><div class="sq" style="background:rgb(255,0,0)"></div>rouge sRGB</figure>
+          <figure><div class="sq" style="background:rgb(0,255,0);background:color(display-p3 0 1 0)"></div>vert P3</figure>
+          <figure><div class="sq" style="background:rgb(0,255,0)"></div>vert sRGB</figure>
+        </div>
+        <p id="gamut-txt"></p>
+      </div>
+      <div class="panel" role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+        <div class="steps" id="blacks" aria-label="Marches de gris de 0 à 12"></div>
+        <div class="steps w" id="whites" style="margin-top:8px" aria-label="Marches de gris de 243 à 255"></div>
+        <p>Deux marches voisines diffèrent très peu, surtout tout en bas et tout en haut : même un bon écran en confond quelques-unes. Si beaucoup de marches sombres se confondent, ton écran (ou sa luminosité, ou la lumière de la pièce) écrase les ombres ; si beaucoup de marches claires se confondent, il écrase les hautes lumières. La trame à 50 % de lumière est sur la page <a data-page="espaces">Espaces</a>.</p>
+      </div>
+      <div class="panel" role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+        <div class="contrast" id="ctr"><div style="background:#1E1E1E"><div class="g"></div></div><div style="background:#E6E6E6"><div class="g"></div></div><span class="bridge"></span></div>
+        <p>Les deux carrés sont le même gris (128). Le fond change ta perception : c'est pour ça qu'on juge une image sur un fond neutre, dans une interface grise.</p>
+        <p><button type="button" class="btn" id="rev">Relier les deux carrés</button></p>
+      </div>
+    </div>
+    <p class="screen-note" data-screen-note="" data-note="Ces tests sont indicatifs : ils ne remplacent pas une sonde."></p>
+  </figure>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>L'écran, le système et la pièce font partie de la chaîne.</li>
+      <li>Un écran large gamut sans gestion rend le sRGB trop saturé : pour travailler en sRGB, utilise son mode sRGB s'il existe.</li>
+      <li>Pour juger du SDR sous Windows, coupe le mode HDR.</li>
+      <li>Seule une sonde dit ce que ton écran émet vraiment.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Windows</h3>
+      <p>Sans « Advanced Color » (Auto Color Management ou mode HDR), Windows ne gère pas la couleur de ce qu'affichent les applications : il suppose tout en sRGB. Auto Color Management est disponible depuis Windows 11 22H2, avec une carte graphique récente et un profil d'écran MHC. Il se règle dans Settings > System > Display > Color profile (libellés de l'interface anglaise). En mode HDR, le curseur de luminosité du contenu SDR fixe le blanc des applications SDR ; plusieurs utilisateurs constatent que Windows décode alors le SDR avec la courbe sRGB par morceaux, ce qui relève les ombres d'un contenu prévu pour un gamma 2,2. Microsoft ne le documente pas.</p>
+      <h3>Les dalles</h3>
+      <p>IPS : contraste d'environ 1000:1, angles de vision larges. VA : contraste plus élevé, mais teintes qui changent avec l'angle. OLED : noir par pixel, mais luminosité qui baisse quand une grande surface est claire.</p>
+      <h3>macOS</h3>
+      <p>ColorSync gère la couleur pour la plupart des applications. Avec l'EDR, macOS peut afficher au-dessus du blanc SDR ; la marge dépend de l'écran et de la luminosité choisie.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>Microsoft Learn, <i>ICC profile behavior with Advanced Color</i> et <i>Use DirectX with Advanced Color</i> : <a href="https://learn.microsoft.com/en-us/windows/win32/wcs/advanced-color-icc-profiles">learn.microsoft.com</a></li>
+        <li>W3C, <i>A Standard Default Color Space for the Internet – sRGB</i> (80 cd/m²) : <a href="https://www.w3.org/Graphics/Color/sRGB">w3.org</a></li>
+        <li>ITU-R BT.2035 (100 cd/m², 10 lux, D65) : <a href="https://www.itu.int/rec/R-REC-BT.2035">itu.int</a></li>
+        <li>TFTCentral, gamut des écrans et mode sRGB ; technologies de dalles : <a href="https://tftcentral.co.uk/articles/colour_gamut">tftcentral.co.uk</a></li>
+        <li>DisplayCAL, calibration et profilage : <a href="https://displaycal.net/">displaycal.net</a></li>
+        <li>EIZO, calibration matérielle et logicielle (source constructeur) : <a href="https://www.eizo.com/library/management/hardware-vs-software-calibration/">eizo.com</a></li>
+        <li>Apple, ColorSync et EDR : <a href="https://developer.apple.com/documentation/colorsync">developer.apple.com</a></li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(() => {
+  'use strict';
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    tabs.forEach((x) => { x.setAttribute('aria-selected', x === t); document.getElementById(x.getAttribute('aria-controls')).hidden = x !== t; });
+  }));
+  const s = Couleur.screenInfo();
+  document.getElementById('gamut-txt').textContent = s.gamut === 'srgb'
+    ? 'Ton navigateur annonce un écran sRGB : les carrés P3 et sRGB doivent te paraître identiques, car le P3 est ramené au bord du sRGB. Firefox annonce toujours sRGB.'
+    : 'Ton navigateur annonce un écran large gamut : le rouge et le vert P3 doivent te paraître plus intenses que leurs voisins sRGB. S\'ils sont identiques, un maillon de la chaîne (navigateur, profil ou mode de l\'écran) ne suit pas.';
+  const mk = (id, from) => { const box = document.getElementById(id); for (let v = from; v < from + 13; v++) { const d = document.createElement('div'); d.style.background = `rgb(${v},${v},${v})`; d.textContent = v; box.append(d); } };
+  mk('blacks', 0); mk('whites', 243);
+  document.getElementById('rev').addEventListener('click', () => document.getElementById('ctr').classList.toggle('rev'));
+})();
+</script>
+</body>
+</html>

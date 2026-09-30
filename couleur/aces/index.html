@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="ACES : les trois sens du mot, ACES2065-1, ACEScg et ACEScct, les transforms, ACES 1.x contre 2.0, et pourquoi espace de travail et vue sont deux choix indépendants. Wiki 3D, section Couleur.">
+<title>ACES · Couleur · Wiki 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/couleur.css?v=20260930">
+<style>
+.sens{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.sens div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.sens b{font-family:var(--display);display:block}
+.grid{position:relative}
+.grid canvas{width:100%;display:block;cursor:crosshair}
+.q{position:absolute;font:700 .72rem/1.3 var(--mono);background:#000b;color:#fff;padding:4px 6px;border-radius:5px;pointer-events:none}
+</style>
+</head>
+<body data-page="aces">
+<div class="wrap">
+<header class="crumbs"></header>
+<nav class="secnav"></nav>
+<main>
+  <span class="eyebrow">Couleur · 5</span>
+  <h1>ACES</h1>
+  <p class="une-phrase"><dfn data-g="aces">ACES</dfn> (Academy Color Encoding System) est un ensemble de normes de l'Académie des Oscars pour <strong>encoder, échanger et afficher</strong> les images tout au long d'une production.</p>
+  <div class="pourquoi"><p>Des caméras, des studios et des logiciels différents devaient se passer des images et les archiver pour de futurs remasters. ACES leur donne un encodage commun, gratuit et ouvert.</p></div>
+
+  <h2>Trois sens du même mot</h2>
+  <div class="sens">
+    <div><b>Le système</b>Les normes, les transforms et les fichiers.</div>
+    <div><b>Des espaces</b><dfn data-g="aces2065">ACES2065-1</dfn>, <dfn data-g="acescg">ACEScg</dfn>, <dfn data-g="acescct">ACEScct</dfn>.</div>
+    <div><b>Un rendu</b>La vue ACES, qui transforme l'image de scène pour l'écran.</div>
+  </div>
+  <p>« Je travaille en ACES » peut donc vouloir dire : ACEScg comme espace de travail, la vue ACES, ou les deux. Ce sont deux choix indépendants.</p>
+
+  <figure class="demo" id="demo">
+    <div class="demo-frame">
+      <div class="grid"><canvas id="cv" width="960" height="540" aria-label="Deux sphères saturées éclairées par deux lumières colorées, calculées dans deux espaces de travail et vues à travers deux vues : grille 2 × 2."></canvas>
+        <span class="q" style="left:8px;top:8px">Linear Rec.709 · AgX</span><span class="q" style="left:calc(50% + 8px);top:8px">ACEScg · AgX</span>
+        <span class="q" style="left:8px;top:calc(50% + 8px)">Linear Rec.709 · ACES 2.0</span><span class="q" style="left:calc(50% + 8px);top:calc(50% + 8px)">ACEScg · ACES 2.0</span></div>
+    </div>
+    <div class="demo-readout" id="ro" aria-live="polite">Clique un point pour lire ses valeurs.</div>
+    <p class="screen-note" data-screen-note="" data-note="Scène volontairement simple : éclairage diffus seul, calculé dans le navigateur."></p>
+  </figure>
+  <p>Sur une même ligne, l'espace de travail change la couleur des sphères, pas celle du fond gris : multiplier un albedo coloré par une lumière colorée ne donne pas le même résultat selon les primaires. Dans une même colonne, la vue change le rendu des hautes lumières.</p>
+
+  <h2>Les pièces</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Pièce</th><th>Ce que c'est</th><th>Pour</th></tr></thead>
+    <tbody>
+      <tr><td>ACES2065-1</td><td>primaires AP0, linéaire</td><td>échange entre studios, archive</td></tr>
+      <tr><td>ACEScg</td><td>primaires AP1, linéaire</td><td>rendu, compositing</td></tr>
+      <tr><td>ACEScct</td><td>primaires AP1, log</td><td>étalonnage</td></tr>
+      <tr><td>Input Transform (<dfn data-g="idt">IDT</dfn>)</td><td>d'une caméra ou d'une source vers ACES</td><td>l'entrée</td></tr>
+      <tr><td>Look Transform (LMT)</td><td>un look créatif ou technique</td><td>le look du projet</td></tr>
+      <tr><td>Output Transform</td><td>rendu + encodage pour un écran : <dfn data-g="rrt">RRT</dfn> + <dfn data-g="odt">ODT</dfn> en 1.x, un seul bloc en 2.0</td><td>la vue</td></tr>
+      <tr><td>AMF, CLF</td><td>fichier qui décrit la chaîne d'un plan ; format de LUT</td><td>l'échange</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>ACES 1.x ou 2.0</h2>
+  <p>ACES 2.0 (avril 2025) change le rendu : contraste moyen plus bas, hautes lumières plus douces, moins de dérives de teinte, vue presque entièrement inversible. Les espaces ne changent pas : ACEScg reste ACEScg. Houdini 22 et Nuke 17.1 livrent des configs ACES 2.0 (Nuke 17.1 garde aussi des configs ACES 1.3, et la houdini-config une vue <code>ACES 1.0 - SDR Video</code>), Nuke 16 seulement de l'ACES 1.x (1.2 et 1.3), et Resolve 21 propose ACES 1.0.3 à 2.0. Les noms des vues le disent : <code>ACES 1.0 - SDR Video</code> ou <code>ACES 2.0 - SDR 100 nits (Rec.709)</code>.</p>
+  <p>ACES n'est pas obligatoire : AgX, T-CAM de FilmLight, les LUT LogC4 d'ARRI (REVEAL) ou une LUT propre au film sont aussi des choix de projet.</p>
+
+  <section class="retenir">
+    <h2>À retenir</h2>
+    <ul>
+      <li>« ACES » désigne un système, des espaces ou un rendu : précise toujours lequel.</li>
+      <li>L'espace de travail et la vue sont deux choix indépendants.</li>
+      <li>ACEScg pour calculer, ACES2065-1 pour échanger, ACEScct pour étalonner.</li>
+      <li>ACES 2.0 change la vue, pas les espaces.</li>
+    </ul>
+  </section>
+
+  <details class="plus">
+    <summary>Pour aller plus loin</summary>
+    <div>
+      <h3>Précisions</h3>
+      <p>Le blanc ACES (x 0,32168 ; y 0,33767) vaut environ 6000 K, mais ce n'est pas un illuminant CIE « D60 ». Les primaires AP1 débordent légèrement du visible pour englober Rec.2020 et P3 ; AP0 englobe tout le visible. ACEScct a un « toe » linéaire dans les basses lumières : un « lift » y voile davantage les ombres, comme sur un scan film ; ACEScc n'en a pas.</p>
+      <p>En ACES 2.0, la vue <code>ACES 2.0 - SDR 100 nits (P3 D65)</code> du display <code>P3-D65 - Display</code> est la sortie cinéma à 48 nits : sa courbe est calculée à 100 nits, puis le projecteur calibré fait le reste. Sur <code>Display P3 - Display</code>, la même vue vise un écran Display P3. Dans les configs ACES 1.x, le préfixe des vues (<code>ACES 1.0</code>, <code>ACES 1.1</code>) suit en gros la version inscrite dans l'identifiant du transform, pas la version d'ACES qui l'a publié.</p>
+      <p>La démo convertit albedos et lumières (définis en Rec.709) dans l'espace de travail, y fait le produit, puis revient en Linear Rec.709 pour appliquer la vue par LUT. Les valeurs devenues négatives au retour (couleurs hors Rec.709) sont ramenées à 0 par la LUT : un vrai pipeline OCIO les transmettrait à la vue. Un vrai moteur de rendu applique le même principe à tout son transport de lumière.</p>
+      <h3>Sources</h3>
+      <ol class="sources">
+        <li>ACES, documentation (encodages, point blanc, transforms, ACES 2) : <a href="https://docs.acescentral.com/">docs.acescentral.com</a></li>
+        <li>Académie, lancement d'ACES 1.0 (1er avril 2015) : <a href="https://www.oscars.org/news/academy-launches-aces-global-digital-production-and-archiving-standard">oscars.org</a></li>
+        <li>aces-core, CHANGELOG (versions et dates) : <a href="https://github.com/aces-aswf/aces-core/blob/main/CHANGELOG.md">github.com/aces-aswf</a></li>
+        <li>Configs dumpées localement : Houdini 22, Nuke 17.1 et 16 ; Resolve 21.1, Reference Manual, p. 245–251.</li>
+      </ol>
+    </div>
+  </details>
+</main>
+</div>
+<script src="../assets/glossaire-data.js?v=20260930"></script>
+<script src="../assets/colorlib.js?v=20260930"></script>
+<script src="../assets/gl.js?v=20260930"></script>
+<script src="../assets/couleur.js?v=20260930"></script>
+<script>
+(async () => {
+  'use strict';
+  const C = ColorLib, F = Couleur.fmt;
+  // Scène (valeurs Linear Rec.709) : deux sphères saturées + fond gris, deux lumières colorées, Lambert seul.
+  const ALB = [[0.75, 0.04, 0.04], [0.04, 0.55, 0.08]], BG = [0.18, 0.18, 0.18];
+  const KEY = { dir: [-0.6, 0.55, 0.58], col: [1.0, 0.45, 0.08], k: 5.0 }, FILL = { dir: [0.75, 0.1, 0.65], col: [0.08, 0.35, 1.0], k: 2.5 };
+  const norm3 = (v) => { const l = Math.hypot(...v); return v.map((x) => x / l); };
+  KEY.dir = norm3(KEY.dir); FILL.dir = norm3(FILL.dir);
+  const lutAgX = await Couleur.loadLUT('agx'), lutA2 = await Couleur.loadLUT('aces2');
+  const M = C.matrix('lin_rec709', 'acescg'), Mi = C.matrix('acescg', 'lin_rec709');
+  // Évaluation d'un point de quadrant (u, v dans [0,1], v vers le bas) → {n, alb} ou fond
+  function hit(u, v) {
+    const asp = 480 / 270, x = (u - 0.5) * asp, y = 0.5 - v;
+    const S = [[-0.42, -0.02, 0.3], [0.42, -0.02, 0.3]];
+    for (let i = 0; i < 2; i++) { const dx = (x - S[i][0]) / S[i][2], dy = (y - S[i][1]) / S[i][2], r2 = dx * dx + dy * dy; if (r2 < 1) return { n: [dx, dy, Math.sqrt(1 - r2)], alb: ALB[i] }; }
+    return { n: [0, 0.35, 0.94], alb: BG };
+  }
+  function shade(u, v, ws) {
+    const h = hit(u, v), conv = (c) => (ws ? C.apply(M, c) : c);
+    const a = conv(h.alb); let out = [0, 0, 0];
+    for (const Lt of [KEY, FILL]) {
+      const nl = Math.max(0, h.n[0] * Lt.dir[0] + h.n[1] * Lt.dir[1] + h.n[2] * Lt.dir[2]), lc = conv(Lt.col.map((c) => c * Lt.k));
+      out = out.map((o, k) => o + a[k] * lc[k] * nl);
+    }
+    return ws ? C.apply(Mi, out) : out; // retour en Linear Rec.709 pour la vue
+  }
+  const cv = document.getElementById('cv');
+  const t = (Mx) => [Mx[0][0], Mx[1][0], Mx[2][0], Mx[0][1], Mx[1][1], Mx[2][1], Mx[0][2], Mx[1][2], Mx[2][2]];
+  const FS = `uniform sampler2D lutA; uniform sampler2D lutB; uniform mat3 M; uniform mat3 Mi;
+uniform vec3 alb0; uniform vec3 alb1; uniform vec3 bg; uniform vec3 kd; uniform vec3 kc; uniform vec3 fd; uniform vec3 fc;
+vec3 shade(vec2 q, bool cg){
+  float asp = 480.0 / 270.0; vec2 p = vec2((q.x - 0.5) * asp, q.y - 0.5);
+  vec3 n = vec3(0.0, 0.35, 0.94); vec3 a = bg;
+  for (int i = 0; i < 2; i++) { vec2 c = vec2(i == 0 ? -0.42 : 0.42, -0.02); vec2 d = (p - c) / 0.3; float r2 = dot(d, d);
+    if (r2 < 1.0) { n = vec3(d, sqrt(1.0 - r2)); a = i == 0 ? alb0 : alb1; break; } }
+  vec3 A = cg ? M * a : a; vec3 K = cg ? M * kc : kc; vec3 Fl = cg ? M * fc : fc;
+  vec3 o = A * K * max(dot(n, kd), 0.0) + A * Fl * max(dot(n, fd), 0.0);
+  return cg ? Mi * o : o;
+}
+void main(){
+  bool right = uv.x > 0.5, top = uv.y > 0.5;
+  vec2 q = vec2(fract(uv.x * 2.0), fract(uv.y * 2.0));
+  vec3 c = shade(q, right);
+  vec3 r = top ? lut3d(lutA, c) : lut3d(lutB, c);
+  if (abs(uv.x - 0.5) < 0.002 || abs(uv.y - 0.5) < 0.003) r = vec3(0.46);
+  o = vec4(r, 1.0);
+}`;
+  const view = (c, top) => C.lutApply(c, top ? lutAgX.px : lutA2.px, lutAgX.meta);
+  if (GL.available()) {
+    const r = GL.create(cv, FS);
+    r.setHDR({ width: 1, height: 1, data: new Float32Array(3) }).setLUT(lutAgX, 'lutA').setLUT(lutA2, 'lutB');
+    const gl = r.gl; gl.uniformMatrix3fv(gl.getUniformLocation(r.prog, 'M'), false, t(M)); gl.uniformMatrix3fv(gl.getUniformLocation(r.prog, 'Mi'), false, t(Mi));
+    r.set('alb0', ...ALB[0]).set('alb1', ...ALB[1]).set('bg', ...BG).set('kd', ...KEY.dir).set('kc', ...KEY.col.map((c) => c * KEY.k)).set('fd', ...FILL.dir).set('fc', ...FILL.col.map((c) => c * FILL.k)).draw();
+  } else {
+    const W = 480, H = 270, img = { width: W * 2, height: H * 2, data: new Float32Array(W * H * 12) };
+    GL.render2D(cv, img, (_, x, y) => { const right = x >= W, top = y < H; return view(shade((x % W) / W, (y % H) / H, right), top); }, 960);
+  }
+  cv.addEventListener('click', (e) => {
+    const b = cv.getBoundingClientRect(), u = (e.clientX - b.left) / b.width, v = (e.clientY - b.top) / b.height;
+    const right = u > 0.5, top = v < 0.5, q = [(u * 2) % 1, (v * 2) % 1];
+    const ws = shade(q[0], q[1], right), inWS = right ? C.apply(M, ws) : ws;
+    document.getElementById('ro').textContent = `${right ? 'ACEScg' : 'Linear Rec.709'} : ${F.rgb(inWS)} (en Linear Rec.709 : ${F.rgb(ws)}) → vue ${top ? 'AgX' : 'ACES 2.0'} ${F.code8(view(ws, top))}`;
+  });
+})();
+</script>
+</body>
+</html>
